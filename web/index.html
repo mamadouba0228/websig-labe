@@ -24,6 +24,7 @@
   <aside id="sidebar">
     <nav class="tabs">
       <button class="tab active" data-tab="layers">Couches</button>
+      <button class="tab" data-tab="iti">Itinéraire</button>
       <button class="tab" data-tab="stats">Statistiques</button>
       <button class="tab" data-tab="about">À propos</button>
     </nav>
@@ -33,6 +34,34 @@
       <div id="basemaps"></div>
       <h3>Couches thématiques</h3>
       <div id="overlays"></div>
+    </section>
+
+    <section id="tab-iti" class="panel">
+      <h3>Itinéraire</h3>
+      <div class="iti-modes">
+        <label><input type="radio" name="iti-mode" value="pied" checked> 🚶 À pied</label>
+        <label><input type="radio" name="iti-mode" value="vehicule"> 🚗 En véhicule</label>
+      </div>
+      <div class="iti-search">
+        <input id="iti-search" type="search" placeholder="Ajouter une adresse, une rue, un lieu…" autocomplete="off">
+        <ul id="iti-search-results"></ul>
+      </div>
+      <div class="row">
+        <button id="iti-pick">+ Point sur la carte</button>
+        <button id="iti-gps">◎ Ma position</button>
+      </div>
+      <p class="hint" id="iti-vide">Ajoutez un départ puis une arrivée : par la recherche, avec « Point sur la carte », ou par un <b>clic droit</b> sur la carte (appui long sur téléphone). Les marqueurs se déplacent à la souris.</p>
+      <ul id="iti-etapes"></ul>
+      <div id="iti-actions" class="hidden">
+        <label class="check"><input type="checkbox" id="iti-optim"> Optimiser l'ordre des étapes (tournée)</label>
+        <label class="check"><input type="checkbox" id="iti-boucle"> Revenir au point de départ</label>
+        <div class="row">
+          <button id="iti-reverse">⇅ Inverser</button>
+          <button id="iti-gpx" title="Pour suivre le trajet sur téléphone (OsmAnd, Maps.me…) ou GPS">Exporter GPX</button>
+          <button id="iti-clear" class="danger">Effacer</button>
+        </div>
+      </div>
+      <div id="iti-result"></div>
     </section>
 
     <section id="tab-stats" class="panel">
@@ -67,5 +96,6 @@
   <script src="js/config.js"></script>
   <script src="js/app.js"></script>
   <script src="js/adressage-public.js"></script>
+  <script src="js/itineraire.js"></script>
 </body>
 </html>

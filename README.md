@@ -39,6 +39,19 @@ Une construction nouvelle reçoit son numéro sans renuméroter les voisins.
 Tables : `adr.voies`, `adr.adresses`, `adr.quartiers` (codes des quartiers), `adr.parametres` (distance de rattachement).
 GeoServer : `labe:voies_publiques`, `labe:adresses_publiques`.
 
+## Itinéraires
+
+Onglet « Itinéraire » de la carte publique et de l'espace agents (calcul dans le navigateur, fonctionne aussi sur GitHub Pages) :
+
+- plus court chemin **à pied** (4,5 km/h, sentiers compris) ou **en véhicule** (12 à 45 km/h selon le type de voie, sans les sentiers) ;
+- **instructions pas à pas** avec les noms et codes des voies de l'adressage (« Tournez à gauche sur Rue KRL-005 ») ;
+- **tournée** jusqu'à 12 étapes avec optimisation de l'ordre (plus proche voisin + 2-opt) et retour au départ en option :
+  ramassage des ordures, pose des plaques d'adresse, visites de terrain ;
+- étapes ajoutées par la recherche, « Point sur la carte », « Ma position » ou **clic droit** sur la carte (appui long sur téléphone) ;
+  marqueurs déplaçables ; **export GPX** pour suivre le trajet sur téléphone (OsmAnd, Organic Maps…) ou GPS.
+
+Limites : les sens uniques et la circulation ne sont pas pris en compte (données OSM sans sens de circulation).
+
 ## Hébergement
 
 | Partie | Où | Adresse |

@@ -99,6 +99,9 @@
       return r.json();
     });
   }
+  // Chargement unique d'une couche partagée entre modules (ex. voies : adressage + itinéraires)
+  var loaded = {};
+  function loadOnce(layer) { return loaded[layer] || (loaded[layer] = wfs(layer)); }
   function wfs(layer) {
     if (STATIC) return getJSON('data/' + layer + '.geojson', 'couche ' + layer);
     return getJSON(GEOSERVER + '/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=labe:' + layer +
@@ -314,7 +317,7 @@
   // ---------- Chargement des couches de référence ----------
   var status = document.getElementById('load-status');
   var ready = Promise.all([
-    wfs('limite_commune'), wfs('quartiers'), wfs('routes'), wfs('cours_eau'), wfs('surface_eau'),
+    wfs('limite_commune'), wfs('quartiers'), loadOnce('routes'), wfs('cours_eau'), wfs('surface_eau'),
     wfs('vegetation'), wfs('cimetieres'), wfs('terrains_sport'), wfs('aerodrome'), wfs('equipements')
   ]).then(function (res) {
     var D = {
@@ -746,7 +749,7 @@
 
   // ---------- API interne pour contributions.js ----------
   window.LabeApp = {
-    map: map, ready: ready, esc: esc, CATEGORIES: CATEGORIES, STATIC: STATIC, wfs: wfs, outerRing: outerRing, noteFeatureClick: noteFeatureClick, fmt: fmt, popupHtml: popupHtml,
+    map: map, ready: ready, esc: esc, CATEGORIES: CATEGORIES, STATIC: STATIC, wfs: wfs, loadOnce: loadOnce, outerRing: outerRing, noteFeatureClick: noteFeatureClick, fmt: fmt, popupHtml: popupHtml,
     fmtLen: fmtLen, fmtArea: fmtArea, lineLength: lineLength, polygonArea: polygonArea,
     startSketch: startSketch, stopSketch: stopSketch, addOverlay: addOverlay, markClicks: markClicks,
     quartierAt: quartierAt, searchIndex: searchIndex,

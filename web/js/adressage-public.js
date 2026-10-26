@@ -133,7 +133,7 @@
   // ---------- Chargement ----------
   A.ready.then(function () {
     return Promise.all([
-      A.wfs(A.STATIC ? 'voies' : 'voies_publiques'),
+      A.loadOnce(A.STATIC ? 'voies' : 'voies_publiques'),
       A.wfs(A.STATIC ? 'adresses' : 'adresses_publiques')
     ]);
   }).then(function (res) {
