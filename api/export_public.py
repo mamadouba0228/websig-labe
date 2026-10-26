@@ -73,6 +73,22 @@ def main():
         for f in fc["features"]:
             f["properties"].pop("ordre", None)
         write("contributions.geojson", fc)
+
+        # Adressage : toutes les voies, adresses validées ou posées uniquement
+        cur.execute("SELECT to_regclass('adr.voies') IS NOT NULL AS ok")
+        if cur.fetchone()["ok"]:
+            fc = feature_collection(cur, """
+                SELECT id AS ordre, code, type_voie, nom, statut_nom, quartier, libelle, geom
+                FROM adr.voies_publiques""", 6)
+            for f in fc["features"]:
+                f["properties"].pop("ordre", None)
+            write("voies.geojson", fc)
+            fc = feature_collection(cur, """
+                SELECT id AS ordre, num, cote, quartier, statut, code_voie, libelle, geom
+                FROM adr.adresses_publiques""", 6)
+            for f in fc["features"]:
+                f["properties"].pop("ordre", None)
+            write("adresses.geojson", fc)
         write("stats.json", compute_stats(cur))
     print("Export terminé.")
 

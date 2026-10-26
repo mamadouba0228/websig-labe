@@ -59,3 +59,5 @@ a.btn { display: inline-block; font-size: 13px; padding: 7px 12px; border-radius
   .admin-tab.active { border-bottom-color: var(--green); }
   .admin-main { padding: 14px; }
 }
+.bar.inline { display: inline-block; width: 90px; vertical-align: middle; }
+.bar.inline > div { background: var(--green); }

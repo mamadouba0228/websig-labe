@@ -20,6 +20,25 @@ Système d'information géographique web de la commune urbaine de Labé (Guinée
 Un agent s'inscrit depuis l'espace agents ; son compte reste **en attente** jusqu'à son activation par
 un administrateur. Les saisies d'un agent sont publiées sur la carte publique **après validation**.
 
+## Adressage
+
+Numérotation **métrique** : le numéro d'un bâtiment est sa distance en mètres depuis le début de la voie,
+**pair à droite**, **impair à gauche** (ex. « 124, Rue DK1-012 » est à environ 124 m du début de la rue).
+Une construction nouvelle reçoit son numéro sans renuméroter les voisins.
+
+- **Voies** : créées depuis la voirie OSM (onglet « Adressage » de l'espace agents → « Initialiser », une seule fois).
+  Chaque voie a un **code** permanent par quartier (`DK1-012` = Daka 1, voie 12) et peut recevoir un **nom officiel**
+  après délibération du conseil municipal (« Avenue Karamoko Alfa (DK1-012) »). Le début d'une voie est l'extrémité
+  la plus proche du centre-ville (pastille noire) ; un superviseur peut l'inverser tant qu'aucune adresse n'est validée.
+- **Adresses** : chaque bâtiment à moins de 50 m d'une voie reçoit une adresse **proposée** ; un superviseur la **valide**
+  après vérification, l'agent de terrain indique **plaque posée**. Une adresse validée ne change plus jamais.
+- **Outils** : « Adresse d'un point », ajout d'une adresse, tracé d'une nouvelle voie, renumérotation / validation par voie
+  ou par quartier, exports CSV pour Excel (adresses pour la fabrication des plaques, registre des voies).
+- **Carte publique** : voies, adresses validées, recherche d'adresse et outil ⌖ « Quelle est l'adresse de ce point ? ».
+
+Tables : `adr.voies`, `adr.adresses`, `adr.quartiers` (codes des quartiers), `adr.parametres` (distance de rattachement).
+GeoServer : `labe:voies_publiques`, `labe:adresses_publiques`.
+
 ## Hébergement
 
 | Partie | Où | Adresse |

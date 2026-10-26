@@ -34,6 +34,8 @@ LAYERS = {
     "contributions_points": ("contrib", "Contributions validées — points", None),
     "contributions_lignes": ("contrib", "Contributions validées — lignes", None),
     "contributions_surfaces": ("contrib", "Contributions validées — surfaces", None),
+    "voies_publiques": ("adr", "Adressage — voies", "labe_voies"),
+    "adresses_publiques": ("adr", "Adressage — adresses validées", "labe_adresses"),
 }
 
 s = requests.Session()
@@ -77,7 +79,7 @@ def main():
         check(s.post(REST + "/workspaces", json={"workspace": {"name": WS}}), "espace de travail")
         print("Espace de travail créé.")
 
-    for store, schema in (("ref", "ref"), ("contrib", "contrib")):
+    for store, schema in (("ref", "ref"), ("contrib", "contrib"), ("adr", "adr")):
         body = {"dataStore": {
             "name": store, "type": "PostGIS",
             "connectionParameters": {"entry": [

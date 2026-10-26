@@ -25,6 +25,7 @@
     <nav class="admin-nav">
       <button class="admin-tab active" data-view="dashboard">Tableau de bord</button>
       <button class="admin-tab" data-view="moderation">Validation des saisies <span class="tab-badge hidden" id="badge-moderation"></span></button>
+      <button class="admin-tab" data-view="adressage">Adressage</button>
       <button class="admin-tab admin-only" data-view="users">Comptes des agents <span class="tab-badge hidden" id="badge-users"></span></button>
       <button class="admin-tab admin-only" data-view="journal">Journal d'activité</button>
       <button class="admin-tab admin-only" data-view="publication">Publication</button>
@@ -59,6 +60,19 @@
             <tbody id="mod-body"></tbody>
           </table>
         </div>
+      </section>
+
+      <section id="view-adressage" class="view hidden">
+        <h2>Avancement de l'adressage</h2>
+        <div class="tiles" id="adr-tiles"></div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Quartier</th><th>Code</th><th>Voies</th><th>Noms officiels</th><th>Bâtiments</th>
+              <th>Proposées</th><th>Validées</th><th>Plaques posées</th><th>Adresses validées / bâti</th></tr></thead>
+            <tbody id="adr-body"></tbody>
+          </table>
+        </div>
+        <p class="hint">La gestion des voies et des adresses (dénomination, validation, exports pour les plaques) se fait dans l'<a href="espace.html">espace agents</a>, onglet « Adressage ».</p>
       </section>
 
       <section id="view-users" class="view hidden">

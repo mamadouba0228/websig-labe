@@ -76,6 +76,7 @@ def startup():
     pool.open(wait=True, timeout=60)
     with cursor() as cur:
         cur.execute((Path(__file__).parent / "schema.sql").read_text(encoding="utf-8"))
+        adressage.apply_schema(cur)
         # Premier administrateur, défini dans .env
         cur.execute("SELECT 1 FROM app.utilisateurs WHERE role = 'admin' LIMIT 1")
         if not cur.fetchone():
@@ -544,3 +545,9 @@ def compute_stats(cur) -> dict:
 def stats():
     with cursor() as cur:
         return compute_stats(cur)
+
+
+# ---------------------------------------------------------------- modules
+import adressage  # noqa: E402  (importé après les définitions partagées ci-dessus)
+
+app.include_router(adressage.router)

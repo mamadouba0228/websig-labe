@@ -29,6 +29,7 @@
   <aside id="sidebar">
     <nav class="tabs">
       <button class="tab active" data-tab="contrib">Saisie <span id="tab-badge" class="tab-badge hidden"></span></button>
+      <button class="tab" data-tab="adr">Adressage</button>
       <button class="tab" data-tab="layers">Couches</button>
       <button class="tab" data-tab="stats">Statistiques</button>
       <button class="tab" data-tab="account">Mon compte</button>
@@ -60,6 +61,46 @@
       </div>
       <p class="hint" id="contrib-count"></p>
       <ul id="contrib-list"></ul>
+    </section>
+
+    <section id="tab-adr" class="panel">
+      <div id="adr-init" class="hidden">
+        <h3>Adressage</h3>
+        <p class="hint">L'adressage n'est pas encore initialisé. Un administrateur peut créer les voies à partir de la voirie OSM et proposer une adresse pour chaque bâtiment.</p>
+        <button id="btn-adr-init" class="primary">Initialiser l'adressage</button>
+      </div>
+      <div id="adr-main" class="hidden">
+        <h3>Avancement</h3>
+        <div id="adr-progress"></div>
+        <p class="hint">Numérotation métrique : le numéro est la distance en mètres depuis le début de la voie, <b>pair à droite</b>, <b>impair à gauche</b>.</p>
+
+        <h3>Sur le terrain</h3>
+        <div class="row">
+          <button id="btn-adr-locate">⌖ Adresse d'un point</button>
+          <button id="btn-adr-add">+ Ajouter une adresse</button>
+        </div>
+        <p class="hint" id="adr-zoom-hint">Zoomez (niveau 16 ou plus) pour afficher les adresses. Cliquez une adresse pour indiquer « Plaque posée ».</p>
+
+        <div class="validator-only-adr hidden">
+          <h3>Supervision</h3>
+          <div class="row"><button id="btn-voie-add">╱ Tracer une nouvelle voie</button></div>
+          <p class="hint">Cliquez une voie sur la carte pour la dénommer, valider ses adresses ou inverser son sens.</p>
+          <select id="adr-quartier" class="full"></select>
+          <div class="row">
+            <button id="btn-q-numeroter">Renuméroter le quartier</button>
+            <button id="btn-q-valider">Valider le quartier</button>
+          </div>
+          <h3>Exports (Excel)</h3>
+          <div class="row">
+            <select id="adr-export-statut">
+              <option value="">Toutes les adresses</option><option>Proposée</option><option>Validée</option><option>Plaque posée</option>
+            </select>
+            <button id="btn-exp-adr">Adresses (CSV)</button>
+            <button id="btn-exp-voies">Registre des voies (CSV)</button>
+          </div>
+          <p class="hint">L'export des adresses suit le quartier choisi ci-dessus (vide = toute la commune). Il sert à commander les plaques.</p>
+        </div>
+      </div>
     </section>
 
     <section id="tab-layers" class="panel">
@@ -165,11 +206,34 @@
     </form>
   </div>
 
+  <!-- Fiche de voie -->
+  <div id="voie-modal" class="modal hidden">
+    <form id="voie-form" class="modal-card">
+      <h3 id="voie-title">Voie</h3>
+      <div class="grid2">
+        <label>Type de voie<select name="type_voie"></select></label>
+        <label>Dénomination
+          <select name="statut_nom">
+            <option>Sans nom</option><option>Nom d'usage</option><option>Proposé</option><option>Officiel</option>
+          </select>
+        </label>
+      </div>
+      <label>Nom<input name="nom" maxlength="120" placeholder="ex. Karamoko Alfa (sans « Rue »)"></label>
+      <label>Délibération du conseil municipal<input name="deliberation" maxlength="200" placeholder="ex. Délibération n° 2026-014 du 12/10/2026"></label>
+      <p class="hint">Le statut « Officiel » demande un nom, idéalement avec la référence de la délibération. Le code de la voie ne change jamais.</p>
+      <div class="row">
+        <button type="button" id="voie-cancel">Annuler</button>
+        <button type="submit" class="primary">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="js/config.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/app.js"></script>
   <script src="js/contributions.js"></script>
+  <script src="js/adressage.js"></script>
   <script src="js/espace.js"></script>
 </body>
 </html>

@@ -208,6 +208,32 @@
     }).catch(fail);
   };
 
+  // ---------- Adressage ----------
+  loaders.adressage = function () {
+    Auth.api('GET', '/adressage/stats').then(function (st) {
+      if (!st.initialise) {
+        document.getElementById('adr-tiles').innerHTML = '';
+        document.getElementById('adr-body').innerHTML = '<tr><td colspan="9" class="empty">Adressage non initialisé : un administrateur peut le lancer depuis l’espace agents, onglet « Adressage ».</td></tr>';
+        return;
+      }
+      var t = { b: 0, p: 0, v: 0, pp: 0, voies: 0, off: 0 };
+      st.quartiers.forEach(function (q) { t.b += q.batiments; t.p += q.proposees; t.v += q.validees; t.pp += q.posees; t.voies += q.voies; t.off += q.voies_officielles; });
+      function pct(n, d) { return d ? Math.round(100 * n / d) : 0; }
+      document.getElementById('adr-tiles').innerHTML = [
+        [t.voies.toLocaleString('fr-FR'), 'Voies'], [t.off, 'Voies nommées officiellement'],
+        [(t.p + t.v + t.pp).toLocaleString('fr-FR'), 'Adresses (' + pct(t.p + t.v + t.pp, t.b) + ' % du bâti)'],
+        [(t.v + t.pp).toLocaleString('fr-FR'), 'Adresses validées'], [t.pp.toLocaleString('fr-FR'), 'Plaques posées']
+      ].map(function (x) { return '<div class="tile"><b>' + x[0] + '</b><span>' + x[1] + '</span></div>'; }).join('');
+      // Une seule mesure par barre (part du bâti ayant une adresse validée) : une seule couleur
+      document.getElementById('adr-body').innerHTML = st.quartiers.map(function (q) {
+        var ok = q.validees + q.posees, p = pct(ok, q.batiments);
+        return '<tr><td><b>' + esc(q.quartier) + '</b></td><td>' + esc(q.code || '') + '</td><td>' + q.voies + '</td><td>' + q.voies_officielles +
+          '</td><td>' + q.batiments.toLocaleString('fr-FR') + '</td><td>' + q.proposees + '</td><td>' + q.validees + '</td><td>' + q.posees +
+          '</td><td title="' + ok + ' / ' + q.batiments + ' bâtiments"><div class="bar inline"><div style="width:' + Math.min(p, 100) + '%"></div></div> ' + p + ' %</td></tr>';
+      }).join('');
+    }).catch(fail);
+  };
+
   // ---------- Journal ----------
   loaders.journal = function () {
     Auth.api('GET', '/admin/journal?limite=300').then(function (rows) {
@@ -228,7 +254,7 @@
     document.getElementById('user-name').innerHTML = esc(u.nom) + ' <span class="role-badge role-' + u.role + '">' + ROLE[u.role] + '</span>';
     if (!Auth.isAdmin()) document.querySelectorAll('.admin-only').forEach(function (el) { el.classList.add('hidden'); });
     var start = location.hash.slice(1);
-    var allowed = ['dashboard', 'moderation'].concat(Auth.isAdmin() ? ['users', 'journal', 'publication'] : []);
+    var allowed = ['dashboard', 'moderation', 'adressage'].concat(Auth.isAdmin() ? ['users', 'journal', 'publication'] : []);
     show(allowed.indexOf(start) >= 0 ? start : 'dashboard');
     if (Auth.isAdmin()) Auth.api('GET', '/admin/utilisateurs').then(function (l) {
       setBadge('badge-users', l.filter(function (x) { return x.statut === 'en_attente'; }).length);

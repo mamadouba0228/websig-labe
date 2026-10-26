@@ -108,6 +108,7 @@
   // Un clic sur un objet vectoriel ne doit pas déclencher aussi l'interrogation du bâti (WMS)
   var lastFeatureClick = 0;
   function markClicks(layer) { layer.on('click', function () { lastFeatureClick = Date.now(); }); return layer; }
+  function noteFeatureClick() { lastFeatureClick = Date.now(); }
 
   // ---------- Styles ----------
   var ROUTE_STYLE = {
@@ -588,6 +589,10 @@
       document.getElementById('tab-' + t.dataset.tab).classList.add('active');
     });
   });
+  // Onglet demandé dans l'adresse de la page : ?onglet=adr
+  var ongletDemande = new URLSearchParams(location.search).get('onglet');
+  var tabBtn = ongletDemande && document.querySelector('.tab[data-tab="' + ongletDemande.replace(/[^a-z]/g, '') + '"]');
+  if (tabBtn) tabBtn.click();
   if (window.innerWidth < 700) document.body.classList.add('collapsed');
   document.getElementById('btn-menu').addEventListener('click', function () {
     document.body.classList.toggle('collapsed');
@@ -741,7 +746,7 @@
 
   // ---------- API interne pour contributions.js ----------
   window.LabeApp = {
-    map: map, ready: ready, esc: esc, CATEGORIES: CATEGORIES, STATIC: STATIC, fmt: fmt, popupHtml: popupHtml,
+    map: map, ready: ready, esc: esc, CATEGORIES: CATEGORIES, STATIC: STATIC, wfs: wfs, outerRing: outerRing, noteFeatureClick: noteFeatureClick, fmt: fmt, popupHtml: popupHtml,
     fmtLen: fmtLen, fmtArea: fmtArea, lineLength: lineLength, polygonArea: polygonArea,
     startSketch: startSketch, stopSketch: stopSketch, addOverlay: addOverlay, markClicks: markClicks,
     quartierAt: quartierAt, searchIndex: searchIndex,
