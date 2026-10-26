@@ -83,9 +83,15 @@ def main():
             for f in fc["features"]:
                 f["properties"].pop("ordre", None)
             write("voies.geojson", fc)
-            fc = feature_collection(cur, """
-                SELECT id AS ordre, num, cote, quartier, statut, code_voie, libelle, geom
-                FROM adr.adresses_publiques""", 6)
+            # Mode démonstration (par défaut) : on publie aussi les adresses proposées, marquées comme telles.
+            # Mettre PUBLIER_ADRESSES_PROPOSEES=0 dans .env quand l'adressage officiel démarre.
+            statuts = ("'Proposée', 'Validée', 'Plaque posée'" if os.environ.get("PUBLIER_ADRESSES_PROPOSEES", "1") == "1"
+                       else "'Validée', 'Plaque posée'")
+            fc = feature_collection(cur, f"""
+                SELECT a.id AS ordre, a.numero || a.suffixe AS num, a.cote, a.quartier, a.statut, v.code AS code_voie,
+                       adr.libelle(a.numero, a.suffixe, v.type_voie, v.nom, v.code) AS libelle, a.geom
+                FROM adr.adresses a JOIN adr.voies v ON v.id = a.voie_id
+                WHERE a.statut IN ({statuts})""", 6)
             for f in fc["features"]:
                 f["properties"].pop("ordre", None)
             write("adresses.geojson", fc)

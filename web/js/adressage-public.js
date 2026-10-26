@@ -97,8 +97,9 @@
     var off = nearestAddress(e.latlng, 30);
     var html = '<div class="popup"><h4>Adresse de ce point</h4>';
     if (off) {
+      var st = off.f.properties.statut;
       html += '<p class="adr-big">' + esc(off.f.properties.libelle) + '</p><p><small>' + esc(off.f.properties.quartier || '') +
-        ', Labé · adresse officielle (' + esc(off.f.properties.statut.toLowerCase()) + ')</small></p>';
+        ', Labé · ' + (st === 'Proposée' ? 'adresse <b>proposée</b>, en attente de validation par la mairie' : 'adresse officielle (' + esc(st.toLowerCase()) + ')') + '</small></p>';
     } else if (r) {
       var v = r.voie;
       html += '<p class="adr-big">' + r.numero + ', ' + esc(v.libelle) + '</p>' +
@@ -154,11 +155,14 @@
     });
     L.geoJSON({ type: 'FeatureCollection', features: adrFeatures }, {
       pointToLayer: function (f, latlng) {
-        return L.circleMarker(latlng, { radius: 4, color: '#fff', weight: 1, fillColor: '#1f6f43', fillOpacity: 1, });
+        var prop = f.properties.statut === 'Proposée';
+        return L.circleMarker(latlng, { radius: 4, color: '#fff', weight: 1, fillColor: prop ? '#f08c00' : '#1f6f43', fillOpacity: 1 });
       },
       onEachFeature: function (f, l) {
         var p = f.properties;
-        l.bindPopup('<div class="popup"><p class="adr-big">' + esc(p.libelle) + '</p><small>' + esc(p.quartier || '') + ', Labé</small></div>');
+        l.bindPopup('<div class="popup"><p class="adr-big">' + esc(p.libelle) + '</p><small>' + esc(p.quartier || '') + ', Labé</small>' +
+          (p.statut === 'Proposée' ? '<p><span class="badge adr-Proposée">Proposée</span> <small>en attente de vérification et de validation par la mairie</small></p>' : '') +
+          '</div>');
         adresses.addLayer(l);
         A.searchIndex.push({ name: p.libelle, type: 'Adresse · ' + (p.quartier || ''), layer: l, parent: adresses });
       }
@@ -167,9 +171,11 @@
     A.addOverlay({ name: 'Voies (' + voieFeatures.length + ')', layer: voies, on: true, group: 'Adressage',
       swatch: '<span class="swatch line" style="background:#7048e8"></span>',
       legend: [['Nom officiel', '#1f6f43', 'line'], ['Code provisoire / nom d\'usage', '#7048e8', 'line']] });
-    A.addOverlay({ name: 'Adresses officielles (' + adrFeatures.length + ', zoom ≥ ' + ADR_ZOOM + ')', on: true,
+    var nbProp = adrFeatures.filter(function (f) { return f.properties.statut === 'Proposée'; }).length;
+    A.addOverlay({ name: 'Adresses (' + A.fmt(adrFeatures.length) + ', zoom ≥ ' + ADR_ZOOM + ')', on: true,
       onToggle: function (on) { adrWanted = on; refreshLabels(); },
-      swatch: '<span class="swatch dot" style="background:#1f6f43"></span>' });
+      swatch: '<span class="swatch dot" style="background:' + (nbProp ? '#f08c00' : '#1f6f43') + '"></span>',
+      legend: nbProp ? [['Validée par la mairie', '#1f6f43'], ['Proposée (en attente de validation)', '#f08c00']] : null });
     map.addControl(new PickControl());
     refreshLabels();
   }).catch(function () { /* adressage pas encore initialisé */ });
