@@ -31,7 +31,7 @@
     });
     var m = 0;
     adresses.eachLayer(function (l) {
-      var show = z >= ADR_ZOOM + 1 && adrWanted && m < 2 * MAX_LABELS && b.contains(l.getLatLng());
+      var show = z >= ADR_ZOOM + 1 && adrWanted && m < 600 && b.contains(l.getLatLng());
       if (show) {
         m++;
         if (!l.getTooltip()) l.bindTooltip(esc(l.feature.properties.num), { permanent: true, direction: 'right', offset: [4, 0], className: 'label-num' });
