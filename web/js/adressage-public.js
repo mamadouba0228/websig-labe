@@ -5,7 +5,7 @@
   'use strict';
 
   var A = window.LabeApp, map = A.map, esc = A.esc;
-  var VOIE_LABEL_ZOOM = 16, ADR_ZOOM = 17, MAX_LABELS = 200;
+  var VOIE_LABEL_ZOOM = 17, ADR_ZOOM = 17, MAX_LABELS = 120;
 
   var voies = A.markClicks(L.featureGroup());
   var adresses = A.markClicks(L.featureGroup());
