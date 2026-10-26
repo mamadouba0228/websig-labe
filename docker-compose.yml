@@ -1,0 +1,120 @@
+# WebSIG — Commune urbaine de Labé
+#   docker compose up -d        → http://localhost:8080
+# Les mots de passe sont dans le fichier .env
+
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "${DB_PORT:-5433}:5432"   # accès QGIS / pgAdmin depuis le poste
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      retries: 20
+
+  # Chargement initial des données de référence (s'arrête une fois terminé)
+  import:
+    image: ghcr.io/osgeo/gdal:alpine-small-3.9.2
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      FORCE_IMPORT: ${FORCE_IMPORT:-0}
+    volumes:
+      - ./data:/data:ro
+      - ./import:/import:ro
+    command: ["sh", "/import/import.sh"]
+    depends_on:
+      db:
+        condition: service_healthy
+
+  geoserver:
+    image: docker.osgeo.org/geoserver:2.25.2
+    restart: unless-stopped
+    environment:
+      GEOSERVER_ADMIN_USER: ${GEOSERVER_ADMIN_USER}
+      GEOSERVER_ADMIN_PASSWORD: ${GEOSERVER_ADMIN_PASSWORD}
+      SKIP_DEMO_DATA: "true"
+      EXTRA_JAVA_OPTS: "-Xms256m -Xmx1g"
+    volumes:
+      - geoserver_data:/opt/geoserver_data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:8080/geoserver/web/ > /dev/null"]
+      interval: 10s
+      retries: 30
+      start_period: 30s
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # Configuration de GeoServer par l'API REST (s'arrête une fois terminé)
+  geoserver-init:
+    build: ./api
+    environment:
+      GEOSERVER_ADMIN_USER: ${GEOSERVER_ADMIN_USER}
+      GEOSERVER_ADMIN_PASSWORD: ${GEOSERVER_ADMIN_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./geoserver:/setup:ro
+    command: ["python", "/setup/setup_geoserver.py"]
+    depends_on:
+      geoserver:
+        condition: service_healthy
+      import:
+        condition: service_completed_successfully
+
+  api:
+    build: ./api
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      APP_ADMIN_EMAIL: ${APP_ADMIN_EMAIL}
+      APP_ADMIN_PASSWORD: ${APP_ADMIN_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+      import:
+        condition: service_completed_successfully
+
+  # Export des données publiques pour GitHub Pages (lancé à la demande : scripts/publier.ps1)
+  export:
+    build: ./api
+    profiles: ["outils"]
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./data/public:/out
+    command: ["python", "export_public.py"]
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    volumes:
+      - ./web:/usr/share/nginx/html:ro
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - api
+      - geoserver
+
+volumes:
+  pgdata:
+  geoserver_data:

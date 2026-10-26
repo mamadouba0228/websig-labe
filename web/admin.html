@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Administration — WebSIG Commune urbaine de Labé</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="admin-page">
+  <header class="topbar">
+    <div class="brand">
+      <strong>Administration — WebSIG Labé</strong>
+      <span>Comptes des agents, validation des saisies, journal</span>
+    </div>
+    <nav class="user-menu">
+      <span id="user-name"></span>
+      <a class="header-link" href="espace.html">Espace agents</a>
+      <a class="header-link" href="index.html">Carte publique</a>
+      <button id="btn-logout" class="header-link">Déconnexion</button>
+    </nav>
+  </header>
+
+  <div class="admin-layout">
+    <nav class="admin-nav">
+      <button class="admin-tab active" data-view="dashboard">Tableau de bord</button>
+      <button class="admin-tab" data-view="moderation">Validation des saisies <span class="tab-badge hidden" id="badge-moderation"></span></button>
+      <button class="admin-tab admin-only" data-view="users">Comptes des agents <span class="tab-badge hidden" id="badge-users"></span></button>
+      <button class="admin-tab admin-only" data-view="journal">Journal d'activité</button>
+      <button class="admin-tab admin-only" data-view="publication">Publication</button>
+    </nav>
+
+    <main class="admin-main">
+      <p id="denied" class="notice hidden">Accès réservé aux superviseurs et administrateurs. <a href="espace.html">Se connecter</a></p>
+
+      <section id="view-dashboard" class="view">
+        <h2>Tableau de bord</h2>
+        <div class="tiles" id="tiles"></div>
+        <div class="cards2">
+          <div class="card"><h3>Saisies par jour (30 derniers jours)</h3><div id="chart-days" class="chart-days"></div></div>
+          <div class="card"><h3>Saisies par service</h3><div id="chart-services"></div></div>
+          <div class="card"><h3>Saisies par catégorie</h3><div id="chart-categories"></div></div>
+        </div>
+      </section>
+
+      <section id="view-moderation" class="view hidden">
+        <h2>Validation des saisies</h2>
+        <div class="toolbar">
+          <select id="mod-statut">
+            <option value="À valider">À valider</option><option value="">Tous statuts</option>
+            <option>Validé</option><option>Traité</option><option>Rejeté</option>
+          </select>
+          <input id="mod-search" type="search" placeholder="Filtrer (nom, agent, quartier…)">
+          <span class="hint" id="mod-count"></span>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>N°</th><th>Date</th><th>Catégorie / type</th><th>Nom</th><th>Quartier</th><th>Saisi par</th><th>Statut</th><th></th></tr></thead>
+            <tbody id="mod-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="view-users" class="view hidden">
+        <h2>Comptes des agents</h2>
+        <div class="toolbar">
+          <select id="user-statut">
+            <option value="">Tous les comptes</option><option value="en_attente">En attente d'activation</option>
+            <option value="actif">Actifs</option><option value="desactive">Désactivés</option>
+          </select>
+          <input id="user-search" type="search" placeholder="Filtrer (nom, e-mail, service…)">
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Nom</th><th>Service / fonction</th><th>Contact</th><th>Rôle</th><th>Statut</th><th>Saisies</th><th>Dernière connexion</th><th></th></tr></thead>
+            <tbody id="users-body"></tbody>
+          </table>
+        </div>
+        <p class="hint">Rôles : <b>agent</b> saisit des données · <b>superviseur</b> valide les saisies · <b>administrateur</b> gère aussi les comptes.</p>
+      </section>
+
+      <section id="view-journal" class="view hidden">
+        <h2>Journal d'activité</h2>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Date</th><th>Utilisateur</th><th>Action</th><th>Objet</th><th>Détail</th></tr></thead>
+            <tbody id="journal-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="view-publication" class="view hidden">
+        <h2>Publication de la carte publique (GitHub Pages)</h2>
+        <div class="card prose">
+          <p>La carte publique hébergée sur GitHub Pages est une <b>copie statique</b> des données : couches de référence et saisies <b>validées</b>. Elle ne contient ni comptes, ni photos, ni saisies en attente.</p>
+          <p>Pour la mettre à jour après des validations, lancez sur le poste serveur, dans le dossier du projet :</p>
+          <pre>powershell -ExecutionPolicy Bypass -File scripts\publier.ps1</pre>
+          <p>Le script exporte les données publiques depuis PostGIS, les enregistre dans le dépôt GitHub, et GitHub met le site à jour en une à deux minutes.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

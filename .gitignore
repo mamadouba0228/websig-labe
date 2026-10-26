@@ -1,0 +1,21 @@
+# Secrets
+.env
+
+# Données sources volumineuses (non versionnées) : Guinée entière, GADM, shapefiles bruts
+202303_OSM2IGEO_GUINEE_SHP_WGS84_4326/
+gadm41_GIN_shp/
+Labe_Centre_polygone/
+/*.shp
+/*.shx
+/*.dbf
+/*.prj
+/*.cpg
+/*.qix
+/*.qmd
+
+# Divers
+__pycache__/
+*.pyc
+.vscode/
+Thumbs.db
+desktop.ini

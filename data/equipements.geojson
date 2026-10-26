@@ -1,0 +1,30 @@
+{
+"type": "FeatureCollection",
+"name": "eq",
+"xy_coordinate_resolution": 1e-06,
+"features": [
+{ "type": "Feature", "properties": { "CATEGORIE": "Administration", "NOM": "Prefecture", "NATURE": "Mairie" }, "geometry": { "type": "Point", "coordinates": [ -12.286866, 11.315963 ] } },
+{ "type": "Feature", "properties": { "CATEGORIE": "Administration", "NOM": "sapeurs-pompiers de Labé", "NATURE": "Caserne de pompiers" }, "geometry": { "type": "Point", "coordinates": [ -12.283388, 11.314662 ] } },
+{ "type": "Feature", "properties": { "CATEGORIE": "Administration", "NOM": "Poste Labé", "NATURE": "Bureau ou hôtel des postes" }, "geometry": { "type": "Point", "coordinates": [ -12.284255, 11.315698 ] } },
+{ "type": "Feature", "properties": { "CATEGORIE": "Culture", "NOM": "Petit Musée du Fouta", "NATURE": "Musée" }, "geometry": { "type": "Point", "coordinates": [ -12.306539, 11.313182 ] } },
+{ "type": "Feature", "properties": { "CATEGORIE": "Commerce", "NOM": "Centre de Formation de l'Elevage de Labé", "NATURE": "Divers commercial" }, "geometry": { "type": "Point", "coordinates": [ -12.275043, 11.359449 ] } },
+{ "type": "Feature", "properties": { "CATEGORIE": "Commerce", "NOM": "Abbatoir de Labé", "NATURE": "Divers industriel" }, "geometry": { "type": "Point", "coordinates": [ -12.268385, 11.361207 ] } },
+{ "type": "Feature", "properties": { "CATEGORIE": "Commerce", "NOM": "Marché de Daka", "NATURE": "Marché" }, "geometry": { "type": "Point", "coordinates": [ -12.281945, 11.331504 ] } },
+{ "type": "Feature", "properties": { "CATEGORIE": "Commerce", "NOM": "Marché Radar", "NATURE": "Marché" }, "geometry": { "type": "Point", "coordinates": [ -12.307888, 11.320528 ] } },
+{ "type": "Feature", "properties": { "CATEGORIE": "Commerce", "NOM": "Marché de Hore Saala", "NATURE": "Marché" }, "geometry": { "type": "Point", "coordinates": [ -12.252098, 11.359254 ] } },
+{ "type": "Feature", "properties": { "CATEGORIE": "Commerce", "NOM": "Grand marché de Labé", "NATURE": "Marché" }, "geometry": { "type": "Point", "coordinates": [ -12.277238, 11.315661 ] } },
+{ "type": "Feature", "properties": { "CATEGORIE": "Religion", "NOM": "Mosquée Elhadj Mamadou Companya de Hore Hollande", "NATURE": "Culte islamique" }, "geometry": { "type": "Point", "coordinates": [ -12.275555, 11.378787 ] } },
+{ "type": "Feature", "properties": { "CATEGORIE": "Religion", "NOM": "Mosquée Kansato", "NATURE": "Culte islamique" }, "geometry": { "type": "Point", "coordinates": [ -12.279284, 11.333105 ] } },
+{ "type": "Feature", "properties": { "CATEGORIE": "Religion", "NOM": "Mosquée Malea", "NATURE": "Culte islamique" }, "geometry": { "type": "Point", "coordinates": [ -12.278276, 11.341784 ] } },
+{ "type": "Feature", "properties": { "CATEGORIE": "Religion", "NOM": "Mosquée secteur CFEL", "NATURE": "Culte islamique" }, "geometry": { "type": "Point", "coordinates": [ -12.2712, 11.359153 ] } },
+{ "type": "Feature", "properties": { "CATEGORIE": "Religion", "NOM": "Mosquée CFEL", "NATURE": "Culte islamique" }, "geometry": { "type": "Point", "coordinates": [ -12.271201, 11.359159 ] } },
+{ "type": "Feature", "properties": { "CATEGORIE": "Religion", "NOM": "Grande Mosquée Karamoko Alfa de Labé", "NATURE": "Culte islamique" }, "geometry": { "type": "Point", "coordinates": [ -12.277373, 11.318494 ] } },
+{ "type": "Feature", "properties": { "CATEGORIE": "Religion", "NOM": "Mosque", "NATURE": "Culte islamique" }, "geometry": { "type": "Point", "coordinates": [ -12.273061, 11.317618 ] } },
+{ "type": "Feature", "properties": { "CATEGORIE": "Religion", "NOM": "Mosquée de pounthioun", "NATURE": "Culte islamique" }, "geometry": { "type": "Point", "coordinates": [ -12.292499, 11.316141 ] } },
+{ "type": "Feature", "properties": { "CATEGORIE": "Religion", "NOM": "Église Protestante", "NATURE": "Culte protestant" }, "geometry": { "type": "Point", "coordinates": [ -12.278001, 11.316821 ] } },
+{ "type": "Feature", "properties": { "CATEGORIE": "Religion", "NOM": "Cimetière de Malea", "NATURE": "Tombeau" }, "geometry": { "type": "Point", "coordinates": [ -12.277843, 11.3355 ] } },
+{ "type": "Feature", "properties": { "CATEGORIE": "Religion", "NOM": "Cimetière de Bowloko", "NATURE": "Tombeau" }, "geometry": { "type": "Point", "coordinates": [ -12.274252, 11.319154 ] } },
+{ "type": "Feature", "properties": { "CATEGORIE": "Santé", "NOM": "Centre de santé de Fafabhe", "NATURE": "Hôpital" }, "geometry": { "type": "Point", "coordinates": [ -12.28414, 11.288934 ] } },
+{ "type": "Feature", "properties": { "CATEGORIE": "Santé", "NOM": "Hôpital Régional de Labé", "NATURE": "Hôpital" }, "geometry": { "type": "Point", "coordinates": [ -12.285284, 11.318116 ] } }
+]
+}

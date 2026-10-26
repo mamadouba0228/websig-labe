@@ -1,0 +1,8 @@
+{
+"type": "FeatureCollection",
+"name": "SELECT",
+"xy_coordinate_resolution": 1e-06,
+"features": [
+{ "type": "Feature", "properties": { "ID": "w271290827", "NATURE": "Indifférencié", "SPORT": "Football", "SOURCE": "OpenStreetMap", "DATE_MAJ": "2014-04-02" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ -12.270192, 11.313309 ], [ -12.270801, 11.313408 ], [ -12.270959, 11.312475 ], [ -12.270349, 11.312376 ], [ -12.270192, 11.313309 ] ] ] } }
+]
+}
