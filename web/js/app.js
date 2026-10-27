@@ -195,20 +195,16 @@
       hint.textContent = 'Chargement du bâti…'; hint.classList.remove('hidden');
       batiLoading = loadOnce('batiments').then(function (gj) {
         hint.classList.add('hidden');
+        // non interactif : l'identification au clic passe par l'index ci-dessous (le calque est sous les autres)
         bati = L.geoJSON(gj, {
           renderer: L.canvas({ padding: 0.3, pane: 'batiPane' }),
+          interactive: false,
           style: function (f) {
             var c = BATI_COLORS[f.properties.nature] || '#868e96';
-            return { color: c, weight: 0.5, fillColor: c, fillOpacity: 0.55 };
-          },
-          onEachFeature: function (f, l) {
-            l.on('click', function (e) {
-              L.popup().setLatLng(e.latlng).setContent(
-                popupHtml(f.properties.nature === 'NC' ? 'Bâtiment' : f.properties.nature, {}, {}) +
-                '<small>Emprise au sol : ' + fmtArea(polygonArea(outerRing(l))) + '</small>').openOn(map);
-            });
+            return { color: c, weight: 0.5, fillColor: c, fillOpacity: 0.55, interactive: false };
           }
         });
+        indexerBati(gj);
       });
     }
     return batiLoading;
@@ -222,25 +218,86 @@
   }
   map.on('zoomend', updateBati);
 
-  // Interrogation du bâti au clic (GetFeatureInfo)
-  var sketch = null; // déclaré plus bas, utilisé ici pour ignorer les clics de dessin
+  // ---------- Identification au clic ----------
+  // Les points et les lignes ont leur propre fiche (ils sont au-dessus). Sinon on cherche le bâtiment
+  // sous le curseur, puis le quartier : l'objet le plus précis l'emporte.
+  var sketch = null; // déclaré plus bas, utilisé ici pour ignorer les clics des outils
+
+  // Index en grille du bâti (mode statique)
+  var BATI_CELL = 0.001, batiGrid = null;
+  function polysOf(g) {
+    if (!g || !g.coordinates) return [];
+    return g.type === 'MultiPolygon' ? g.coordinates : g.type === 'Polygon' ? [g.coordinates] : [];
+  }
+  function indexerBati(gj) {
+    batiGrid = {};
+    gj.features.forEach(function (f) {
+      polysOf(f.geometry).forEach(function (poly) {
+        var r = poly[0];
+        if (!r || !r.length) return;
+        var x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+        r.forEach(function (c) { if (c[0] < x0) x0 = c[0]; if (c[0] > x1) x1 = c[0]; if (c[1] < y0) y0 = c[1]; if (c[1] > y1) y1 = c[1]; });
+        for (var i = Math.floor(x0 / BATI_CELL); i <= Math.floor(x1 / BATI_CELL); i++)
+          for (var j = Math.floor(y0 / BATI_CELL); j <= Math.floor(y1 / BATI_CELL); j++)
+            (batiGrid[i + ':' + j] = batiGrid[i + ':' + j] || []).push({ f: f, ring: r });
+      });
+    });
+  }
+  function batiAt(ll) {
+    if (!batiGrid) return null;
+    var list = batiGrid[Math.floor(ll.lng / BATI_CELL) + ':' + Math.floor(ll.lat / BATI_CELL)] || [];
+    for (var k = 0; k < list.length; k++) if (inRing(ll.lng, ll.lat, list[k].ring)) return list[k].f;
+    return null;
+  }
+  // Interrogation du WMS (mode serveur)
+  function gfiBati(ll) {
+    var size = map.getSize(), b = map.getBounds(), p = map.latLngToContainerPoint(ll);
+    var url = GEOSERVER + '/wms?service=WMS&version=1.1.1&request=GetFeatureInfo&layers=labe:batiments' +
+      '&query_layers=labe:batiments&info_format=application/json&feature_count=1&srs=EPSG:4326' +
+      '&bbox=' + [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()].join(',') +
+      '&width=' + size.x + '&height=' + size.y + '&x=' + Math.round(p.x) + '&y=' + Math.round(p.y);
+    return fetch(url).then(function (r) { return r.json(); }).then(function (gj) { return gj.features && gj.features[0] || null; });
+  }
+
+  // Surbrillance de l'objet identifié (effacée à la fermeture de sa fiche)
+  var surbrillance = L.layerGroup().addTo(map);
+  map.on('popupclose', function () { surbrillance.clearLayers(); });
+  function montrer(ll, html, geom) {
+    surbrillance.clearLayers();
+    L.popup().setLatLng(ll).setContent(html).openOn(map);
+    if (geom) L.geoJSON(geom, { style: { color: '#f59f00', weight: 3, fillColor: '#ffd43b', fillOpacity: 0.25 }, interactive: false }).addTo(surbrillance);
+  }
+  function ficheBatiment(ll, f) {
+    var p = f.properties, q = quartierAt(ll);
+    var surf = polysOf(f.geometry).reduce(function (sum, poly) {
+      return sum + polygonArea(poly[0].map(function (c) { return L.latLng(c[1], c[0]); }));
+    }, 0);
+    montrer(ll, popupHtml(p.nature && p.nature !== 'NC' ? p.nature : 'Bâtiment', {
+      surf: fmtArea(surf), q: q
+    }, { surf: 'Emprise au sol', q: 'Quartier' }), f.geometry);
+  }
+  function ficheQuartier(ll, f) {
+    var p = f.properties;
+    montrer(ll, popupHtml('Quartier ' + p.nom, {
+      SUP: fmt(p.superficie_km2, 2) + ' km²', BAT: fmt(p.nb_batiments),
+      DENS: fmt(p.nb_batiments / p.superficie_km2) + ' bât./km²'
+    }, { SUP: 'Superficie', BAT: 'Bâtiments (OSM)', DENS: 'Densité' }), f.geometry);
+  }
+  function identifier(ll) {
+    var batiVisible = bati && map.hasLayer(bati);
+    var req = !batiVisible ? Promise.resolve(null) : STATIC ? Promise.resolve(batiAt(ll)) : gfiBati(ll).catch(function () { return null; });
+    return req.then(function (f) {
+      if (f) { ficheBatiment(ll, f); return 'batiment'; }
+      var q = quartierFeatureAt(ll);
+      if (q && quartiersVisibles()) { ficheQuartier(ll, q); return 'quartier'; }
+      return null;
+    });
+  }
   map.on('click', function (e) {
-    if (STATIC || sketch || !bati || !map.hasLayer(bati)) return;
+    if (sketch || captureClic || Date.now() - derniereCapture < 500) return;
     setTimeout(function () {
-      if (Date.now() - lastFeatureClick < 300) return;
-      var size = map.getSize(), b = map.getBounds(), p = map.latLngToContainerPoint(e.latlng);
-      var url = GEOSERVER + '/wms?service=WMS&version=1.1.1&request=GetFeatureInfo&layers=labe:batiments' +
-        '&query_layers=labe:batiments&info_format=application/json&feature_count=1&srs=EPSG:4326' +
-        '&bbox=' + [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()].join(',') +
-        '&width=' + size.x + '&height=' + size.y + '&x=' + Math.round(p.x) + '&y=' + Math.round(p.y);
-      fetch(url).then(function (r) { return r.json(); }).then(function (gj) {
-        var f = gj.features && gj.features[0];
-        if (!f) return;
-        var area = polygonArea(outerRing(L.geoJSON(f).getLayers()[0]));
-        L.popup().setLatLng(e.latlng).setContent(
-          popupHtml(f.properties.nature === 'NC' ? 'Bâtiment' : f.properties.nature, {}, {}) +
-          '<small>Emprise au sol : ' + fmtArea(area) + '</small>').openOn(map);
-      }).catch(function () {});
+      if (Date.now() - lastFeatureClick < 300) return; // un objet a déjà ouvert sa fiche
+      identifier(e.latlng);
     }, 0);
   });
 
@@ -276,7 +333,11 @@
     map.flyToBounds(b, { maxZoom: 17, padding: [40, 40] });
     var hl = L.geoJSON(it.layer.toGeoJSON(), { style: { color: '#00e5ff', weight: 8, opacity: 0.6, fill: false }, interactive: false }).addTo(map);
     setTimeout(function () { map.removeLayer(hl); }, 4000);
-    map.once('moveend', function () { it.layer.getLayers()[0].openPopup(b.getCenter()); });
+    map.once('moveend', function () {
+      var l0 = it.layer.getLayers()[0];
+      if (l0.getPopup && l0.getPopup()) l0.openPopup(b.getCenter());
+      else if (it.type === 'Quartier' && l0.feature) ficheQuartier(b.getCenter(), l0.feature); // quartiers : sans fiche propre
+    });
   }
   function indexNamed(group, typeLabel, parent) {
     var byName = {};
@@ -300,7 +361,9 @@
     }
     return inside;
   }
-  function quartierAt(latlng) {
+  var quartiersLayer = null;
+  function quartiersVisibles() { return !quartiersLayer || map.hasLayer(quartiersLayer); }
+  function quartierFeatureAt(latlng) {
     var hit = null;
     quartierFeatures.some(function (f) {
       var polys = f.geometry.type === 'MultiPolygon' ? f.geometry.coordinates : [f.geometry.coordinates];
@@ -308,11 +371,12 @@
         return inRing(latlng.lng, latlng.lat, poly[0]) &&
           !poly.slice(1).some(function (hole) { return inRing(latlng.lng, latlng.lat, hole); });
       });
-      if (ok) hit = f.properties.nom;
+      if (ok) hit = f;
       return ok;
     });
     return hit;
   }
+  function quartierAt(latlng) { var f = quartierFeatureAt(latlng); return f ? f.properties.nom : null; }
 
   // ---------- Chargement des couches de référence ----------
   var status = document.getElementById('load-status');
@@ -350,19 +414,16 @@
 
     // Quartiers
     quartierFeatures = D.quartiers.features;
-    var quartiers = markClicks(L.geoJSON(D.quartiers, {
-      style: { color: '#7048e8', weight: 1.5, fillColor: '#7048e8', fillOpacity: 0 },
+    // non interactifs : un clic sur un bâtiment ou une rue ne doit pas être capté par le quartier
+    // (sa fiche s'affiche par l'identification au clic quand rien d'autre n'est sous le curseur)
+    var quartiers = L.geoJSON(D.quartiers, {
+      style: { color: '#7048e8', weight: 1.5, fill: false, interactive: false },
+      interactive: false,
       onEachFeature: function (f, l) {
-        var p = f.properties;
-        l.bindTooltip(esc(p.nom), { permanent: true, direction: 'center', className: 'label-quartier' });
-        l.bindPopup(popupHtml('Quartier ' + p.nom, {
-          SUP: fmt(p.superficie_km2, 2) + ' km²', BAT: fmt(p.nb_batiments),
-          DENS: fmt(p.nb_batiments / p.superficie_km2) + ' bât./km²'
-        }, { SUP: 'Superficie', BAT: 'Bâtiments (OSM)', DENS: 'Densité' }));
-        l.on('mouseover', function () { l.setStyle({ fillOpacity: 0.12 }); });
-        l.on('mouseout', function () { l.setStyle({ fillOpacity: 0 }); });
+        l.bindTooltip(esc(f.properties.nom), { permanent: true, direction: 'center', className: 'label-quartier', interactive: false });
       }
-    }));
+    });
+    quartiersLayer = quartiers;
     function toggleQuartierLabels() {
       map.getContainer().classList.toggle('hide-quartier-labels', map.getZoom() < 13);
     }
@@ -766,7 +827,7 @@
 
   // ---------- API interne pour contributions.js ----------
   window.LabeApp = {
-    map: map, ready: ready, esc: esc, CATEGORIES: CATEGORIES, STATIC: STATIC, wfs: wfs, loadOnce: loadOnce, outerRing: outerRing, noteFeatureClick: noteFeatureClick, capturerClic: capturerClic, libererClic: libererClic, fmt: fmt, popupHtml: popupHtml,
+    map: map, ready: ready, esc: esc, CATEGORIES: CATEGORIES, STATIC: STATIC, wfs: wfs, loadOnce: loadOnce, outerRing: outerRing, noteFeatureClick: noteFeatureClick, identifier: identifier, capturerClic: capturerClic, libererClic: libererClic, fmt: fmt, popupHtml: popupHtml,
     fmtLen: fmtLen, fmtArea: fmtArea, lineLength: lineLength, polygonArea: polygonArea,
     startSketch: startSketch, stopSketch: stopSketch, addOverlay: addOverlay, markClicks: markClicks,
     quartierAt: quartierAt, searchIndex: searchIndex,
