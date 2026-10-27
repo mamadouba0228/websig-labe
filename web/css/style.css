@@ -252,3 +252,22 @@ body.drawer-open #map { bottom: 36vh; }
 #sel-table tbody tr { cursor: pointer; }
 #sel-table tbody tr:hover { background: #fff0f6; }
 @media (max-width: 700px) { .sel-drawer { left: 0; height: 45vh; } body.drawer-open #map { bottom: 45vh; } #sel-groups { display: none; } }
+
+/* Analyses (isochrones, tampons) */
+.ana-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin-bottom: 10px; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+.ana-switch button { border: 0; border-radius: 0; padding: 8px; background: #fff; }
+.ana-switch button.active { background: var(--green); color: #fff; font-weight: 600; }
+.panel label.field { display: block; font-size: 13px; margin: 8px 0 4px; }
+.panel label.field input, .panel label.field select { display: block; width: 100%; margin-top: 3px; font: inherit; font-size: 13px; padding: 6px; border: 1px solid var(--border); border-radius: 6px; background: #fff; }
+.ana-points { list-style: none; padding: 0; margin: 6px 0; }
+.ana-points li { display: flex; justify-content: space-between; align-items: center; background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; margin-bottom: 4px; font-size: 13px; }
+.ana-points button { padding: 1px 7px; font-size: 12px; }
+.ana-head { margin: 12px 0 6px; font-size: 13px; }
+.ana-table { width: 100%; border-collapse: collapse; font-size: 12px; background: #fff; }
+.ana-table th { text-align: left; color: var(--muted); font-weight: 600; padding: 4px; border-bottom: 1px solid var(--border); }
+.ana-table td { padding: 5px 4px; border-bottom: 1px solid #eef0ee; vertical-align: middle; white-space: nowrap; }
+.ana-table td small { color: var(--muted); }
+.ana-table button { padding: 2px 8px; font-size: 12px; }
+.ana-table .swatch { display: inline-block; vertical-align: middle; }
+.ana-hors td { background: #fff5f5; }
+#buf-value { margin-top: 6px; }

@@ -114,17 +114,21 @@
   };
   Heap.prototype.size = function () { return this.k.length; };
 
-  // Dijkstra depuis un point accroché au graphe ; renvoie distances et prédécesseurs (segment utilisé)
-  function dijkstra(from, mode) {
+  // Dijkstra depuis un ou plusieurs points accrochés au graphe (coût initial optionnel, arrêt à maxCost)
+  function dijkstraMulti(froms, mode, maxCost, initCosts) {
     var n = G.nx.length, dist = new Float64Array(n).fill(Infinity), prev = new Int32Array(n).fill(-1);
-    var done = new Uint8Array(n), h = new Heap();
-    var s0 = G.seg[from.s];
-    var ca = cost(s0, from.t * s0.len, mode), cb = cost(s0, (1 - from.t) * s0.len, mode);
-    dist[s0.a] = ca; dist[s0.b] = cb; h.push(ca, s0.a); h.push(cb, s0.b);
+    var done = new Uint8Array(n), h = new Heap(), lim = maxCost == null ? Infinity : maxCost;
+    froms.forEach(function (from, k) {
+      var s0 = G.seg[from.s], c0 = initCosts ? initCosts[k] : 0;
+      var ca = c0 + cost(s0, from.t * s0.len, mode), cb = c0 + cost(s0, (1 - from.t) * s0.len, mode);
+      if (ca < dist[s0.a]) { dist[s0.a] = ca; h.push(ca, s0.a); }
+      if (cb < dist[s0.b]) { dist[s0.b] = cb; h.push(cb, s0.b); }
+    });
     while (h.size()) {
       var u = h.pop();
       if (done[u]) continue;
       done[u] = 1;
+      if (dist[u] > lim) break;
       var list = G.adj[u];
       for (var i = 0; i < list.length; i++) {
         var s = G.seg[list[i]], w = s.a === u ? s.b : s.a;
@@ -132,8 +136,9 @@
         if (c < dist[w]) { dist[w] = c; prev[w] = list[i]; h.push(c, w); }
       }
     }
-    return { dist: dist, prev: prev, from: from };
+    return { dist: dist, prev: prev, from: froms[0] };
   }
+  function dijkstra(from, mode) { return dijkstraMulti([from], mode); }
   // Coût jusqu'à un point accroché (et nœud d'arrivée choisi)
   function costTo(D, to, mode) {
     var s = G.seg[to.s];
@@ -431,4 +436,14 @@
   if (tab) tab.addEventListener('click', function () { ensureGraph(); });
 
   A.itineraire = { ajouter: addStop };
+  // Moteur de réseau partagé (isochrones)
+  A.reseau = {
+    pret: ensureGraph,
+    graphe: function () { return G; },
+    accrocher: snap,
+    parcourir: dijkstraMulti,
+    cout: cost,
+    VITESSE_PIETON: VITESSE_PIETON,
+    KX: KX, KY: KY
+  };
 })();

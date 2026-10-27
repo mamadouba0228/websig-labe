@@ -26,6 +26,7 @@
       <button class="tab active" data-tab="layers">Couches</button>
       <button class="tab" data-tab="iti">Itinéraire</button>
       <button class="tab" data-tab="sel">Sélection</button>
+      <button class="tab" data-tab="ana">Analyses</button>
       <button class="tab" data-tab="stats">Statistiques</button>
       <button class="tab" data-tab="about">À propos</button>
     </nav>
@@ -100,6 +101,59 @@
       </div>
     </section>
 
+    <section id="tab-ana" class="panel">
+      <div class="ana-switch">
+        <button class="active" data-ana="iso" type="button">⏱ Isochrones</button>
+        <button data-ana="buf" type="button">◎ Tampons</button>
+      </div>
+
+      <div id="ana-iso">
+        <p class="hint">Zones atteignables en un temps donné par le réseau de rues.</p>
+        <div class="iti-modes">
+          <label><input type="radio" name="iso-mode" value="pied" checked> 🚶 À pied</label>
+          <label><input type="radio" name="iso-mode" value="vehicule"> 🚗 En véhicule</label>
+        </div>
+        <label class="field">Durées (minutes)<input id="iso-minutes" value="5, 10, 15"></label>
+        <label class="field">Départ
+          <select id="iso-source">
+            <option value="points">Point(s) choisi(s) sur la carte</option>
+            <option value="sel">Objets de la sélection en cours</option>
+          </select>
+        </label>
+        <div id="iso-points-box">
+          <div class="row">
+            <button id="iso-pick" type="button">+ Point sur la carte</button>
+            <button id="iso-gps" type="button">◎ Ma position</button>
+          </div>
+          <ul id="iso-points" class="ana-points"></ul>
+        </div>
+        <div class="row"><button id="iso-run" class="primary" type="button">Calculer les isochrones</button></div>
+        <div id="iso-result"></div>
+      </div>
+
+      <div id="ana-buf" class="hidden">
+        <p class="hint">Zones situées à moins d'une distance donnée d'objets.</p>
+        <label class="field">Autour de
+          <select id="buf-source">
+            <option value="sel">Objets de la sélection en cours</option>
+            <option value="draw:point">Un point dessiné</option>
+            <option value="draw:line">Une ligne dessinée</option>
+            <option value="draw:area">Une surface dessinée</option>
+          </select>
+        </label>
+        <select id="buf-value" class="full hidden"></select>
+        <div id="buf-draw-box" class="hidden">
+          <div class="row"><button id="buf-draw" type="button">✎ Dessiner l'objet</button> <span class="hint" id="buf-draw-info"></span></div>
+        </div>
+        <label class="field">Distances (mètres)<input id="buf-dist" value="30"></label>
+        <p class="hint">Plusieurs anneaux possibles, ex. « 50, 100, 200 ».</p>
+        <div class="row"><button id="buf-run" class="primary" type="button">Calculer le tampon</button></div>
+        <div id="buf-result"></div>
+      </div>
+
+      <div class="row"><button id="ana-clear" type="button">Effacer les analyses</button></div>
+    </section>
+
     <section id="tab-stats" class="panel">
       <div id="stats"><p class="hint">Chargement…</p></div>
     </section>
@@ -152,5 +206,8 @@
   <script src="js/adressage-public.js"></script>
   <script src="js/itineraire.js"></script>
   <script src="js/selection.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3-array@3.2.4/dist/d3-array.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3-contour@4.0.2/dist/d3-contour.min.js"></script>
+  <script src="js/analyses.js"></script>
 </body>
 </html>

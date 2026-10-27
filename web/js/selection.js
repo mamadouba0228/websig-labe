@@ -467,6 +467,14 @@
     }) };
     download(JSON.stringify(fc), 'selection_' + result.key + '.geojson', 'application/geo+json');
   });
+  // API partagée (analyses : tampons, isochrones)
+  A.selection = {
+    LAYERS: LAYERS,
+    prepare: prepare,
+    resultat: function () { return result; },
+    afficher: function (key, items, desc) { showResult({ key: key, items: items, desc: desc }); }
+  };
+
   $('sel-zoom').addEventListener('click', function () { if (hlLayer.getLayers().length) map.fitBounds(hlLayer.getBounds(), { padding: [30, 30] }); });
   function closeDrawer() {
     drawer.classList.add('hidden');
