@@ -25,6 +25,7 @@
     <nav class="tabs">
       <button class="tab active" data-tab="layers">Couches</button>
       <button class="tab" data-tab="iti">Itinéraire</button>
+      <button class="tab" data-tab="sel">Sélection</button>
       <button class="tab" data-tab="stats">Statistiques</button>
       <button class="tab" data-tab="about">À propos</button>
     </nav>
@@ -64,6 +65,41 @@
       <div id="iti-result"></div>
     </section>
 
+    <section id="tab-sel" class="panel">
+      <h3>Sélection des données</h3>
+      <select id="sel-layer" class="full"><option value="">— choisir une couche —</option></select>
+      <p class="hint" id="sel-status">Choisissez une couche, puis ajoutez des conditions et/ou une zone.</p>
+      <div id="sel-builder" class="hidden">
+        <h3>Conditions sur les attributs</h3>
+        <div class="sel-combine">
+          <label><input type="radio" name="sel-combine" value="et" checked> Toutes (ET)</label>
+          <label><input type="radio" name="sel-combine" value="ou"> Au moins une (OU)</label>
+        </div>
+        <div id="sel-conds"></div>
+        <button id="sel-add-cond" type="button">+ Ajouter une condition</button>
+
+        <h3>Zone géographique</h3>
+        <div class="row">
+          <button id="sel-zone-poly" type="button">⬠ Dessiner une zone</button>
+          <button id="sel-zone-circle" type="button">◯ Cercle</button>
+          <label class="inline-num">rayon <input id="sel-radius" type="number" value="500" min="10" step="50"> m</label>
+        </div>
+        <p class="hint"><span id="sel-zone-info">Aucune zone.</span> <a href="#" id="sel-zone-clear" class="hidden">Retirer</a></p>
+
+        <h3>Proximité d'une autre couche</h3>
+        <select id="sel-ref-layer" class="full"><option value="">— aucune —</option></select>
+        <div id="sel-ref-opts" class="hidden">
+          <select id="sel-ref-value" class="full"></select>
+          <label class="inline-num">à moins de <input id="sel-ref-dist" type="number" value="50" min="1" step="10"> m</label>
+        </div>
+
+        <div class="row">
+          <button id="sel-run" class="primary" type="button">Appliquer la sélection</button>
+          <button id="sel-reset" type="button">Réinitialiser</button>
+        </div>
+      </div>
+    </section>
+
     <section id="tab-stats" class="panel">
       <div id="stats"><p class="hint">Chargement…</p></div>
     </section>
@@ -89,6 +125,24 @@
   <main id="map"></main>
 
   <div id="load-status" class="load-status">Chargement des couches…</div>
+  <!-- Résultats de la sélection -->
+  <div id="sel-drawer" class="sel-drawer hidden">
+    <div class="sel-drawer-head">
+      <div id="sel-summary"></div>
+      <div class="sel-drawer-actions">
+        <select id="sel-groupby"></select>
+        <button id="sel-zoom" type="button">Zoomer</button>
+        <button id="sel-csv" type="button">CSV (Excel)</button>
+        <button id="sel-geojson" type="button">GeoJSON</button>
+        <button id="sel-close" type="button" title="Fermer">✕</button>
+      </div>
+    </div>
+    <div class="sel-drawer-body">
+      <div id="sel-groups"></div>
+      <div id="sel-table"></div>
+    </div>
+  </div>
+
   <div id="coords" class="coords"></div>
   <div id="measure-box" class="measure-box hidden"></div>
 
@@ -97,5 +151,6 @@
   <script src="js/app.js"></script>
   <script src="js/adressage-public.js"></script>
   <script src="js/itineraire.js"></script>
+  <script src="js/selection.js"></script>
 </body>
 </html>

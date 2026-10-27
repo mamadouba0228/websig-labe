@@ -193,7 +193,7 @@
     if (!batiLoading) {
       var hint = document.getElementById('load-status');
       hint.textContent = 'Chargement du bâti…'; hint.classList.remove('hidden');
-      batiLoading = wfs('batiments').then(function (gj) {
+      batiLoading = loadOnce('batiments').then(function (gj) {
         hint.classList.add('hidden');
         bati = L.geoJSON(gj, {
           renderer: L.canvas({ padding: 0.3, pane: 'batiPane' }),
@@ -317,8 +317,8 @@
   // ---------- Chargement des couches de référence ----------
   var status = document.getElementById('load-status');
   var ready = Promise.all([
-    wfs('limite_commune'), wfs('quartiers'), loadOnce('routes'), wfs('cours_eau'), wfs('surface_eau'),
-    wfs('vegetation'), wfs('cimetieres'), wfs('terrains_sport'), wfs('aerodrome'), wfs('equipements')
+    loadOnce('limite_commune'), loadOnce('quartiers'), loadOnce('routes'), loadOnce('cours_eau'), loadOnce('surface_eau'),
+    loadOnce('vegetation'), loadOnce('cimetieres'), loadOnce('terrains_sport'), loadOnce('aerodrome'), loadOnce('equipements')
   ]).then(function (res) {
     var D = {
       limite_commune: res[0], quartiers: res[1], routes: res[2], cours_eau: res[3], surface_eau: res[4],

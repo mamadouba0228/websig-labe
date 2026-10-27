@@ -52,6 +52,22 @@ Onglet « Itinéraire » de la carte publique et de l'espace agents (calcul dans
 
 Limites : les sens uniques et la circulation ne sont pas pris en compte (données OSM sans sens de circulation).
 
+## Sélection des données
+
+Onglet « Sélection » de la carte publique et de l'espace agents (calcul dans le navigateur, fonctionne aussi sur GitHub Pages) :
+
+- **couches** : bâtiments, voirie, voies et adresses de l'adressage, équipements, quartiers, cours d'eau ;
+  champs calculés : surface au sol, longueur, quartier, densité ;
+- **conditions attributaires** combinées en **ET** / **OU** : « est parmi » (valeurs à cocher, avec effectifs),
+  contient, =, ≠, commence par, vide, >, ≥, <, ≤, entre ;
+- **sélection spatiale** : zone dessinée, cercle d'un rayon donné, **proximité** d'une autre couche
+  (ex. bâtiments à moins de 30 m d'un cours d'eau, d'une route nationale…) ;
+- **résultats** : mise en évidence sur la carte, total (nombre, longueur, surface), **répartition** par champ,
+  tableau triable (clic sur une ligne = zoom), exports **CSV** (Excel) et **GeoJSON** (QGIS).
+
+Exemples : bâtiments en construction de Daka 1 · bâtiments de plus de 300 m² · voies sans nom de Madina ·
+adresses d'un quartier pour une tournée · bâtiments en zone inondable (proximité des cours d'eau).
+
 ## Hébergement
 
 | Partie | Où | Adresse |
