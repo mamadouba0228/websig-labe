@@ -68,6 +68,22 @@ Onglet « Sélection » de la carte publique et de l'espace agents (calcul dans 
 Exemples : bâtiments en construction de Daka 1 · bâtiments de plus de 300 m² · voies sans nom de Madina ·
 adresses d'un quartier pour une tournée · bâtiments en zone inondable (proximité des cours d'eau).
 
+## Analyses : isochrones et tampons
+
+Onglet « Analyses » de la carte publique et de l'espace agents (calcul dans le navigateur, fonctionne aussi sur GitHub Pages).
+
+- **Isochrones** : zones atteignables en X minutes (ex. 5, 10, 15) **par le réseau de rues**, à pied ou en véhicule,
+  depuis des points choisis, **tous les équipements d'une catégorie** (ex. Santé → carte d'accessibilité aux soins)
+  ou les objets de la sélection en cours. Tient compte d'une marche de 100 m maximum entre la rue et le bâtiment.
+- **Tampons** : zones à moins de X m (un ou plusieurs anneaux, ex. 50, 100, 200) autour d'une couche
+  (éventuellement filtrée, ex. routes nationales), de la sélection en cours, ou d'un point / ligne / surface dessiné.
+- **Résultats** : surface de chaque zone, nombre et part des bâtiments (et des adresses) concernés,
+  **bâtiments non desservis** ; bouton « Voir » pour les lister dans le tableau de sélection (tri, export CSV) ;
+  export des zones en **GeoJSON** pour QGIS.
+
+Méthode : champ de temps (Dijkstra multi-sources) ou de distance calculé sur une grille fine (20 m pour les isochrones,
+≈ distance/10 pour les tampons), contours tracés avec d3-contour. Les bâtiments sont comptés par leur point central.
+
 ## Hébergement
 
 | Partie | Où | Adresse |

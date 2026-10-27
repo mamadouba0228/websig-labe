@@ -127,18 +127,22 @@
     });
   }
 
+  // part en %, avec une décimale sous 1 % (« 0,4 % » plutôt que « 0 % »)
+  function pct(n, total) {
+    var p = 100 * n / Math.max(total, 1);
+    return (p > 0 && p < 1 ? A.fmt(p, 1) : A.fmt(Math.round(p))) + ' %';
+  }
   function tableau(box, zones, couleurs, cnt, libelle, descDans, descHors, grid) {
     var b = cnt.bati, a = cnt.adr;
     var html = '<table class="ana-table"><thead><tr><th></th><th>Surface</th><th>Bâtiments</th>' + (a.total ? '<th>Adresses</th>' : '') + '<th></th></tr></thead><tbody>';
     zones.forEach(function (z, k) {
       html += '<tr><td><span class="swatch" style="background:' + couleurs[k] + '"></span> ' + esc(libelle(z.seuil)) + '</td>' +
         '<td>' + A.fmtArea(grid.surface(z.seuil)) + '</td>' +
-        '<td><b>' + A.fmt(b.dans[k].length) + '</b> <small>' + Math.round(100 * b.dans[k].length / Math.max(b.total, 1)) + ' %</small></td>' +
+        '<td><b>' + A.fmt(b.dans[k].length) + '</b> <small>' + pct(b.dans[k].length, b.total) + '</small></td>' +
         (a.total ? '<td>' + A.fmt(a.dans[k].length) + '</td>' : '') +
         '<td><button data-k="' + k + '" title="Lister ces bâtiments">Voir</button></td></tr>';
     });
-    if (descHors) html += '<tr class="ana-hors"><td>' + esc(descHors) + '</td><td></td><td><b>' + A.fmt(b.hors.length) + '</b> <small>' +
-      Math.round(100 * b.hors.length / Math.max(b.total, 1)) + ' %</small></td>' + (a.total ? '<td>' + A.fmt(a.hors.length) + '</td>' : '') +
+    if (descHors) html += '<tr class="ana-hors"><td>' + esc(descHors) + '</td><td></td><td><b>' + A.fmt(b.hors.length) + '</b> <small>' + pct(b.hors.length, b.total) + '</small></td>' + (a.total ? '<td>' + A.fmt(a.hors.length) + '</td>' : '') +
       '<td><button data-k="hors">Voir</button></td></tr>';
     html += '</tbody></table><p class="hint">Pourcentages calculés sur les ' + A.fmt(b.total) + ' bâtiments de la commune (point central de chaque bâtiment).</p>';
     box.innerHTML = html;
