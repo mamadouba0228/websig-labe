@@ -86,7 +86,7 @@
   var picking = false, pickBtn = null;
   function stopPick() {
     picking = false;
-    A.libererClic();
+    A.libererClic(onPick);
     map.getContainer().classList.remove('crosshair');
     if (pickBtn) pickBtn.classList.remove('on');
   }
@@ -169,6 +169,8 @@
       }
     });
 
+    A.enregistrerIdentifiable(voies, 'Voies (adressage)');
+    A.enregistrerIdentifiable(adresses, 'Adresses');
     A.addOverlay({ name: 'Voies (' + voieFeatures.length + ')', layer: voies, on: true, group: 'Adressage',
       swatch: '<span class="swatch line" style="background:#7048e8"></span>',
       legend: [['Nom officiel', '#1f6f43', 'line'], ['Code provisoire / nom d\'usage', '#7048e8', 'line']] });

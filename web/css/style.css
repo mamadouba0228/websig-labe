@@ -271,3 +271,23 @@ body.drawer-open #map { bottom: 36vh; }
 .ana-table .swatch { display: inline-block; vertical-align: middle; }
 .ana-hors td { background: #fff5f5; }
 #buf-value { margin-top: 6px; }
+
+/* Outil ⓘ d'identification */
+.tool-bar a.idf-btn { font-family: Georgia, "Times New Roman", serif; font-style: italic; font-size: 17px; font-weight: 700; color: #1864ab; }
+.tool-bar a.idf-btn.on { background: #1864ab; color: #fff; }
+.leaflet-container.identify-cursor, .leaflet-container.identify-cursor .leaflet-interactive { cursor: help !important; }
+.identify-panel { position: fixed; top: calc(var(--topbar-h) + 12px); right: 56px; width: 340px; max-height: calc(100vh - var(--topbar-h) - 40px); z-index: 1100;
+  background: #fff; border-radius: 8px; box-shadow: 0 6px 24px rgba(0,0,0,.28); display: flex; flex-direction: column; border-top: 4px solid #1864ab; }
+.idf-head { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-bottom: 1px solid var(--border); font-size: 13px; }
+.idf-head #idf-count { color: var(--muted); flex: 1; }
+.idf-head button { padding: 2px 8px; font-size: 12px; }
+#idf-body { overflow-y: auto; padding: 4px 10px 10px; }
+.idf-layer { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: #1864ab; font-weight: 700; margin: 10px 0 4px; }
+.idf-item { border: 1px solid var(--border); border-radius: 6px; margin-bottom: 4px; background: #fafbfa; }
+.idf-item summary { cursor: pointer; padding: 6px 8px; font-size: 13px; font-weight: 600; color: var(--text); }
+.idf-item[open] summary { border-bottom: 1px solid var(--border); background: #fff8e1; }
+.idf-item table { width: 100%; border-collapse: collapse; font-size: 12px; background: #fff; }
+.idf-item td { padding: 3px 8px; border-bottom: 1px solid #f1f3f1; vertical-align: top; }
+.idf-item td:first-child { color: var(--muted); width: 45%; }
+.idf-zoom { display: inline-block; font-size: 12px; margin: 5px 8px; color: #1864ab; }
+@media (max-width: 700px) { .identify-panel { right: 8px; left: 8px; width: auto; top: auto; bottom: 8px; max-height: 50vh; } }

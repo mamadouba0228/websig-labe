@@ -24,7 +24,8 @@
   };
 
   // ---------- Carte & fonds ----------
-  var map = L.map('map', { zoomControl: false, preferCanvas: true, minZoom: 10 });
+  // tolérance de 6 px autour des traits : les lignes fines restent faciles à cliquer
+  var map = L.map('map', { zoomControl: false, preferCanvas: true, renderer: L.canvas({ tolerance: 6 }), minZoom: 10 });
   L.control.zoom({ position: 'topright' }).addTo(map);
   L.control.scale({ imperial: false, position: 'bottomleft' }).addTo(map);
   map.setView([11.318, -12.30], 12);
@@ -134,6 +135,11 @@
     'Culture':        { color: '#d63384', sym: 'M' },
     'Sport':          { color: '#0ca678', sym: 'S' }
   };
+
+  // ---------- Registre des couches interrogeables (outil ⓘ) ----------
+  // couche : groupe Leaflet contenant les entités ; parent : groupe dont dépend la visibilité
+  var identifiables = [];
+  function enregistrerIdentifiable(couche, nom, parent) { identifiables.push({ couche: couche, nom: nom, parent: parent || null }); }
 
   // ---------- Panneau des couches ----------
   var ovDiv = document.getElementById('overlays');
@@ -294,7 +300,7 @@
     });
   }
   map.on('click', function (e) {
-    if (sketch || captureClic || Date.now() - derniereCapture < 500) return;
+    if (sketch || captures.length || Date.now() - derniereCapture < 500) return;
     setTimeout(function () {
       if (Date.now() - lastFeatureClick < 300) return; // un objet a déjà ouvert sa fiche
       identifier(e.latlng);
@@ -424,6 +430,7 @@
       }
     });
     quartiersLayer = quartiers;
+    enregistrerIdentifiable(quartiers, 'Quartiers');
     function toggleQuartierLabels() {
       map.getContainer().classList.toggle('hide-quartier-labels', map.getZoom() < 13);
     }
@@ -449,30 +456,37 @@
       style: function (f) { return { color: '#1c7ed6', weight: 2, dashArray: f.properties.regime === 'Intermittent' ? '5 4' : null }; },
       onEachFeature: function (f, l) { l.bindPopup(popupHtml(f.properties.nom || 'Cours d\'eau', f.properties, { regime: 'Régime' })); }
     });
-    var hydro = markClicks(L.featureGroup([
-      L.geoJSON(D.surface_eau, { style: { color: '#1971c2', weight: 1, fillColor: '#74c0fc', fillOpacity: 0.7 } }),
-      coursEau
-    ]));
+    var surfaceEau = L.geoJSON(D.surface_eau, { style: { color: '#1971c2', weight: 1, fillColor: '#74c0fc', fillOpacity: 0.7 } });
+    var hydro = markClicks(L.featureGroup([surfaceEau, coursEau]));
+    enregistrerIdentifiable(coursEau, 'Cours d\'eau', hydro);
+    enregistrerIdentifiable(surfaceEau, 'Surfaces en eau', hydro);
 
     // Espaces verts & occupation
+    var espacesParts = {};
     var espaces = markClicks(L.featureGroup([
-      L.geoJSON(D.vegetation, {
+      espacesParts.vegetation = L.geoJSON(D.vegetation, {
         style: { color: '#2b8a3e', weight: 1, fillColor: '#69db7c', fillOpacity: 0.45 },
         onEachFeature: function (f, l) { l.bindPopup(popupHtml(f.properties.nom || 'Zone boisée', f.properties, { nature: 'Type' })); }
       }),
-      L.geoJSON(D.cimetieres, {
+      espacesParts.cimetieres = L.geoJSON(D.cimetieres, {
         style: { color: '#495057', weight: 1, fillColor: '#adb5bd', fillOpacity: 0.6 },
         onEachFeature: function (f, l) { l.bindPopup(popupHtml(f.properties.nom || 'Cimetière', f.properties, { nature: 'Type' })); }
       }),
-      L.geoJSON(D.terrains_sport, {
+      espacesParts.terrains = L.geoJSON(D.terrains_sport, {
         style: { color: '#0ca678', weight: 1, fillColor: '#96f2d7', fillOpacity: 0.6 },
         onEachFeature: function (f, l) { l.bindPopup('<b>Terrain de sport</b>'); }
       }),
-      L.geoJSON(D.aerodrome, {
+      espacesParts.aerodrome = L.geoJSON(D.aerodrome, {
         style: { color: '#343a40', weight: 6, opacity: 0.7 },
         onEachFeature: function (f, l) { l.bindPopup('<b>Aéroport de Labé (Tata)</b><br><small>Piste</small>'); }
       })
     ]));
+
+    enregistrerIdentifiable(espacesParts.vegetation, 'Zones boisées', espaces);
+    enregistrerIdentifiable(espacesParts.cimetieres, 'Cimetières', espaces);
+    enregistrerIdentifiable(espacesParts.terrains, 'Terrains de sport', espaces);
+    enregistrerIdentifiable(espacesParts.aerodrome, 'Aéroport', espaces);
+    enregistrerIdentifiable(routes, 'Voirie (tronçons OSM)');
 
     // Équipements OSM
     var eqLayers = {};
@@ -523,6 +537,7 @@
       legend: Object.keys(ROUTE_STYLE).map(function (k) { return [ROUTE_STYLE[k].label, ROUTE_STYLE[k].color, 'line']; }) });
     Object.keys(EQ_STYLE).forEach(function (cat) {
       if (!eqLayers[cat]) return;
+      enregistrerIdentifiable(eqLayers[cat], 'Équipements — ' + cat);
       addOverlay({ name: cat + ' (' + eqLayers[cat].getLayers().length + ')', layer: eqLayers[cat], on: true, group: 'Équipements (OSM)',
         swatch: '<span class="swatch dot" style="background:' + EQ_STYLE[cat].color + '"></span>' });
     });
@@ -571,6 +586,7 @@
       });
       Object.keys(CATEGORIES).forEach(function (cat) {
         if (!groups[cat]) return;
+        enregistrerIdentifiable(groups[cat], 'Données de la mairie — ' + cat);
         addOverlay({ name: cat + ' (' + groups[cat].getLayers().length + ')', layer: groups[cat], on: true,
           group: 'Données de la mairie',
           swatch: '<span class="swatch dot" style="background:' + CATEGORIES[cat].color + '"></span>' });
@@ -762,20 +778,25 @@
   // Capture des clics pour les outils (dessin, choix d'un point).
   // On écoute « preclick » et non « click » : un clic sur un objet qui ouvre une fiche (ex. un quartier,
   // qui couvre toute la commune) est stoppé par Leaflet et n'arrive jamais à la carte en « click ».
-  var captureClic = null, derniereCapture = 0;
+  // pile : le dernier outil activé reçoit le clic, la main revient au précédent quand il se termine
+  var captures = [], derniereCapture = 0;
   map.on('preclick', function (e) {
-    if (!sketch && !captureClic) return;
+    if (!sketch && !captures.length) return;
     derniereCapture = Date.now();
     lastFeatureClick = derniereCapture; // pas d'interrogation du bâti pour ce clic
-    if (sketch) onSketchClick(e); else captureClic(e);
+    if (sketch) onSketchClick(e); else captures[captures.length - 1](e);
   });
   // la fiche de l'objet cliqué ne doit pas s'ouvrir pendant qu'un outil attend un clic
   // (les fiches ouvertes par l'outil lui-même portent l'option « outil »)
   map.on('popupopen', function (e) {
     if (!e.popup.options.outil && Date.now() - derniereCapture < 400) map.closePopup(e.popup);
   });
-  function capturerClic(fn) { captureClic = fn; }
-  function libererClic() { captureClic = null; }
+  function capturerClic(fn) { libererClic(fn); captures.push(fn); }
+  function libererClic(fn) {
+    if (!fn) { captures.pop(); return; }
+    var i = captures.indexOf(fn);
+    if (i >= 0) captures.splice(i, 1);
+  }
 
   function onSketchClick(e) {
     if (sketch.done) { // nouvelle mesure après une mesure terminée
@@ -827,7 +848,9 @@
 
   // ---------- API interne pour contributions.js ----------
   window.LabeApp = {
-    map: map, ready: ready, esc: esc, CATEGORIES: CATEGORIES, STATIC: STATIC, wfs: wfs, loadOnce: loadOnce, outerRing: outerRing, noteFeatureClick: noteFeatureClick, identifier: identifier, capturerClic: capturerClic, libererClic: libererClic, fmt: fmt, popupHtml: popupHtml,
+    map: map, ready: ready, esc: esc, CATEGORIES: CATEGORIES, STATIC: STATIC, wfs: wfs, loadOnce: loadOnce, outerRing: outerRing, noteFeatureClick: noteFeatureClick, identifier: identifier, enregistrerIdentifiable: enregistrerIdentifiable,
+    identifiables: identifiables, batiAt: batiAt, gfiBati: gfiBati, batiVisible: function () { return !!bati && map.hasLayer(bati); },
+    quartierAt: quartierAt, polysOf: polysOf, capturerClic: capturerClic, libererClic: libererClic, fmt: fmt, popupHtml: popupHtml,
     fmtLen: fmtLen, fmtArea: fmtArea, lineLength: lineLength, polygonArea: polygonArea,
     startSketch: startSketch, stopSketch: stopSketch, addOverlay: addOverlay, markClicks: markClicks,
     quartierAt: quartierAt, searchIndex: searchIndex,

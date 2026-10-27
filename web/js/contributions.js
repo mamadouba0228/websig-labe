@@ -326,6 +326,7 @@
         : 'Dessinez l\'objet sur la carte puis remplissez la fiche. Un superviseur la validera avant publication.';
       A.ready.then(function () {
         A.quartierNames().forEach(function (q) { fQ.add(new Option(q, q)); });
+        A.enregistrerIdentifiable(layer, 'Saisies des agents');
         A.addOverlay({ name: 'Saisies des agents', layer: layer, on: true, group: 'Données de la mairie',
           swatch: '<span class="swatch dot" style="background:#1c4e80;border:2px solid #fff"></span>',
           legend: Object.keys(CATEGORIES).map(function (c) { return [c, CATEGORIES[c].color]; })

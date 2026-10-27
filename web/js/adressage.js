@@ -286,6 +286,8 @@
       started = true;
       document.querySelectorAll('.validator-only-adr').forEach(function (el) { el.classList.toggle('hidden', !Auth.isValidator()); });
       A.ready.then(function () {
+        A.enregistrerIdentifiable(voiesLayer, 'Voies (adressage)');
+        A.enregistrerIdentifiable(adrLayer, 'Adresses');
         A.addOverlay({ name: 'Voies (adressage)', on: true, group: 'Adressage',
           onToggle: function (on) { voiesWanted = on; if (started) refresh(); },
           swatch: '<span class="swatch line" style="background:#7048e8"></span>',

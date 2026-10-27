@@ -39,6 +39,18 @@ Une construction nouvelle reçoit son numéro sans renuméroter les voisins.
 Tables : `adr.voies`, `adr.adresses`, `adr.quartiers` (codes des quartiers), `adr.parametres` (distance de rattachement).
 GeoServer : `labe:voies_publiques`, `labe:adresses_publiques`.
 
+## Identification des entités (bouton ⓘ)
+
+Comme l'outil « Identifier les entités » de QGIS : cliquer sur **ⓘ** (barre d'outils à droite, sous le zoom),
+puis sur la carte. Toutes les couches visibles sont interrogées autour du point (tolérance de 8 pixels) :
+voirie, voies et adresses de l'adressage, cours d'eau, espaces verts, équipements, données de la mairie,
+saisies des agents, bâti et quartiers. Le panneau liste les entités trouvées par couche, avec **tous leurs
+attributs** et les mesures calculées (longueur, surface) ; un clic sur une entité la met en évidence,
+« Zoomer sur l'entité » la cadre. Le mode reste actif jusqu'à un nouveau clic sur ⓘ ou la touche Échap.
+
+Hors de ce mode, un clic simple ouvre la fiche de l'objet le plus précis (point, puis ligne — avec une
+tolérance de 6 pixels —, puis bâtiment, puis quartier).
+
 ## Itinéraires
 
 Onglet « Itinéraire » de la carte publique et de l'espace agents (calcul dans le navigateur, fonctionne aussi sur GitHub Pages) :
