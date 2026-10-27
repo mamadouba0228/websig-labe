@@ -40,7 +40,8 @@ def feature_collection(cur, sql: str, precision: int) -> dict:
                  json_build_object('type', 'Feature',
                                    'geometry', ST_AsGeoJSON(t.geom, {precision})::json,
                                    'properties', to_jsonb(t) - 'geom') ORDER BY t.ordre), '[]'::json)) AS fc
-        FROM ({sql}) t""")
+        FROM ({sql}) t
+        WHERE t.geom IS NOT NULL AND NOT ST_IsEmpty(t.geom)""")
     return cur.fetchone()["fc"]
 
 

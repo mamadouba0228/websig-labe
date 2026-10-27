@@ -64,13 +64,16 @@
   }
   // sommets (lon/lat) et lignes d'une géométrie quelconque
   function parts(g) {
-    var t = g.type, c = g.coordinates;
-    if (t === 'Point') return { pts: [c], lines: [] };
+    var t = g.type, c = g.coordinates || [];
+    if (t === 'Point') return c.length ? { pts: [c], lines: [] } : { pts: [], lines: [] };
     if (t === 'MultiPoint') return { pts: c, lines: [] };
     if (t === 'LineString') return { pts: c, lines: [c] };
     if (t === 'MultiLineString') return { pts: [].concat.apply([], c), lines: c };
-    if (t === 'Polygon') return { pts: c[0], lines: [c[0]], rings: [c] };
-    if (t === 'MultiPolygon') return { pts: [].concat.apply([], c.map(function (p) { return p[0]; })), lines: c.map(function (p) { return p[0]; }), rings: c };
+    if (t === 'Polygon') return c[0] && c[0].length ? { pts: c[0], lines: [c[0]], rings: [c] } : { pts: [], lines: [] };
+    if (t === 'MultiPolygon') {
+      var polys = c.filter(function (p) { return p && p[0] && p[0].length; });
+      return { pts: [].concat.apply([], polys.map(function (p) { return p[0]; })), lines: polys.map(function (p) { return p[0]; }), rings: polys };
+    }
     return { pts: [], lines: [] };
   }
 
@@ -108,8 +111,12 @@
     if (prepared[key]) return prepared[key];
     var def = LAYERS[key], src = typeof def.src === 'function' ? def.src() : def.src;
     prepared[key] = Promise.all([A.loadOnce(src), quartierIndex()]).then(function (r) {
-      return r[0].features.filter(function (f) { return f.geometry; }).map(function (f) {
-        var g = parts(f.geometry), p = Object.assign({}, f.properties), rep;
+      // les géométries vides ou incomplètes (ex. polygone réduit à rien par le découpage) sont ignorées
+      return r[0].features.map(function (f) {
+        if (!f.geometry || !f.geometry.coordinates) return null;
+        var g = parts(f.geometry);
+        if (!g.pts.length || !g.pts[0] || (def.geom !== 'point' && !(g.lines[0] && g.lines[0].length))) return null;
+        var p = Object.assign({}, f.properties), rep;
         if (def.geom === 'point') rep = g.pts[0];
         else if (def.geom === 'line') {
           var l = g.lines[0]; rep = l[Math.floor(l.length / 2)];
@@ -123,7 +130,7 @@
         }
         if (key !== 'quartiers' && p.quartier == null) p.quartier = quartierOf(rep);
         return { f: f, p: p, rep: rep, g: g };
-      });
+      }).filter(Boolean);
     });
     return prepared[key];
   }
