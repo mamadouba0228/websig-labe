@@ -196,7 +196,7 @@
           h += '<p><b>' + r.numero_calcule + ', ' + esc(r.voie) + '</b><br><small>Numéro métrique calculé · côté ' + esc(r.cote) +
             ' · ' + r.distance_m + ' m depuis le début · ' + r.distance_voie_m + ' m de la voie · ' + esc(r.quartier || '') + '</small></p>';
         }
-        L.popup().setLatLng(ll).setContent(h + '</div>').openOn(map);
+        L.popup({ outil: true }).setLatLng(ll).setContent(h + '</div>').openOn(map);
       }).catch(fail);
     } });
   });

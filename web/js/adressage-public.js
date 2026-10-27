@@ -86,12 +86,11 @@
   var picking = false, pickBtn = null;
   function stopPick() {
     picking = false;
+    A.libererClic();
     map.getContainer().classList.remove('crosshair');
     if (pickBtn) pickBtn.classList.remove('on');
   }
-  map.on('click', function (e) {
-    if (!picking) return;
-    A.noteFeatureClick();
+  function onPick(e) {
     stopPick();
     var r = locate(e.latlng);
     var off = nearestAddress(e.latlng, 30);
@@ -109,8 +108,9 @@
       html += '<p>Aucune voie à moins de 150 m.</p>';
     }
     html += '<small class="muted">' + e.latlng.lat.toFixed(6) + ', ' + e.latlng.lng.toFixed(6) + '</small></div>';
-    L.popup().setLatLng(e.latlng).setContent(html).openOn(map);
-  });
+    // ouverte après le traitement complet du clic (sinon la fiche de l'objet cliqué la remplacerait)
+    setTimeout(function () { L.popup({ outil: true }).setLatLng(e.latlng).setContent(html).openOn(map); }, 0);
+  }
 
   var PickControl = L.Control.extend({
     options: { position: 'topright' },
@@ -123,6 +123,7 @@
         L.DomEvent.stop(ev);
         if (picking) return stopPick();
         picking = true; a.classList.add('on');
+        A.capturerClic(onPick);
         map.getContainer().classList.add('crosshair');
       });
       L.DomEvent.disableClickPropagation(c);

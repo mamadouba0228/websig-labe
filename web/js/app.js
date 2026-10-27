@@ -698,8 +698,25 @@
     stopSketch();
     if (cb) cb(pts);
   }
-  map.on('click', function (e) {
-    if (!sketch) return;
+  // Capture des clics pour les outils (dessin, choix d'un point).
+  // On écoute « preclick » et non « click » : un clic sur un objet qui ouvre une fiche (ex. un quartier,
+  // qui couvre toute la commune) est stoppé par Leaflet et n'arrive jamais à la carte en « click ».
+  var captureClic = null, derniereCapture = 0;
+  map.on('preclick', function (e) {
+    if (!sketch && !captureClic) return;
+    derniereCapture = Date.now();
+    lastFeatureClick = derniereCapture; // pas d'interrogation du bâti pour ce clic
+    if (sketch) onSketchClick(e); else captureClic(e);
+  });
+  // la fiche de l'objet cliqué ne doit pas s'ouvrir pendant qu'un outil attend un clic
+  // (les fiches ouvertes par l'outil lui-même portent l'option « outil »)
+  map.on('popupopen', function (e) {
+    if (!e.popup.options.outil && Date.now() - derniereCapture < 400) map.closePopup(e.popup);
+  });
+  function capturerClic(fn) { captureClic = fn; }
+  function libererClic() { captureClic = null; }
+
+  function onSketchClick(e) {
     if (sketch.done) { // nouvelle mesure après une mesure terminée
       sketch.done = false; sketch.pts = [];
       map.getContainer().classList.add('crosshair');
@@ -707,7 +724,7 @@
     sketch.pts.push(e.latlng);
     if (sketch.mode === 'point') return finishSketch();
     drawSketch();
-  });
+  }
   map.on('dblclick', function () {
     if (!sketch || sketch.done || sketch.mode === 'point') return;
     sketch.pts.pop(); // le double-clic a déclenché un clic en trop
@@ -749,7 +766,7 @@
 
   // ---------- API interne pour contributions.js ----------
   window.LabeApp = {
-    map: map, ready: ready, esc: esc, CATEGORIES: CATEGORIES, STATIC: STATIC, wfs: wfs, loadOnce: loadOnce, outerRing: outerRing, noteFeatureClick: noteFeatureClick, fmt: fmt, popupHtml: popupHtml,
+    map: map, ready: ready, esc: esc, CATEGORIES: CATEGORIES, STATIC: STATIC, wfs: wfs, loadOnce: loadOnce, outerRing: outerRing, noteFeatureClick: noteFeatureClick, capturerClic: capturerClic, libererClic: libererClic, fmt: fmt, popupHtml: popupHtml,
     fmtLen: fmtLen, fmtArea: fmtArea, lineLength: lineLength, polygonArea: polygonArea,
     startSketch: startSketch, stopSketch: stopSketch, addOverlay: addOverlay, markClicks: markClicks,
     quartierAt: quartierAt, searchIndex: searchIndex,
