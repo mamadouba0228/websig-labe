@@ -207,7 +207,7 @@
     actif = on;
     btn.classList.toggle('on', on);
     map.getContainer().classList.toggle('identify-cursor', on);
-    if (on) { A.stopSketch(); A.capturerClic(onClic); }
+    if (on) { A.stopSketch(); if (window.LabeEdition && LabeEdition.arreterOutil) LabeEdition.arreterOutil(); A.capturerClic(onClic); }
     else { A.libererClic(onClic); marque.clearLayers(); }
   }
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && actif) activer(false); });

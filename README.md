@@ -56,7 +56,8 @@ GeoServer : `labe:voies_publiques`, `labe:adresses_publiques`.
 
 ## Modification des formes et corrections de la carte
 
-- **Forme d'une saisie** : « ✎ Forme » dans sa fiche — déplacer, ajouter (« + ») ou supprimer des sommets.
+- **Outil ✎** (barre d'outils, sous ⓘ) : cliquer l'outil puis l'objet — saisie modifiable, bâtiment ou rue.
+- **Forme d'une saisie** : outil ✎ ou « ✎ Forme » dans sa fiche — déplacer, ajouter (« + ») ou supprimer des sommets.
   L'ancienne forme est gardée dans l'**historique** ; un superviseur peut la restaurer.
 - **Carte de référence** (bâti, voirie OSM) : outil ⓘ, cliquer l'objet, « Proposer une correction » → redessiner,
   ou signaler un bâtiment démoli / une voie disparue ; « + Bâtiment manquant », « + Voie manquante » dans l'onglet Saisie.

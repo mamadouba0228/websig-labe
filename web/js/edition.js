@@ -121,5 +121,58 @@
     });
   }
 
-  window.LabeEdition = { editer: editer, arreter: arreter, peutCorriger: peutCorriger, corriger: corriger };
+  // ---------- Outil ✎ « Modifier une forme » (barre d'outils, sous ⓘ) ----------
+  // On clique l'outil, puis l'objet : une saisie modifiable, un bâtiment ou un tronçon de voirie.
+  var outilActif = false, outilBtn = null;
+  function activerOutil(on) {
+    outilActif = on;
+    outilBtn.classList.toggle('on', on);
+    map.getContainer().classList.toggle('edit-cursor', on);
+    if (on) {
+      if (A.identification) A.identification.activer(false);
+      A.stopSketch(); arreter();
+      A.capturerClic(choisir);
+      LabeTerrain.toast('Cliquez l\'objet à modifier : votre saisie, un bâtiment ou une rue.');
+    } else A.libererClic(choisir);
+  }
+  function choisir(e) {
+    A.identification.interroger(e.latlng).then(function (res) {
+      // d'abord une saisie que l'on peut modifier, sinon un objet de la carte de référence
+      var saisie = res.filter(function (r) { return r.couche === 'Saisies des agents' && LabeContrib.peutModifier(r.feature.properties); })[0];
+      var ref = res.filter(peutCorriger)[0];
+      if (!saisie && !ref) {
+        var autre = res.filter(function (r) { return r.couche === 'Saisies des agents'; })[0];
+        LabeTerrain.toast(autre ? 'Cette saisie est déjà validée : seul un superviseur peut la modifier.'
+          : 'Aucun objet modifiable ici. Cliquez une saisie, un bâtiment (zoom 15 ou plus) ou une rue.');
+        return;
+      }
+      activerOutil(false);
+      if (saisie) LabeContrib.modifierForme(saisie.feature);
+      else corriger(ref, 'forme');
+    });
+  }
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && outilActif) activerOutil(false); });
+  A.ready.then(function () {
+    var Ctrl = L.Control.extend({
+      options: { position: 'topright' },
+      onAdd: function () {
+        var c = L.DomUtil.create('div', 'leaflet-bar tool-bar');
+        outilBtn = L.DomUtil.create('a', 'edit-btn', c);
+        outilBtn.href = '#'; outilBtn.innerHTML = '✎';
+        outilBtn.title = 'Modifier une forme (cliquez ensuite l\'objet : saisie, bâtiment, rue) — Échap pour quitter';
+        L.DomEvent.on(outilBtn, 'click', function (ev) { L.DomEvent.stop(ev); activerOutil(!outilActif); });
+        L.DomEvent.disableClickPropagation(c);
+        return c;
+      }
+    });
+    var ctrl = new Ctrl();
+    map.addControl(ctrl);
+    // placé juste sous le bouton ⓘ
+    var coin = ctrl.getContainer().parentNode, idf = document.querySelector('.idf-btn');
+    var apres = idf ? idf.parentNode : coin.children[0];
+    coin.insertBefore(ctrl.getContainer(), apres.nextSibling);
+  });
+
+  window.LabeEdition = { editer: editer, arreter: arreter, peutCorriger: peutCorriger, corriger: corriger,
+    arreterOutil: function () { if (outilActif) activerOutil(false); } };
 })();

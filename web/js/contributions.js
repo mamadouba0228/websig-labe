@@ -32,6 +32,17 @@
     return Auth.isValidator() || (p.cree_par === Auth.user().id && (p.statut === 'À valider' || p.statut === 'Rejeté'));
   }
 
+  // Modification des sommets d'une saisie (l'ancienne forme est gardée dans l'historique)
+  function modifierForme(f) {
+    var p = f.properties;
+    map.closePopup();
+    LabeEdition.editer(f.geometry, { label: 'Saisie n° ' + p.id + ' : modifier la forme', onSave: function (g) {
+      Auth.api('PUT', '/contributions/' + p.id, { geometry: g, properties: {} }).then(function () {
+        LabeTerrain.toast('Forme enregistrée (l\'ancienne est gardée dans l\'historique).'); reload();
+      }).catch(showError);
+    } });
+  }
+
   function popupContent(f, l) {
     var p = f.properties;
     var div = document.createElement('div');
@@ -78,14 +89,7 @@
     btn(p.categorie === 'Signalement' ? '🕘 Suivi' : '🕘 Historique', '', function () { map.closePopup(); LabeSuivi.ouvrir(p.id); });
     if (canEdit(p)) {
       btn('Modifier', '', function () { openForm(null, f); });
-      btn('✎ Forme', '', function () {
-        map.closePopup();
-        LabeEdition.editer(f.geometry, { label: 'Saisie n° ' + p.id + ' : modifier la forme', onSave: function (g) {
-          Auth.api('PUT', '/contributions/' + p.id, { geometry: g, properties: {} }).then(function () {
-            LabeTerrain.toast('Forme enregistrée (l\'ancienne est gardée dans l\'historique).'); reload();
-          }).catch(showError);
-        } });
-      });
+      btn('✎ Forme', '', function () { modifierForme(f); });
       btn('Supprimer', 'danger', function () {
         if (!confirm('Supprimer définitivement cette saisie ?')) return;
         Auth.api('DELETE', '/contributions/' + p.id).then(function () { map.closePopup(); reload(); }).catch(showError);
@@ -379,6 +383,8 @@
     features: function () { return features; },
     onChange: function (fn) { abonnes.push(fn); if (features.length) fn(features); },
     focus: function (id) { focus(id); },
+    peutModifier: function (p) { return canEdit(p); },
+    modifierForme: modifierForme,
     layer: layer,
     start: function () {
       document.getElementById('contrib-hint').textContent = Auth.isValidator()
