@@ -4,6 +4,13 @@
 (function () {
   'use strict';
 
+  // Certificat d'adresse : adresses validées (sur la démo GitHub, toutes les adresses, en spécimen)
+  function lienCertificat(p) {
+    if (!p.code_voie || (p.statut === 'Proposée' && !window.LabeApp.STATIC)) return '';
+    return '<p><a class="btn-lien" target="_blank" href="certificat.html?voie=' + encodeURIComponent(p.code_voie) + '&num=' +
+      encodeURIComponent(p.num) + '">📄 Certificat d’adresse</a></p>';
+  }
+
   var A = window.LabeApp, map = A.map, esc = A.esc;
   var VOIE_LABEL_ZOOM = 17, ADR_ZOOM = 17, MAX_LABELS = 120;
 
@@ -99,6 +106,7 @@
       var st = off.f.properties.statut;
       html += '<p class="adr-big">' + esc(off.f.properties.libelle) + '</p><p><small>' + esc(off.f.properties.quartier || '') +
         ', Labé · ' + (st === 'Proposée' ? 'adresse <b>proposée</b>, en attente de validation par la mairie' : 'adresse officielle (' + esc(st.toLowerCase()) + ')') + '</small></p>';
+      html += lienCertificat(off.f.properties);
     } else if (r) {
       var v = r.voie;
       html += '<p class="adr-big">' + r.numero + ', ' + esc(v.libelle) + '</p>' +
@@ -163,7 +171,7 @@
         var p = f.properties;
         l.bindPopup('<div class="popup"><p class="adr-big">' + esc(p.libelle) + '</p><small>' + esc(p.quartier || '') + ', Labé</small>' +
           (p.statut === 'Proposée' ? '<p><span class="badge adr-Proposée">Proposée</span> <small>en attente de vérification et de validation par la mairie</small></p>' : '') +
-          '</div>');
+          lienCertificat(p) + '</div>');
         adresses.addLayer(l);
         A.searchIndex.push({ name: p.libelle, type: 'Adresse · ' + (p.quartier || ''), layer: l, parent: adresses });
       }

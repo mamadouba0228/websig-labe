@@ -33,7 +33,7 @@ SERVICES = [
     "Affaires sociales", "Police municipale", "Autre",
 ]
 ROLES = ("agent", "superviseur", "admin")
-STATUTS = {"À valider", "Validé", "Rejeté", "Traité"}
+STATUTS = {"À valider", "Validé", "Affecté", "En cours", "Traité", "Rejeté"}
 GEOM_TYPES = {"Point", "LineString", "Polygon"}
 MAX_PHOTO = 1_000_000
 SESSION_HOURS = 12
@@ -340,6 +340,10 @@ class Props(BaseModel):
     statut: str | None = None
     motif_rejet: str | None = Field(None, max_length=500)
     photo: str | None = None  # data:image/jpeg;base64,...  ("" pour supprimer)
+    uid: str | None = Field(None, pattern=r"^[0-9a-fA-F-]{36}$")   # saisie hors connexion : évite les doublons
+    ref_couche: str | None = Field(None, pattern=r"^(batiments|routes)$")
+    ref_gid: int | None = None
+    commentaire: str | None = Field(None, max_length=1000)        # motif d'une modification (historique)
 
 
 class FeatureIn(BaseModel):
@@ -387,7 +391,9 @@ def check_geometry(cur, geometry: dict | None) -> str:
 
 SELECT_FEATURE = """
     SELECT c.id, c.categorie, c.type, c.nom, c.description, c.quartier, c.statut, c.motif_rejet, c.service,
-           c.cree_le, c.modifie_le, c.valide_le, c.cree_par,
+           c.cree_le, c.modifie_le, c.valide_le, c.cree_par, c.service_affecte, c.priorite, c.echeance,
+           c.affecte_le, c.traite_le, c.ref_couche, c.ref_gid,
+           (SELECT count(*) FROM contrib.historique h WHERE h.contribution = c.id)::int AS nb_historique,
            COALESCE(a.nom, c.auteur) AS auteur, v.nom AS valide_par_nom,
            (c.photo IS NOT NULL) AS a_photo,
            ST_AsGeoJSON(c.geom, 7)::json AS geometry
@@ -399,9 +405,11 @@ SELECT_FEATURE = """
 
 def to_feature(r: dict) -> dict:
     geom = r.pop("geometry")
-    for k in ("cree_le", "modifie_le", "valide_le"):
+    for k in ("cree_le", "modifie_le", "valide_le", "affecte_le", "traite_le"):
         if r.get(k):
             r[k] = r[k].isoformat(timespec="seconds")
+    if r.get("echeance"):
+        r["echeance"] = r["echeance"].isoformat()
     r["photo_url"] = f"/api/contributions/{r['id']}/photo" if r.pop("a_photo") else None
     return {"type": "Feature", "id": r["id"], "geometry": geom, "properties": r}
 
@@ -412,6 +420,16 @@ def fetch_one(cur, cid: int) -> dict:
     if not r:
         raise HTTPException(404, "Contribution introuvable.")
     return to_feature(r)
+
+
+def historiser(cur, cid: int, uid: int | None, action: str, avant: str | None = None, apres: str | None = None,
+               commentaire: str | None = None, photo: bytes | None = None, geom_avant: bool = False):
+    """Trace une étape dans l'historique de la contribution (geom_avant : copie la forme actuelle)."""
+    cur.execute("""INSERT INTO contrib.historique (contribution, utilisateur, action, statut_avant, statut_apres,
+                                                   commentaire, photo, geom_avant)
+                   SELECT %s, %s, %s, %s, %s, %s, %s, CASE WHEN %s THEN geom END
+                   FROM contrib.contributions WHERE id = %s""",
+                (cid, uid, action, avant, apres, commentaire, photo, geom_avant, cid))
 
 
 def can_edit(u: dict, row: dict) -> bool:
@@ -444,21 +462,35 @@ def creer(body: FeatureIn, u: dict = Depends(current_user)):
     if not p.categorie:
         raise HTTPException(400, "La catégorie est obligatoire.")
     validateur = u["role"] in ("superviseur", "admin")
-    statut = p.statut if validateur and p.statut in STATUTS else "À valider"
+    statut = p.statut if validateur and p.statut in ("À valider", "Validé", "Traité", "Rejeté") else "À valider"
+    if p.ref_couche and not p.ref_gid and "ajouter" not in (p.type or "").lower():
+        raise HTTPException(400, "Correction : l'objet de référence à corriger n'est pas indiqué.")
     with cursor() as cur:
+        if p.uid:   # renvoi d'une saisie hors connexion déjà reçue : on ne la duplique pas
+            cur.execute("SELECT id FROM contrib.contributions WHERE uid = %s", (p.uid,))
+            deja = cur.fetchone()
+            if deja:
+                return fetch_one(cur, deja["id"])
         gj = check_geometry(cur, body.geometry)
+        if p.ref_couche and not any(m in (p.type or "").lower() for m in ("démoli", "disparu")):
+            attendu = "Polygon" if p.ref_couche == "batiments" else "LineString"
+            if body.geometry["type"] != attendu:
+                raise HTTPException(400, "Correction : un bâtiment se dessine en surface, une voie en ligne.")
         cur.execute("""
             INSERT INTO contrib.contributions
                 (categorie, type, nom, description, quartier, statut, photo, geom, cree_par, service, auteur,
-                 valide_par, valide_le)
+                 valide_par, valide_le, uid, ref_couche, ref_gid)
             VALUES (%s, %s, %s, %s, NULLIF(%s, ''), %s, %s, ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326), %s, %s, %s,
-                    %s, CASE WHEN %s THEN now() END)
+                    %s, CASE WHEN %s THEN now() END, %s, %s, %s)
             RETURNING id""",
             (p.categorie, p.type, p.nom, p.description, p.quartier, statut, decode_photo(p.photo), gj,
              u["id"], u["service"], u["nom"],
-             u["id"] if statut != "À valider" else None, statut != "À valider"))
+             u["id"] if statut != "À valider" else None, statut != "À valider", p.uid, p.ref_couche, p.ref_gid))
         cid = cur.fetchone()["id"]
+        historiser(cur, cid, u["id"], "création", None, statut, p.commentaire)
         journal(cur, u["id"], "ajout", f"contribution {cid}", f"{p.categorie} / {p.type or ''} {p.nom or ''}".strip())
+        if statut == "Validé" and p.ref_couche:
+            suivi.appliquer_correction(cur, cid, u)
         return fetch_one(cur, cid)
 
 
@@ -481,27 +513,41 @@ def modifier(cid: int, body: FeatureIn, u: dict = Depends(current_user)):
         if "photo" in p:
             sets.append("photo = %s")
             vals.append(decode_photo(p["photo"]))
-        if body.geometry:
+        forme = bool(body.geometry)
+        if forme:
             sets.append("geom = ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326)")
             vals.append(check_geometry(cur, body.geometry))
-        action = "modification"
+        action, nouveau = "modification", row["statut"]
         if "statut" in p and p["statut"] != row["statut"]:
             if not validateur:
                 raise HTTPException(403, "Seul un superviseur peut changer le statut.")
             if p["statut"] not in STATUTS:
                 raise HTTPException(400, "Statut invalide.")
+            nouveau = p["statut"]
             sets += ["statut = %s", "valide_par = %s", "valide_le = now()", "motif_rejet = %s"]
             vals += [p["statut"], u["id"], p.get("motif_rejet") if p["statut"] == "Rejeté" else None]
-            action = {"Validé": "validation", "Rejeté": "rejet", "Traité": "traitement", "À valider": "remise en attente"}[p["statut"]]
+            if p["statut"] == "Traité":
+                sets.append("traite_le = COALESCE(traite_le, now())")
+            action = {"Validé": "validation", "Rejeté": "rejet", "Traité": "traitement", "À valider": "remise en attente",
+                      "Affecté": "affectation", "En cours": "prise en charge"}[p["statut"]]
         elif not validateur and row["statut"] == "Rejeté" and sets:
             # un agent corrige une saisie rejetée : elle repart en validation
             sets += ["statut = 'À valider'", "motif_rejet = NULL"]
+            nouveau = "À valider"
         if not sets:
             raise HTTPException(400, "Rien à modifier.")
         sets += ["modifie_le = now()", "modifie_par = %s"]
         vals.append(u["nom"])
+        # l'historique garde la forme d'avant : il est écrit avant la mise à jour
+        historiser(cur, cid, u["id"], "modification de la forme" if forme and action == "modification" else action,
+                   row["statut"], nouveau, p.get("motif_rejet") if action == "rejet" else p.get("commentaire"),
+                   geom_avant=forme)
         cur.execute(f"UPDATE contrib.contributions SET {', '.join(sets)} WHERE id = %s", vals + [cid])
         journal(cur, u["id"], action, f"contribution {cid}", p.get("motif_rejet") if action == "rejet" else None)
+        if nouveau == "Validé" and row["statut"] != "Validé":
+            cur.execute("SELECT ref_couche FROM contrib.contributions WHERE id = %s", (cid,))
+            if cur.fetchone()["ref_couche"]:
+                suivi.appliquer_correction(cur, cid, u)
         return fetch_one(cur, cid)
 
 
@@ -536,7 +582,8 @@ def compute_stats(cur) -> dict:
     cur.execute("SELECT round((ST_Area(geom::geography) / 1e6)::numeric, 2)::float AS km2 FROM ref.limite_commune LIMIT 1")
     superficie = cur.fetchone()["km2"]
     cur.execute("""SELECT categorie, count(*)::int AS n FROM contrib.contributions
-                   WHERE statut IN ('Validé', 'Traité') GROUP BY categorie ORDER BY n DESC""")
+                   WHERE statut IN ('Validé', 'Affecté', 'En cours', 'Traité') AND categorie <> 'Correction de la carte'
+                   GROUP BY categorie ORDER BY n DESC""")
     contrib = {r["categorie"]: r["n"] for r in cur.fetchall()}
     return {"superficie_km2": superficie, "batiments": bati, "routes_km": routes, "contributions_publiees": contrib}
 
@@ -549,5 +596,7 @@ def stats():
 
 # ---------------------------------------------------------------- modules
 import adressage  # noqa: E402  (importé après les définitions partagées ci-dessus)
+import suivi  # noqa: E402
 
 app.include_router(adressage.router)
+app.include_router(suivi.router)

@@ -308,3 +308,102 @@ body.drawer-open #map { bottom: 36vh; }
 .rel-svg circle.c { fill: #5f3dc4; stroke: #fff; stroke-width: 2; }
 .rel-svg .hidden { display: none; }
 .rel-tip { position: absolute; top: 6px; width: 110px; text-align: center; font-size: 12px; background: rgba(255,255,255,.95); border: 1px solid var(--border); border-radius: 4px; padding: 2px 4px; pointer-events: none; }
+
+/* Onglets : passent à la ligne quand ils sont nombreux (espace agents) */
+.tabs { flex-wrap: wrap; }
+.tab { flex: 1 0 auto; padding: 10px 8px; }
+.badge.s-Affecté, .badge.s-En-cours { background: #ffe8cc; color: #a34700; }
+
+/* Terrain : réseau, file d'attente, GPS */
+.terrain-reseau { font-size: 12px; margin: 10px 0 0; }
+.terrain-reseau.en { color: var(--green); }
+.terrain-reseau.hors { color: #c92a2a; font-weight: 600; }
+.terrain-attente { background: #fff9db; border: 1px solid #ffe066; border-radius: 6px; padding: 8px 10px; margin-top: 6px; font-size: 13px; }
+.terrain-attente ul { list-style: none; padding: 0; margin: 6px 0 0; }
+.terrain-attente li { display: flex; justify-content: space-between; gap: 6px; align-items: center; padding: 3px 0; border-top: 1px solid #ffec99; }
+.terrain-attente small { color: var(--muted); }
+.gps-buttons button { font-size: 12px; padding: 8px 4px; }
+.gps-q { display: inline-block; padding: 0 6px; border-radius: 8px; font-size: 11px; color: #fff; }
+.gps-q.bonne { background: #2b8a3e; } .gps-q.moyenne { background: #f08c00; } .gps-q.faible { background: #c92a2a; }
+.gps-box, .edit-box { max-width: min(640px, 96vw); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: center; }
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 3000; background: #212529; color: #fff; padding: 10px 16px; border-radius: 8px; font-size: 14px; box-shadow: 0 4px 14px rgba(0,0,0,.3); max-width: 92vw; transition: opacity .6s; }
+.toast.out { opacity: 0; }
+
+/* Édition des formes */
+.edit-vertex { background: #fff; border: 3px solid #f2c230; border-radius: 50%; box-shadow: 0 0 0 1px rgba(0,0,0,.3); cursor: move; }
+.edit-vertex.choisi { background: #c92a2a; border-color: #fff; }
+.edit-vertex.milieu { background: rgba(255,255,255,.7); border: 2px dashed #f2c230; transform: scale(.8); cursor: copy; }
+.idf-corr { margin-top: 6px; font-size: 12px; color: var(--muted); }
+.idf-corr button { padding: 3px 8px; font-size: 12px; margin-top: 3px; }
+
+/* Suivi des signalements */
+.suivi-cartes { grid-template-columns: 1fr 1fr 1fr; }
+.suivi-cartes .stat-card b { font-size: 18px; }
+.stat-card.cliquable { cursor: pointer; }
+.stat-card.cliquable:hover { border-color: var(--green); }
+.stat-card.alerte b { color: #c92a2a; }
+#tab-suivi .filters select { grid-column: auto; }
+.suivi-liste { list-style: none; padding: 0; margin: 8px 0 0; max-height: 45vh; overflow-y: auto; }
+.suivi-liste li { background: #fff; border: 1px solid var(--border); border-left: 4px solid #c8102e; border-radius: 6px; padding: 7px 10px; margin-bottom: 6px; font-size: 13px; cursor: pointer; }
+.suivi-liste li small { color: var(--muted); display: block; margin-top: 2px; }
+.suivi-liste li.s-Affecté, .suivi-liste li.s-En-cours { border-left-color: #f08c00; }
+.suivi-liste li.s-Traité { border-left-color: #1864ab; }
+.suivi-liste li.retard { background: #fff5f5; }
+.retard-txt { color: #c92a2a; }
+.prio { display: inline-block; font-size: 10px; padding: 0 5px; border-radius: 8px; border: 1px solid currentColor; }
+.prio-Urgente { color: #c92a2a; font-weight: 700; } .prio-Haute { color: #e8590c; } .prio-Basse { color: #868e96; }
+.suivi-photo img, .histo-photo img { max-width: 100%; max-height: 180px; border-radius: 6px; margin: 6px 0; display: block; }
+.suivi-sousform { background: #f8f9fa; border: 1px solid var(--border); border-radius: 6px; padding: 10px; margin-top: 8px; }
+.suivi-sousform label { font-size: 12px; }
+.suivi-sousform textarea, .suivi-sousform select, .stack textarea { display: block; width: 100%; margin-top: 4px; padding: 7px; border: 1px solid var(--border); border-radius: 6px; font: inherit; font-size: 13px; }
+.histo { list-style: none; padding: 0; margin: 0; }
+.histo li { display: flex; gap: 8px; font-size: 13px; padding: 6px 0; border-bottom: 1px solid var(--border); }
+.histo-ico { flex: none; width: 24px; height: 24px; border-radius: 50%; background: #e6ebe7; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+.histo p { margin: 4px 0 0; white-space: pre-wrap; }
+.histo small { color: var(--muted); }
+.histo button { margin-top: 4px; padding: 3px 8px; font-size: 12px; }
+.legende-chaleur { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 12px; margin: 6px 0; }
+.legende-chaleur i { display: inline-block; width: 14px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: middle; border: 1px solid rgba(0,0,0,.1); }
+.legende-chaleur small { flex-basis: 100%; color: var(--muted); }
+#suivi-quartiers .bar-row { display: grid; grid-template-columns: 110px 1fr 28px; gap: 6px; align-items: center; }
+#suivi-quartiers .bar { margin: 0; }
+
+/* Adressage : avancement, pose des plaques */
+.adr-detail { margin: 8px 0; font-size: 13px; }
+.adr-detail summary { cursor: pointer; color: var(--green-dark); font-weight: 600; }
+.adr-avancement td { white-space: normal; }
+.adr-avancement .bar { width: 60px; display: inline-block; vertical-align: middle; margin: 0 4px 0 0; }
+.pose-liste { list-style: none; padding: 0; margin: 8px 0; max-height: 40vh; overflow-y: auto; }
+.pose-liste li { display: flex; gap: 6px; align-items: center; background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; margin-bottom: 5px; font-size: 13px; }
+.pose-liste li span { flex: 1; }
+.pose-liste li small { color: var(--muted); }
+.pose-liste li.pose-faite { opacity: .55; }
+.pose-num { background: #1c4e80; color: #fff; border: 2px solid #fff; border-radius: 50%; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 4px rgba(0,0,0,.4); }
+.poses-svg { width: 100%; height: auto; display: block; margin: 6px 0; }
+.poses-svg rect { fill: #1c4e80; }
+.poses-svg .g { stroke: #ced4da; }
+.poses-svg text { font-size: 9px; fill: #868e96; }
+.btn-lien { display: inline-block; padding: 4px 10px; border: 1px solid var(--green); border-radius: 6px; color: var(--green); text-decoration: none; font-size: 13px; }
+
+/* Téléphone : boutons plus grands, fiches plein écran */
+@media (max-width: 700px) {
+  button { padding: 10px 12px; font-size: 14px; }
+  .draw-buttons button { padding: 12px 4px; }
+  .modal { align-items: stretch; }
+  .modal-card { width: 100vw; max-height: 100vh; border-radius: 0; }
+  .measure-box { top: auto; bottom: 12px; font-size: 13px; }
+  .edit-vertex { transform: scale(1.3); }
+  .suivi-cartes { grid-template-columns: 1fr 1fr; }
+}
+
+/* Téléphone : en-tête compact (titre abrégé, menu utilisateur réduit) */
+@media (max-width: 700px) {
+  .topbar { gap: 6px; padding: 0 6px; }
+  .brand { min-width: 0; flex: 0 1 auto; max-width: 34vw; overflow: hidden; }
+  .brand strong { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+  .search { width: auto; flex: 1 1 0; min-width: 60px; }
+  .search input { padding: 7px 8px; font-size: 13px; }
+  .user-menu { margin-left: 0; gap: 4px; flex: none; }
+  .user-menu #user-name, .user-menu a[href="index.html"] { display: none; }
+  .header-link { padding: 5px 7px; font-size: 12px; }
+}

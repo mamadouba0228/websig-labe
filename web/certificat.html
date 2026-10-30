@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Certificat d'adresse — Commune urbaine de Labé</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="css/certificat.css">
+</head>
+<body>
+  <div class="barre no-print">
+    <a href="index.html">← Carte</a>
+    <label>Bénéficiaire <input id="beneficiaire" placeholder="Nom et prénom du demandeur" maxlength="120"></label>
+    <label>Motif <input id="motif" placeholder="ex. ouverture de compte, état civil" maxlength="120"></label>
+    <button id="imprimer" type="button">🖨 Imprimer / PDF</button>
+  </div>
+
+  <main id="page" class="page">
+    <p class="chargement">Chargement du certificat…</p>
+  </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/certificat.js"></script>
+</body>
+</html>

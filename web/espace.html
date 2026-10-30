@@ -6,6 +6,10 @@
   <title>Espace agents — WebSIG Commune urbaine de Labé</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <link rel="stylesheet" href="css/style.css">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#1f6f43">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="apple-touch-icon" href="icons/icone-192.png">
 </head>
 <body data-page="espace">
   <header class="topbar">
@@ -29,6 +33,7 @@
   <aside id="sidebar">
     <nav class="tabs">
       <button class="tab active" data-tab="contrib">Saisie <span id="tab-badge" class="tab-badge hidden"></span></button>
+      <button class="tab" data-tab="suivi">Suivi <span id="suivi-badge" class="tab-badge hidden"></span></button>
       <button class="tab" data-tab="adr">Adressage</button>
       <button class="tab" data-tab="iti">Itinéraire</button>
       <button class="tab" data-tab="sel">Sélection</button>
@@ -39,6 +44,8 @@
     </nav>
 
     <section id="tab-contrib" class="panel active">
+      <p id="terrain-reseau" class="terrain-reseau en">● Connecté</p>
+      <div id="terrain-file"></div>
       <h3>Ajouter des données</h3>
       <p class="hint" id="contrib-hint">Dessinez l'objet sur la carte puis remplissez la fiche.</p>
       <div class="draw-buttons">
@@ -46,6 +53,21 @@
         <button data-draw="line" class="primary">╱ Ligne</button>
         <button data-draw="area" class="primary">⬠ Surface</button>
       </div>
+      <h3>Sur le terrain (GPS)</h3>
+      <div class="draw-buttons gps-buttons">
+        <button id="gps-point" type="button">◎ Point à ma position</button>
+        <button data-gps-trace="line" type="button">🚶 Ligne en marchant</button>
+        <button data-gps-trace="area" type="button">🚶 Surface en marchant</button>
+      </div>
+      <p class="hint">Sans réseau, les saisies (avec photo) sont gardées dans le téléphone et envoyées automatiquement au retour de la connexion.
+        Sur téléphone, « Ajouter à l'écran d'accueil » installe l'application.</p>
+      <h3>Corriger la carte de référence</h3>
+      <div class="row">
+        <button data-manquant="batiment" type="button">+ Bâtiment manquant</button>
+        <button data-manquant="voie" type="button">+ Voie manquante</button>
+      </div>
+      <p class="hint">Bâtiment mal tracé, démoli, rue modifiée : outil <b>ⓘ</b>, cliquez l'objet, puis « Proposer une correction ».
+        La carte n'est modifiée qu'après validation par un superviseur.</p>
       <div class="row">
         <button id="btn-import" title="Fichier GeoJSON en WGS84 (EPSG:4326)">Importer un GeoJSON</button>
         <button id="btn-export">Exporter (GeoJSON)</button>
@@ -57,13 +79,42 @@
         <select id="filter-categorie"><option value="">Toutes catégories</option></select>
         <select id="filter-statut">
           <option value="">Tous statuts</option>
-          <option>À valider</option><option>Validé</option><option>Traité</option><option>Rejeté</option>
+          <option>À valider</option><option>Validé</option><option>Affecté</option><option>En cours</option><option>Traité</option><option>Rejeté</option>
         </select>
         <select id="filter-quartier"><option value="">Tous quartiers</option></select>
         <label class="check"><input type="checkbox" id="filter-mine"> Mes saisies uniquement</label>
       </div>
       <p class="hint" id="contrib-count"></p>
       <ul id="contrib-list"></ul>
+    </section>
+
+    <section id="tab-suivi" class="panel">
+      <div id="suivi-liste-vue">
+        <h3>Suivi des signalements</h3>
+        <div id="suivi-cartes" class="stat-cards suivi-cartes"></div>
+        <div class="filters">
+          <select id="suivi-statut">
+            <option value="">Non clos (à traiter)</option><option value="tous">Tous les statuts</option>
+            <option>À valider</option><option>Validé</option><option>Affecté</option><option>En cours</option><option>Traité</option><option>Rejeté</option>
+          </select>
+          <select id="suivi-service"><option value="">Tous les services</option></select>
+          <select id="suivi-type"><option value="">Tous les types</option></select>
+          <select id="suivi-quartier"><option value="">Tous les quartiers</option></select>
+          <label class="check"><input type="checkbox" id="suivi-retard"> En retard</label>
+          <label class="check"><input type="checkbox" id="suivi-mien"> Mon service</label>
+        </div>
+        <ul id="suivi-liste" class="suivi-liste"></ul>
+        <h3>Indicateurs par service</h3>
+        <div id="suivi-indic"></div>
+        <h3>Points chauds</h3>
+        <label class="check"><input type="checkbox" id="suivi-chaleur"> Carte des points chauds (mailles de 250 m)</label>
+        <div id="suivi-legende"></div>
+        <div id="suivi-quartiers"></div>
+      </div>
+      <div id="suivi-fiche-vue" class="hidden">
+        <button id="suivi-retour" type="button">← Retour à la liste</button>
+        <div id="suivi-fiche"></div>
+      </div>
     </section>
 
     <section id="tab-adr" class="panel">
@@ -75,6 +126,7 @@
       <div id="adr-main" class="hidden">
         <h3>Avancement</h3>
         <div id="adr-progress"></div>
+        <details class="adr-detail"><summary>Avancement par quartier</summary><div id="adr-quartiers"></div></details>
         <p class="hint">Numérotation métrique : le numéro est la distance en mètres depuis le début de la voie, <b>pair à droite</b>, <b>impair à gauche</b>.</p>
 
         <h3>Sur le terrain</h3>
@@ -83,6 +135,15 @@
           <button id="btn-adr-add">+ Ajouter une adresse</button>
         </div>
         <p class="hint" id="adr-zoom-hint">Zoomez (niveau 16 ou plus) pour afficher les adresses. Cliquez une adresse pour indiquer « Plaque posée ».</p>
+
+        <h3>Pose des plaques</h3>
+        <div class="row">
+          <button id="btn-adr-tournee" class="primary" type="button">📍 Plaques à poser près de moi</button>
+          <button id="btn-adr-tournee-centre" type="button">…autour du centre de la carte</button>
+        </div>
+        <div id="adr-pose-liste"></div>
+        <details class="adr-detail"><summary>Suivi de la campagne de pose</summary><div id="adr-poses"></div></details>
+        <p class="hint">Certificat d'adresse : cliquez une adresse validée puis « 📄 Certificat ».</p>
 
         <div class="validator-only-adr hidden">
           <h3>Supervision</h3>
@@ -386,7 +447,10 @@
   <script src="js/config.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/terrain.js"></script>
+  <script src="js/edition.js"></script>
   <script src="js/contributions.js"></script>
+  <script src="js/suivi.js"></script>
   <script src="js/adressage.js"></script>
   <script src="js/itineraire.js"></script>
   <script src="js/selection.js"></script>

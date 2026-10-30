@@ -70,7 +70,7 @@ def main():
         fc = feature_collection(cur, """
             SELECT id AS ordre, id, categorie, type, nom, description, quartier, statut,
                    to_char(cree_le, 'YYYY-MM-DD') AS date, geom
-            FROM contrib.contributions WHERE statut IN ('Validé', 'Traité')""", 6)
+            FROM contrib.contributions WHERE statut IN ('Validé', 'Affecté', 'En cours', 'Traité') AND categorie <> 'Correction de la carte'""", 6)
         for f in fc["features"]:
             f["properties"].pop("ordre", None)
         write("contributions.geojson", fc)

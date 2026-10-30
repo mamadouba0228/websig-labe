@@ -65,6 +65,10 @@ CREATE TABLE IF NOT EXISTS adr.adresses (
     valide_par    integer REFERENCES app.utilisateurs(id) ON DELETE SET NULL,
     UNIQUE (voie_id, numero, suffixe)
 );
+-- Pose des plaques : qui et quand
+ALTER TABLE adr.adresses ADD COLUMN IF NOT EXISTS pose_le  timestamptz;
+ALTER TABLE adr.adresses ADD COLUMN IF NOT EXISTS pose_par integer REFERENCES app.utilisateurs(id) ON DELETE SET NULL;
+ALTER TABLE adr.adresses ADD COLUMN IF NOT EXISTS valide_le timestamptz;
 CREATE INDEX IF NOT EXISTS adresses_geom_idx ON adr.adresses USING gist (geom);
 CREATE INDEX IF NOT EXISTS adresses_voie_idx ON adr.adresses (voie_id);
 CREATE UNIQUE INDEX IF NOT EXISTS adresses_batiment_idx ON adr.adresses (batiment_gid) WHERE batiment_gid IS NOT NULL;

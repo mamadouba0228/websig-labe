@@ -85,7 +85,7 @@
       Auth.ROLE_LABEL[u.role] + '</span>';
     document.getElementById('link-admin').classList.toggle('hidden', !Auth.isValidator());
     renderAccount(u);
-    if (!started) { started = true; LabeContrib.start(); LabeAdressage.start(); }
+    if (!started) { started = true; LabeTerrain.start(); LabeContrib.start(); LabeSuivi.start(); LabeAdressage.start(); }
   }
 
   Auth.refresh().then(function (u) { if (u) enter(); });

@@ -1,0 +1,52 @@
+/* Certificat d'adresse : page A4 à l'écran et à l'impression */
+* { box-sizing: border-box; }
+body { margin: 0; background: #e9ecef; font-family: "Segoe UI", system-ui, sans-serif; color: #212529; }
+.barre { position: sticky; top: 0; z-index: 1000; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 10px 16px; background: #1f6f43; color: #fff; font-size: 14px; }
+.barre a { color: #fff; text-decoration: none; }
+.barre label { display: flex; gap: 6px; align-items: center; }
+.barre input { padding: 6px 8px; border: 0; border-radius: 4px; min-width: 200px; font: inherit; }
+.barre button { margin-left: auto; padding: 7px 14px; border: 0; border-radius: 4px; background: #f2c230; color: #3b2f00; font: inherit; font-weight: 600; cursor: pointer; }
+
+.page { position: relative; width: 210mm; min-height: 297mm; margin: 16px auto; padding: 16mm 18mm; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,.15); overflow: hidden; }
+.chargement, .erreur { text-align: center; margin-top: 40mm; color: #868e96; }
+.erreur { color: #c92a2a; font-weight: 600; }
+
+.entete { display: flex; justify-content: space-between; border-bottom: 3px double #1f6f43; padding-bottom: 6mm; }
+.entete div { display: flex; flex-direction: column; gap: 2px; font-size: 11pt; }
+.entete .commune { text-align: right; }
+.entete b { color: #1f6f43; letter-spacing: .5px; }
+.entete span { font-size: 9.5pt; color: #495057; }
+.ref { text-align: right; font-size: 9.5pt; color: #495057; margin: 4mm 0 0; }
+h1 { text-align: center; text-transform: uppercase; letter-spacing: 3px; font-size: 20pt; margin: 8mm 0 6mm; color: #1f6f43; }
+.texte { font-size: 11.5pt; line-height: 1.6; text-align: justify; }
+.champ { font-weight: 600; }
+.adresse { text-align: center; font-size: 19pt; font-weight: 700; margin: 6mm 0; padding: 5mm; border: 2px solid #1f6f43; border-radius: 3mm; background: #f4faf6; }
+.adresse small { display: block; font-size: 11pt; font-weight: 400; color: #495057; margin-top: 2mm; }
+.corps { display: grid; grid-template-columns: 1fr 62mm; gap: 6mm; align-items: start; }
+.details { border-collapse: collapse; font-size: 10.5pt; width: 100%; }
+.details th { text-align: left; color: #495057; font-weight: 600; padding: 2mm 3mm 2mm 0; width: 42mm; vertical-align: top; }
+.details td { padding: 2mm 0; border-bottom: 1px solid #e9ecef; }
+.carte { text-align: center; font-size: 8.5pt; color: #868e96; }
+#carte { height: 58mm; border: 1px solid #ced4da; border-radius: 2mm; margin-bottom: 1mm; }
+.pied { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 10mm; }
+.qr { width: 60mm; font-size: 7.5pt; color: #868e96; word-break: break-all; }
+#qr { width: 26mm; height: 26mm; margin-bottom: 2mm; }
+#qr svg { width: 100%; height: 100%; }
+.signature { text-align: center; font-size: 11pt; width: 70mm; }
+.signature p { margin: 1mm 0; }
+.cachet { margin-top: 4mm; height: 28mm; border: 1px dashed #adb5bd; border-radius: 2mm; display: flex; align-items: center; justify-content: center; color: #adb5bd; font-size: 9pt; }
+.avertissement { margin-top: 8mm; font-size: 9pt; color: #c92a2a; text-align: center; }
+.filigrane { position: absolute; top: 42%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); font-size: 90pt; font-weight: 800; color: rgba(201, 42, 42, .10); pointer-events: none; z-index: 500; letter-spacing: 8px; }
+.leaflet-control-attribution { font-size: 7px !important; }
+
+@media (max-width: 820px) {
+  .page { width: auto; min-height: 0; margin: 0; padding: 6mm; box-shadow: none; }
+  .corps { grid-template-columns: 1fr; }
+  .barre input { min-width: 0; width: 100%; }
+}
+@page { size: A4; margin: 0; }
+@media print {
+  body { background: #fff; }
+  .no-print { display: none !important; }
+  .page { margin: 0; box-shadow: none; width: 210mm; height: 297mm; }
+}

@@ -42,3 +42,46 @@ ALTER TABLE contrib.contributions ADD COLUMN IF NOT EXISTS service    text;
 ALTER TABLE contrib.contributions ADD COLUMN IF NOT EXISTS valide_par integer REFERENCES app.utilisateurs(id) ON DELETE SET NULL;
 ALTER TABLE contrib.contributions ADD COLUMN IF NOT EXISTS valide_le  timestamptz;
 ALTER TABLE contrib.contributions ADD COLUMN IF NOT EXISTS motif_rejet text;
+
+-- ---------------------------------------------------------------- suivi des signalements et historique
+-- Statuts : À valider → Validé → Affecté (à un service) → En cours → Traité ; ou Rejeté
+ALTER TABLE contrib.contributions DROP CONSTRAINT IF EXISTS contributions_statut_check;
+ALTER TABLE contrib.contributions ADD CONSTRAINT contributions_statut_check
+    CHECK (statut IN ('À valider', 'Validé', 'Affecté', 'En cours', 'Traité', 'Rejeté'));
+ALTER TABLE contrib.contributions ADD COLUMN IF NOT EXISTS uid            uuid UNIQUE;   -- identifiant créé par le téléphone (saisie hors connexion)
+ALTER TABLE contrib.contributions ADD COLUMN IF NOT EXISTS service_affecte text;
+ALTER TABLE contrib.contributions ADD COLUMN IF NOT EXISTS priorite       text CHECK (priorite IN ('Basse', 'Normale', 'Haute', 'Urgente'));
+ALTER TABLE contrib.contributions ADD COLUMN IF NOT EXISTS echeance       date;
+ALTER TABLE contrib.contributions ADD COLUMN IF NOT EXISTS affecte_le     timestamptz;
+ALTER TABLE contrib.contributions ADD COLUMN IF NOT EXISTS traite_le      timestamptz;
+-- Corrections de la carte de référence (bâti, voirie)
+ALTER TABLE contrib.contributions ADD COLUMN IF NOT EXISTS ref_couche     text CHECK (ref_couche IN ('batiments', 'routes'));
+ALTER TABLE contrib.contributions ADD COLUMN IF NOT EXISTS ref_gid        integer;
+
+CREATE TABLE IF NOT EXISTS contrib.historique (
+    id            bigserial PRIMARY KEY,
+    contribution  integer NOT NULL REFERENCES contrib.contributions(id) ON DELETE CASCADE,
+    date          timestamptz NOT NULL DEFAULT now(),
+    utilisateur   integer REFERENCES app.utilisateurs(id) ON DELETE SET NULL,
+    action        text NOT NULL,
+    statut_avant  text,
+    statut_apres  text,
+    commentaire   text,
+    photo         bytea,
+    geom_avant    geometry(Geometry, 4326)          -- forme avant modification (retour arrière possible)
+);
+CREATE INDEX IF NOT EXISTS historique_contribution_idx ON contrib.historique (contribution, date);
+
+-- Vues publiées : les signalements pris en charge restent visibles
+CREATE OR REPLACE VIEW contrib.contributions_points AS
+    SELECT id, categorie, type, nom, description, quartier, statut, cree_le, geom::geometry(Point, 4326) AS geom
+    FROM contrib.contributions
+    WHERE statut IN ('Validé', 'Affecté', 'En cours', 'Traité') AND categorie <> 'Correction de la carte' AND GeometryType(geom) = 'POINT';
+CREATE OR REPLACE VIEW contrib.contributions_lignes AS
+    SELECT id, categorie, type, nom, description, quartier, statut, cree_le, geom::geometry(LineString, 4326) AS geom
+    FROM contrib.contributions
+    WHERE statut IN ('Validé', 'Affecté', 'En cours', 'Traité') AND categorie <> 'Correction de la carte' AND GeometryType(geom) = 'LINESTRING';
+CREATE OR REPLACE VIEW contrib.contributions_surfaces AS
+    SELECT id, categorie, type, nom, description, quartier, statut, cree_le, geom::geometry(Polygon, 4326) AS geom
+    FROM contrib.contributions
+    WHERE statut IN ('Validé', 'Affecté', 'En cours', 'Traité') AND categorie <> 'Correction de la carte' AND GeometryType(geom) = 'POLYGON';

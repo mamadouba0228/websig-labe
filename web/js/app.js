@@ -20,6 +20,8 @@
       'Zone à risque (inondation, érosion)', 'Réserve foncière', 'Autre'] },
     'Signalement': { color: '#c8102e', types: ['Voirie dégradée', 'Éclairage en panne', 'Dépôt d\'ordures',
       'Inondation / érosion', 'Fuite d\'eau', 'Construction illégale', 'Autre'] },
+    'Correction de la carte': { color: '#ae3ec9', types: ['Bâtiment à ajouter', 'Bâtiment à modifier', 'Bâtiment démoli',
+      'Voie à ajouter', 'Voie à modifier', 'Voie disparue'] },
     'Autre': { color: '#6c757d', types: ['Autre'] }
   };
 

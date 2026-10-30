@@ -60,7 +60,10 @@
         session.utilisateur = u;
         localStorage.setItem(KEY, JSON.stringify(session));
         return u;
-      }).catch(function () { return null; });
+      }).catch(function (e) {
+        // hors connexion (pas de réponse, ou réponse « hors connexion » du service worker) : on garde la session
+        return session && (!e.status || e.status === 503) ? session.utilisateur : null;
+      });
     },
     onExpired: function () { location.href = 'espace.html'; }
   };

@@ -35,9 +35,44 @@ Une construction nouvelle reçoit son numéro sans renuméroter les voisins.
 - **Outils** : « Adresse d'un point », ajout d'une adresse, tracé d'une nouvelle voie, renumérotation / validation par voie
   ou par quartier, exports CSV pour Excel (adresses pour la fabrication des plaques, registre des voies).
 - **Carte publique** : voies, adresses validées, recherche d'adresse et outil ⌖ « Quelle est l'adresse de ce point ? ».
+- **Pose des plaques** : « 📍 Plaques à poser près de moi » liste les adresses validées sans plaque les plus proches
+  (position GPS), numérotées sur la carte ; « ✓ Posée » enregistre la date et l'agent. Avancement par quartier
+  (validées, posées) et suivi de la campagne (plaques par jour et par agent).
+- **Certificat d'adresse** (`certificat.html?voie=KRL-026&num=47`) : page A4 imprimable ou enregistrable en PDF
+  (en-tête de la commune, adresse, coordonnées GPS, carte de situation, QR code de vérification, signature du Maire).
+  Délivré seulement pour une adresse **validée** ; sur la démo GitHub, document « spécimen ».
 
 Tables : `adr.voies`, `adr.adresses`, `adr.quartiers` (codes des quartiers), `adr.parametres` (distance de rattachement).
 GeoServer : `labe:voies_publiques`, `labe:adresses_publiques`.
+
+## Travail sur le terrain (téléphone, hors connexion)
+
+- **Application installable** : sur téléphone, « Ajouter à l'écran d'accueil » (manifeste + service worker `sw.js`,
+  nécessite HTTPS en production). Pages, données consultées et fonds de carte déjà vus restent disponibles sans réseau.
+- **Saisie hors connexion** : sans réseau, la saisie (avec sa photo) est gardée dans le téléphone (IndexedDB) et envoyée
+  automatiquement au retour de la connexion ; un identifiant unique évite les doublons si l'envoi est répété.
+- **GPS** : « Point à ma position » (précision affichée, attente d'une bonne précision), « Ligne / Surface en marchant »
+  (un sommet tous les 5 m).
+
+## Modification des formes et corrections de la carte
+
+- **Forme d'une saisie** : « ✎ Forme » dans sa fiche — déplacer, ajouter (« + ») ou supprimer des sommets.
+  L'ancienne forme est gardée dans l'**historique** ; un superviseur peut la restaurer.
+- **Carte de référence** (bâti, voirie OSM) : outil ⓘ, cliquer l'objet, « Proposer une correction » → redessiner,
+  ou signaler un bâtiment démoli / une voie disparue ; « + Bâtiment manquant », « + Voie manquante » dans l'onglet Saisie.
+  La correction est appliquée à `ref.batiments` / `ref.routes` **seulement quand un superviseur la valide** ;
+  l'ancienne forme reste dans l'historique de la correction.
+
+## Suivi des signalements
+
+Circuit : **À valider** → **Validé** → **Affecté** à un service (priorité, échéance, consigne) → **En cours**
+(pris en charge par un agent du service) → **Traité** (compte rendu et photo après intervention) ; ou **Rejeté** (motif).
+Seul le service chargé (ou un superviseur) peut prendre en charge et traiter ; tout le monde peut commenter.
+
+Onglet « Suivi » de l'espace agents : chiffres clés (nouveaux, à prendre en charge, en retard, délai moyen de traitement),
+liste triée (retards et priorités d'abord), fiche avec historique complet et photos, indicateurs par service,
+**points chauds** (signalements par maille de 250 m et par quartier). Tables : `contrib.contributions`
+(colonnes `service_affecte`, `priorite`, `echeance`, `traite_le`…), `contrib.historique`.
 
 ## Identification des entités (bouton ⓘ)
 

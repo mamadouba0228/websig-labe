@@ -28,9 +28,9 @@ jobs:
           ESPACE_URL: ${{ vars.ESPACE_URL }}
         run: |
           mkdir -p _site/js _site/data
-          cp web/index.html _site/
+          cp web/index.html web/certificat.html _site/
           cp -r web/css _site/
-          cp web/js/app.js web/js/adressage-public.js web/js/itineraire.js web/js/selection.js web/js/analyses.js web/js/relief.js web/js/identify.js _site/js/
+          cp web/js/app.js web/js/adressage-public.js web/js/itineraire.js web/js/selection.js web/js/analyses.js web/js/relief.js web/js/identify.js web/js/certificat.js _site/js/
           cp data/public/*.geojson data/public/stats.json _site/data/
           cp -r data/public/relief _site/data/
           # Mode statique ; lien vers l'espace agents seulement si la variable ESPACE_URL est définie

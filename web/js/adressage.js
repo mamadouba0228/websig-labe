@@ -102,6 +102,7 @@
     }
     if (Auth.isValidator() && p.statut === 'Proposée') btn('✓ Valider', 'primary', function () { put({ statut: 'Validée' }); });
     if (p.statut === 'Validée') btn('Plaque posée', 'primary', function () { put({ statut: 'Plaque posée' }); });
+    if (p.statut !== 'Proposée') btn('📄 Certificat', '', function () { window.open(lienCertificat(p.code_voie, p.numero + p.suffixe), '_blank'); });
     btn('Complément', '', function () {
       var c = prompt('Complément d\'adresse (ex. « Concession Diallo », « 1er étage ») :', p.complement || '');
       if (c !== null) put({ complement: c.trim() || null });
@@ -122,6 +123,7 @@
     d.appendChild(bar);
     return d;
   }
+  function lienCertificat(voie, num) { return 'certificat.html?voie=' + encodeURIComponent(voie) + '&num=' + encodeURIComponent(num); }
   function loadAdresses() {
     if (!adrWanted || map.getZoom() < ADR_ZOOM) { adrLayer.clearLayers(); return Promise.resolve(); }
     var b = map.getBounds(), id = ++adrReq;
@@ -272,12 +274,88 @@
         '<div class="stat-card"><b>' + A.fmt(adresses) + '</b><span>adresses (' + Math.round(100 * adresses / Math.max(t.batiments, 1)) + ' % du bâti)</span></div>' +
         '<div class="stat-card"><b>' + A.fmt(t.validees + t.posees) + '</b><span>validées</span></div>' +
         '<div class="stat-card"><b>' + A.fmt(t.posees) + '</b><span>plaques posées</span></div></div>';
+      var lignes = st.quartiers.filter(function (q) { return q.proposees + q.validees + q.posees; }).map(function (q) {
+        var n = q.proposees + q.validees + q.posees;
+        return { q: q, n: n, val: (q.validees + q.posees) / n, pose: q.posees / n };
+      }).sort(function (a, b) { return b.val - a.val || b.pose - a.pose || a.q.quartier.localeCompare(b.q.quartier); });
+      $('adr-quartiers').innerHTML = '<table class="ana-table adr-avancement"><thead><tr><th>Quartier</th><th>Adresses</th><th>Validées</th><th>Plaques posées</th></tr></thead><tbody>' +
+        lignes.map(function (l) {
+          function barre(x, c) { return '<div class="bar"><div style="width:' + Math.round(100 * x) + '%;background:' + c + '"></div></div><small>' + Math.round(100 * x) + ' %</small>'; }
+          return '<tr><td>' + esc(l.q.quartier) + '</td><td>' + A.fmt(l.n) + '</td><td>' + barre(l.val, '#1f6f43') + '</td><td>' + barre(l.pose, '#1c4e80') + '</td></tr>';
+        }).join('') + '</tbody></table>';
       var sel = $('adr-quartier'), cur = sel.value;
       sel.innerHTML = '<option value="">— quartier —</option>';
       st.quartiers.forEach(function (q) { sel.add(new Option(q.quartier + ' (' + q.code + ')', q.quartier, false, q.quartier === cur)); });
     }).catch(function () {});
   }
-  function reloadAll() { return Promise.all([loadVoies(), loadStats()]); }
+  function reloadAll() { return Promise.all([loadVoies(), loadStats(), loadPoses()]); }
+
+  // ---------- Campagne de pose des plaques ----------
+  var poseLayer = L.layerGroup().addTo(map);
+  function tournee(ll) {
+    $('adr-pose-liste').innerHTML = '<p class="hint">Recherche des adresses à équiper…</p>';
+    Auth.api('GET', '/adressage/a-poser?lon=' + ll.lng.toFixed(6) + '&lat=' + ll.lat.toFixed(6) + '&limite=40').then(function (fc) {
+      poseLayer.clearLayers();
+      if (!fc.features.length) { $('adr-pose-liste').innerHTML = '<p class="hint">Aucune adresse validée en attente de plaque.</p>'; return; }
+      var ul = document.createElement('ul'); ul.className = 'pose-liste';
+      fc.features.forEach(function (f, i) {
+        var p = f.properties, c = f.geometry.coordinates, pll = L.latLng(c[1], c[0]);
+        var m = L.marker(pll, { icon: L.divIcon({ className: 'pose-num', html: String(i + 1), iconSize: [22, 22], iconAnchor: [11, 11] }) })
+          .bindTooltip(esc(p.libelle)).addTo(poseLayer);
+        var li = document.createElement('li');
+        li.innerHTML = '<span><b>' + (i + 1) + '.</b> ' + esc(p.libelle) + '<br><small>' + A.fmtLen(p.distance_m) + ' · ' + esc(p.quartier || '') +
+          (p.complement ? ' · ' + esc(p.complement) : '') + '</small></span>';
+        var voir = document.createElement('button'); voir.type = 'button'; voir.textContent = 'Voir';
+        voir.onclick = function () { map.setView(pll, 19); m.openTooltip(); };
+        var ok = document.createElement('button'); ok.type = 'button'; ok.className = 'primary'; ok.textContent = '✓ Posée';
+        ok.onclick = function () {
+          ok.disabled = true;
+          Auth.api('PUT', '/adressage/adresses/' + f.id, { statut: 'Plaque posée' }).then(function () {
+            li.classList.add('pose-faite'); ok.textContent = 'Posée ✓'; poseLayer.removeLayer(m);
+            loadStats(); loadPoses(); loadAdresses();
+          }).catch(function (e) { ok.disabled = false; fail(e.status ? e : new Error('pas de réseau, réessayez une fois connecté')); });
+        };
+        li.appendChild(voir); li.appendChild(ok); ul.appendChild(li);
+      });
+      $('adr-pose-liste').innerHTML = '';
+      $('adr-pose-liste').appendChild(ul);
+      map.fitBounds(L.latLngBounds(fc.features.slice(0, 10).map(function (f) { return [f.geometry.coordinates[1], f.geometry.coordinates[0]]; }).concat([ll])), { padding: [40, 40], maxZoom: 18 });
+    }).catch(fail);
+  }
+  $('btn-adr-tournee').addEventListener('click', function () {
+    $('adr-pose-liste').innerHTML = '<p class="hint">Recherche de votre position…</p>';
+    var fini = false;
+    // sans GPS (ou s'il tarde), la tournée part du centre de la carte
+    var t = setTimeout(function () { if (!fini) { fini = true; tournee(map.getCenter()); } }, 8000);
+    LabeTerrain.position(function (pos) {
+      if (fini) return;
+      fini = true; clearTimeout(t);
+      tournee(pos ? pos.ll : map.getCenter());
+    });
+  });
+  $('btn-adr-tournee-centre').addEventListener('click', function () { tournee(map.getCenter()); });
+
+  function loadPoses() {
+    return Auth.api('GET', '/adressage/poses?jours=30').then(function (r) {
+      var max = Math.max.apply(null, r.par_jour.map(function (d) { return d.n; }).concat([1])), total = 0;
+      r.par_jour.forEach(function (d) { total += d.n; });
+      var W = 300, H = 70, bw = W / r.par_jour.length;
+      var svg = '<svg viewBox="0 0 ' + W + ' ' + (H + 14) + '" class="poses-svg" role="img" aria-label="Plaques posées par jour sur 30 jours">' +
+        '<line x1="0" x2="' + W + '" y1="' + H + '" y2="' + H + '" class="g"/>' +
+        r.par_jour.map(function (d, i) {
+          var h = d.n / max * (H - 4);
+          return '<rect x="' + (i * bw + 1).toFixed(1) + '" y="' + (H - h).toFixed(1) + '" width="' + Math.max(bw - 2, 1).toFixed(1) + '" height="' + h.toFixed(1) +
+            '" rx="2"><title>' + new Date(d.jour).toLocaleDateString('fr-FR') + ' : ' + d.n + ' plaque(s)</title></rect>';
+        }).join('') +
+        '<text x="0" y="' + (H + 12) + '">' + new Date(r.par_jour[0].jour).toLocaleDateString('fr-FR') + '</text>' +
+        '<text x="' + W + '" y="' + (H + 12) + '" text-anchor="end">aujourd\'hui</text></svg>';
+      $('adr-poses').innerHTML = '<p class="hint"><b>' + A.fmt(total) + '</b> plaque(s) posée(s) ces 30 derniers jours (max. ' + max + ' par jour).</p>' + svg +
+        (r.par_agent.length ? '<table class="ana-table"><thead><tr><th>Agent</th><th>Plaques</th><th>Dernière</th></tr></thead><tbody>' +
+          r.par_agent.slice(0, 10).map(function (a) {
+            return '<tr><td>' + esc(a.agent) + '</td><td>' + A.fmt(a.n) + '</td><td>' + (a.dernier ? new Date(a.dernier).toLocaleDateString('fr-FR') : '—') + '</td></tr>';
+          }).join('') + '</tbody></table>' : '');
+    }).catch(function () {});
+  }
 
   // ---------- Démarrage (appelé par espace.js) ----------
   var started = false;

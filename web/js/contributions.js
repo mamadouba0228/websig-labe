@@ -16,6 +16,7 @@
     var c = (CATEGORIES[p.categorie] || CATEGORIES.Autre).color;
     if (p.statut === 'Traité') c = '#1f6f43';
     var pending = p.statut === 'À valider', rejected = p.statut === 'Rejeté';
+    if (p.statut === 'Affecté' || p.statut === 'En cours') c = '#f08c00';
     return {
       color: rejected ? '#666' : c, weight: 3, opacity: pending ? 0.75 : 1,
       dashArray: pending || rejected ? '5 4' : null, fillColor: c, fillOpacity: pending ? 0.15 : 0.3
@@ -43,7 +44,10 @@
       ['Mesure', measure], ['Saisi par', p.auteur && p.auteur + (p.service ? ' (' + p.service + ')' : '')],
       ['Date', new Date(p.cree_le).toLocaleString('fr-FR')],
       [p.statut === 'Rejeté' ? 'Rejeté par' : 'Validé par', p.valide_par_nom],
-      ['Motif du rejet', p.motif_rejet]
+      ['Motif du rejet', p.motif_rejet],
+      ['Service chargé', p.service_affecte && p.service_affecte + (p.priorite ? ' · priorité ' + p.priorite.toLowerCase() : '')],
+      ['Échéance', p.echeance && new Date(p.echeance).toLocaleDateString('fr-FR')],
+      ['Objet corrigé', p.ref_couche && (p.ref_couche === 'batiments' ? 'bâtiment' : 'tronçon de voie') + (p.ref_gid ? ' n° ' + p.ref_gid : ' (nouveau)')]
     ].filter(function (r) { return r[1]; });
     div.innerHTML = '<h4>' + esc(p.nom || p.type || p.categorie) + '</h4>' +
       '<span class="badge ' + cls(p.statut) + '">' + esc(p.statut) + '</span> <small class="muted">n° ' + p.id + '</small>' +
@@ -62,15 +66,26 @@
       b.onclick = fn; bar.appendChild(b);
     }
     if (Auth.isValidator()) {
-      if (p.statut !== 'Validé') btn('✓ Valider', 'primary', function () { setStatut(p.id, 'Validé'); });
-      if (p.categorie === 'Signalement' && p.statut !== 'Traité') btn('Traité', '', function () { setStatut(p.id, 'Traité'); });
-      if (p.statut !== 'Rejeté') btn('Rejeter', '', function () {
+      if (p.statut === 'À valider' || p.statut === 'Rejeté') btn(p.ref_couche ? '✓ Valider et appliquer' : '✓ Valider', 'primary', function () {
+        if (p.ref_couche && !confirm('La correction sera appliquée à la carte de référence (' + (p.ref_couche === 'batiments' ? 'bâti' : 'voirie') + ').')) return;
+        action(p.id, { action: 'valider' });
+      });
+      if (p.statut !== 'Rejeté' && p.statut !== 'Traité') btn('Rejeter', '', function () {
         var motif = prompt('Motif du rejet (visible par l\'agent) :');
-        if (motif !== null) setStatut(p.id, 'Rejeté', motif);
+        if (motif) action(p.id, { action: 'rejeter', commentaire: motif });
       });
     }
+    btn(p.categorie === 'Signalement' ? '🕘 Suivi' : '🕘 Historique', '', function () { map.closePopup(); LabeSuivi.ouvrir(p.id); });
     if (canEdit(p)) {
       btn('Modifier', '', function () { openForm(null, f); });
+      btn('✎ Forme', '', function () {
+        map.closePopup();
+        LabeEdition.editer(f.geometry, { label: 'Saisie n° ' + p.id + ' : modifier la forme', onSave: function (g) {
+          Auth.api('PUT', '/contributions/' + p.id, { geometry: g, properties: {} }).then(function () {
+            LabeTerrain.toast('Forme enregistrée (l\'ancienne est gardée dans l\'historique).'); reload();
+          }).catch(showError);
+        } });
+      });
       btn('Supprimer', 'danger', function () {
         if (!confirm('Supprimer définitivement cette saisie ?')) return;
         Auth.api('DELETE', '/contributions/' + p.id).then(function () { map.closePopup(); reload(); }).catch(showError);
@@ -80,7 +95,7 @@
     return div;
   }
 
-  var layerById = {};
+  var layerById = {}, abonnes = [];
   function render() {
     layer.clearLayers();
     layerById = {};
@@ -128,6 +143,7 @@
   function reload() {
     return Auth.api('GET', '/contributions').then(function (fc) {
       features = fc.features;
+      abonnes.forEach(function (fn) { fn(features); });
       for (var i = A.searchIndex.length - 1; i >= 0; i--) if (A.searchIndex[i].contrib) A.searchIndex.splice(i, 1);
       render();
       features.forEach(function (f) {
@@ -139,9 +155,9 @@
       document.getElementById('contrib-count').textContent = 'Saisies indisponibles : ' + e.message;
     });
   }
-  function setStatut(id, statut, motif) {
-    Auth.api('PUT', '/contributions/' + id, { properties: { statut: statut, motif_rejet: motif || null } })
-      .then(function () { map.closePopup(); reload(); }).catch(showError);
+  function action(id, body) {
+    return Auth.api('POST', '/contributions/' + id + '/action', body)
+      .then(function () { map.closePopup(); return reload(); }).catch(showError);
   }
   function showError(e) { alert('Erreur : ' + e.message); }
 
@@ -167,16 +183,18 @@
     return { type: 'Polygon', coordinates: [c.concat([c[0]])] };
   }
 
-  function openForm(geometry, feature) {
+  function openForm(geometry, feature, preset) {
     map.closePopup();
     form.reset();
     photoData = null;
     document.getElementById('photo-preview').innerHTML = '';
-    var p = feature ? feature.properties : {};
-    pending = feature ? { feature: feature } : { geometry: geometry };
-    document.getElementById('contrib-title').textContent = feature ? 'Modifier la saisie n° ' + p.id : 'Nouvelle saisie';
+    var p = feature ? feature.properties : (preset || {});
+    pending = feature ? { feature: feature } : { geometry: geometry, ref: preset && preset.ref };
+    document.getElementById('contrib-title').textContent = feature ? 'Modifier la saisie n° ' + p.id
+      : pending.ref ? 'Correction de la carte' : 'Nouvelle saisie';
     selCat.value = p.categorie || lastCategorie || Object.keys(CATEGORIES)[0];
     fillTypes(p.type);
+    selCat.disabled = selType.disabled = !!pending.ref;
     var g = feature ? feature.geometry : geometry;
     var q = p.quartier;
     if (!q) {
@@ -221,7 +239,7 @@
     e.preventDefault();
     var fd = new FormData(form);
     var props = {
-      categorie: fd.get('categorie'), type: fd.get('type'), nom: fd.get('nom').trim() || null,
+      categorie: selCat.value, type: selType.value, nom: fd.get('nom').trim() || null,
       description: fd.get('description').trim() || null, quartier: fd.get('quartier') || null
     };
     if (Auth.isValidator()) {
@@ -229,18 +247,33 @@
       props.motif_rejet = props.statut === 'Rejeté' ? (fd.get('motif_rejet').trim() || null) : null;
     }
     if (photoData) props.photo = photoData;
+    var editing = !!pending.feature;
+    if (!editing && props.categorie === 'Correction de la carte') {
+      // objet visé (bâtiment ou tronçon existant) ; sinon ajout d'un objet manquant
+      props.ref_couche = pending.ref ? pending.ref.couche : /^Bâtiment/.test(props.type) ? 'batiments' : 'routes';
+      props.ref_gid = pending.ref ? pending.ref.gid : null;
+      var attendu = props.ref_couche === 'batiments' ? 'Polygon' : 'LineString';
+      if (!/démoli|disparue/.test(props.type) && pending.geometry.type !== attendu)
+        return alert(props.ref_couche === 'batiments' ? 'Un bâtiment se dessine avec l\'outil « Surface ».' : 'Une voie se dessine avec l\'outil « Ligne ».');
+      if (!props.ref_gid && !/à ajouter/.test(props.type))
+        return alert('Pour modifier ou retirer un objet existant : outil ⓘ, cliquez l\'objet, puis « Proposer une correction ».');
+    }
     lastCategorie = props.categorie;
     var btn = form.querySelector('button[type=submit]');
     btn.disabled = true;
-    var editing = !!pending.feature;
     var req = editing
       ? Auth.api('PUT', '/contributions/' + pending.feature.properties.id, { properties: props })
-      : Auth.api('POST', '/contributions', { geometry: pending.geometry, properties: props });
-    req.then(function (f) {
+      : LabeTerrain.envoyer({ geometry: pending.geometry, properties: props });
+    req.then(function (r) {
       modal.classList.add('hidden');
+      if (r && r.enAttente) {
+        LabeTerrain.toast('Pas de réseau : saisie gardée dans l\'appareil, envoyée automatiquement au retour de la connexion.');
+        return;
+      }
+      var f = r.feature || r;
       return reload().then(function () {
         if (!editing && f.properties.statut === 'À valider') {
-          alert('Saisie enregistrée (n° ' + f.id + '). Elle sera publiée sur la carte publique après validation par un superviseur.');
+          LabeTerrain.toast('Saisie n° ' + f.id + ' enregistrée. Elle sera publiée après validation par un superviseur.');
         }
       });
     }).catch(showError).then(function () { btn.disabled = false; });
@@ -255,6 +288,27 @@
         label: { point: 'Nouveau point', line: 'Nouvelle ligne', area: 'Nouvelle surface' }[mode],
         onFinish: function (pts) { openForm(toGeometry(mode, pts)); }
       });
+    });
+  });
+
+  // ---------- Saisie à la position GPS (terrain) ----------
+  document.getElementById('gps-point').addEventListener('click', function () {
+    LabeTerrain.pointGps(function (ll) { openForm(toGeometry('point', [ll])); });
+  });
+  document.querySelectorAll('[data-gps-trace]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var mode = b.getAttribute('data-gps-trace');
+      LabeTerrain.traceGps(mode, function (pts) { openForm(toGeometry(mode, pts)); });
+    });
+  });
+  // Corrections : objet manquant dans la carte de référence
+  document.querySelectorAll('[data-manquant]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var bati = b.getAttribute('data-manquant') === 'batiment';
+      A.startSketch(bati ? 'area' : 'line', { label: bati ? 'Bâtiment manquant' : 'Voie manquante', onFinish: function (pts) {
+        openForm(toGeometry(bati ? 'area' : 'line', pts), null, { categorie: 'Correction de la carte', type: bati ? 'Bâtiment à ajouter' : 'Voie à ajouter',
+          ref: { couche: bati ? 'batiments' : 'routes', gid: null } });
+      } });
     });
   });
 
@@ -320,6 +374,12 @@
 
   // ---------- Démarrage (appelé par espace.js une fois connecté) ----------
   window.LabeContrib = {
+    nouvelle: function (geometry, preset) { openForm(geometry, null, preset); },
+    recharger: function () { return reload(); },
+    features: function () { return features; },
+    onChange: function (fn) { abonnes.push(fn); if (features.length) fn(features); },
+    focus: function (id) { focus(id); },
+    layer: layer,
     start: function () {
       document.getElementById('contrib-hint').textContent = Auth.isValidator()
         ? 'Vos saisies sont publiées directement. Validez ou rejetez celles des agents depuis leur fiche.'

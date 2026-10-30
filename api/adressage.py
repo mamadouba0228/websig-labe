@@ -306,7 +306,7 @@ def numeroter(c: Cible, u: dict = Depends(superviseur)):
 def valider_en_masse(c: Cible, u: dict = Depends(superviseur)):
     with cursor() as cur:
         ids = _voies_cibles(cur, c)
-        cur.execute("""UPDATE adr.adresses SET statut = 'Validée', valide_par = %s, modifie_le = now()
+        cur.execute("""UPDATE adr.adresses SET statut = 'Validée', valide_par = %s, valide_le = now(), modifie_le = now()
                        WHERE voie_id = ANY(%s) AND statut = 'Proposée'""", (u["id"], ids))
         n = cur.rowcount
         journal(cur, u["id"], "validation d'adresses", c.quartier or f"voie {c.voie_id}", f"{n} adresses")
@@ -413,8 +413,12 @@ def modifier_adresse(aid: int, body: AdresseIn, u: dict = Depends(current_user))
         if "statut" in d:
             if d["statut"] not in STATUTS_ADR:
                 raise HTTPException(400, "Statut invalide.")
-            sets += ["statut = %s", "valide_par = COALESCE(valide_par, %s)"]
-            vals += [d["statut"], u["id"]]
+            sets += ["statut = %s", "valide_par = COALESCE(valide_par, %s)",
+                     "valide_le = CASE WHEN %s <> 'Proposée' THEN COALESCE(valide_le, now()) END"]
+            vals += [d["statut"], u["id"], d["statut"]]
+            if d["statut"] == "Plaque posée":
+                sets += ["pose_le = now()", "pose_par = %s"]
+                vals.append(u["id"])
         if "complement" in d:
             sets.append("complement = %s")
             vals.append(d["complement"])
@@ -535,3 +539,58 @@ def export_voies(u: dict = Depends(superviseur)):
             FROM adr.voies v LEFT JOIN adr.adresses a ON a.voie_id = v.id
             GROUP BY v.id ORDER BY v.quartier, v.code""")
         return _csv(cur.fetchall(), "registre_voies_labe.csv")
+
+
+# ---------------------------------------------------------------- campagne de pose des plaques
+@router.get("/a-poser")
+def a_poser(lon: float, lat: float, limite: int = 40, u: dict = Depends(current_user)):
+    """Adresses validées sans plaque, les plus proches de l'agent (tournée de pose)."""
+    with cursor() as cur:
+        cur.execute(ADR_SELECT.replace("SELECT a.id,", """SELECT round(ST_Distance(a.geom::geography,
+                        ST_SetSRID(ST_MakePoint(%(lon)s, %(lat)s), 4326)::geography))::int AS distance_m, a.id,""") + """
+            WHERE a.statut = 'Validée'
+            ORDER BY a.geom <-> ST_SetSRID(ST_MakePoint(%(lon)s, %(lat)s), 4326) LIMIT %(n)s""",
+                    {"lon": lon, "lat": lat, "n": min(max(limite, 1), 200)})
+        return {"type": "FeatureCollection", "features": [_adr_feature(r) for r in cur.fetchall()]}
+
+
+@router.get("/poses")
+def suivi_poses(jours: int = 30, u: dict = Depends(current_user)):
+    """Plaques posées par jour et par agent (suivi de la campagne)."""
+    with cursor() as cur:
+        cur.execute("""SELECT to_char(d, 'YYYY-MM-DD') AS jour, count(a.id)::int AS n
+                       FROM generate_series(current_date - %s + 1, current_date, interval '1 day') d
+                       LEFT JOIN adr.adresses a ON a.pose_le::date = d::date
+                       GROUP BY d ORDER BY d""", (min(max(jours, 1), 365),))
+        par_jour = cur.fetchall()
+        cur.execute("""SELECT COALESCE(u.nom, '—') AS agent, count(*)::int AS n, max(a.pose_le)::date::text AS dernier
+                       FROM adr.adresses a LEFT JOIN app.utilisateurs u ON u.id = a.pose_par
+                       WHERE a.statut = 'Plaque posée' GROUP BY 1 ORDER BY n DESC""")
+        return {"par_jour": par_jour, "par_agent": cur.fetchall()}
+
+
+# ---------------------------------------------------------------- certificat d'adresse (public)
+@router.get("/certificat")
+def certificat(voie: str, num: str):
+    """Données du certificat d'une adresse validée : ?voie=DK1-012&num=42A (code de la voie, numéro)."""
+    m = re.fullmatch(r"\s*(\d{1,6})\s*([A-Za-z]?)\s*", num)
+    if not m:
+        raise HTTPException(400, "Numéro invalide.")
+    with cursor() as cur:
+        cur.execute("""
+            SELECT a.id, a.numero, a.suffixe, a.cote, a.quartier, a.statut, a.complement, a.valide_le, a.pose_le,
+                   v.code AS code_voie, v.type_voie, v.nom AS nom_voie, v.statut_nom, v.deliberation,
+                   adr.libelle(a.numero, a.suffixe, v.type_voie, v.nom, v.code) AS libelle,
+                   round(ST_Y(a.geom)::numeric, 6)::float AS lat, round(ST_X(a.geom)::numeric, 6)::float AS lon
+            FROM adr.adresses a JOIN adr.voies v ON v.id = a.voie_id
+            WHERE upper(v.code) = upper(%s) AND a.numero = %s AND a.suffixe = upper(%s)""",
+                    (voie.strip(), int(m.group(1)), m.group(2)))
+        r = cur.fetchone()
+    if not r:
+        raise HTTPException(404, "Adresse inconnue.")
+    if r["statut"] == "Proposée":
+        raise HTTPException(409, "Cette adresse n'est pas encore validée par la mairie : pas de certificat possible.")
+    for k in ("valide_le", "pose_le"):
+        r[k] = r[k].date().isoformat() if r[k] else None
+    r["reference"] = f"LAB-ADR-{r['id']:06d}"
+    return r

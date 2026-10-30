@@ -173,13 +173,19 @@
       var rows = attributs(r);
       html += '<details class="idf-item" data-i="' + i + '"' + (i === 0 ? ' open' : '') + '><summary>' + esc(titre(r.feature.properties || {}, r.couche)) +
         '</summary><table>' + rows.map(function (x) { return '<tr><td>' + esc(x[0]) + '</td><td>' + esc(x[1]) + '</td></tr>'; }).join('') +
-        '</table><a href="#" class="idf-zoom" data-i="' + i + '">Zoomer sur l\'entité</a></details>';
+        '</table><a href="#" class="idf-zoom" data-i="' + i + '">Zoomer sur l\'entité</a>' +
+        (window.LabeEdition && LabeEdition.peutCorriger(r) ? '<div class="idf-corr">Proposer une correction : ' +
+          '<button type="button" data-corr="forme" data-i="' + i + '">✎ Redessiner</button> ' +
+          '<button type="button" data-corr="supprimer" data-i="' + i + '">' + (r.couche === 'Bâti' ? 'Bâtiment démoli' : 'Voie disparue') + '</button></div>' : '') +
+        '</details>';
     });
     body.innerHTML = html;
     surligner(res[0], false);
   }
   function $(id) { return document.getElementById(id); }
   body.addEventListener('click', function (e) {
+    var c = e.target.closest('[data-corr]');
+    if (c) { activer(false); panel.classList.add('hidden'); hl.clearLayers(); LabeEdition.corriger(derniers[+c.dataset.i], c.dataset.corr); return; }
     var z = e.target.closest('.idf-zoom');
     if (z) { e.preventDefault(); surligner(derniers[+z.dataset.i], true); return; }
     var d = e.target.closest('summary');
