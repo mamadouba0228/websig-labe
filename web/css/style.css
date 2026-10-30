@@ -254,7 +254,7 @@ body.drawer-open #map { bottom: 36vh; }
 @media (max-width: 700px) { .sel-drawer { left: 0; height: 45vh; } body.drawer-open #map { bottom: 45vh; } #sel-groups { display: none; } }
 
 /* Analyses (isochrones, tampons) */
-.ana-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin-bottom: 10px; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+.ana-switch { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 0; margin-bottom: 10px; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
 .ana-switch button { border: 0; border-radius: 0; padding: 8px; background: #fff; }
 .ana-switch button.active { background: var(--green); color: #fff; font-weight: 600; }
 .panel label.field { display: block; font-size: 13px; margin: 8px 0 4px; }
@@ -291,3 +291,20 @@ body.drawer-open #map { bottom: 36vh; }
 .idf-item td:first-child { color: var(--muted); width: 45%; }
 .idf-zoom { display: inline-block; font-size: 12px; margin: 5px 8px; color: #1864ab; }
 @media (max-width: 700px) { .identify-panel { right: 8px; left: 8px; width: auto; top: auto; bottom: 8px; max-height: 50vh; } }
+
+/* Relief et risques naturels */
+.rel-titre { margin: 16px 0 4px; font-size: 13px; border-top: 1px solid var(--border); padding-top: 10px; }
+.rel-scroll { max-height: 260px; overflow: auto; border: 1px solid var(--border); border-radius: 6px; }
+.rel-scroll th { position: sticky; top: 0; background: #fff; }
+.rel-chiffres { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+.rel-chiffres b { color: #212529; }
+#rel-graph { position: relative; background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 4px; }
+.rel-svg { width: 100%; height: auto; display: block; touch-action: none; }
+.rel-svg text { font-size: 9px; fill: #868e96; }
+.rel-svg .g { stroke: #e9ecef; stroke-width: 1; }
+.rel-svg .l { fill: none; stroke: #5f3dc4; stroke-width: 2; stroke-linejoin: round; }
+.rel-svg .a { fill: #5f3dc4; fill-opacity: .1; stroke: none; }
+.rel-svg line.c { stroke: #495057; stroke-width: 1; stroke-dasharray: 3 2; }
+.rel-svg circle.c { fill: #5f3dc4; stroke: #fff; stroke-width: 2; }
+.rel-svg .hidden { display: none; }
+.rel-tip { position: absolute; top: 6px; width: 110px; text-align: center; font-size: 12px; background: rgba(255,255,255,.95); border: 1px solid var(--border); border-radius: 4px; padding: 2px 4px; pointer-events: none; }

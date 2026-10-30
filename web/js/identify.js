@@ -82,6 +82,9 @@
       : A.STATIC ? Promise.resolve(A.batiAt(latlng)) : A.gfiBati(latlng).catch(function () { return null; });
     return bati.then(function (f) {
       if (f) resultats.push({ couche: 'Bâti', feature: f, d: 0, rang: 2 });
+      // valeurs du terrain (si le relief a été chargé : couche de relief affichée ou analyse lancée)
+      var rel = A.relief && A.relief.fiche(latlng);
+      if (rel) resultats.push({ couche: 'Relief et risques naturels', feature: { type: 'Feature', properties: rel, geometry: null }, d: 0, rang: 4 });
       // points d'abord, puis lignes, puis petites surfaces, puis grandes ; à rang égal, le plus proche
       resultats.sort(function (a, b) { return a.rang - b.rang || a.d - b.d; });
       return resultats;
@@ -103,7 +106,7 @@
     var props = r.feature.properties || {}, rows = [];
     Object.keys(props).forEach(function (k) {
       var v = props[k];
-      if (MASQUES[k] || v == null || v === '' || v === 'NC') return;
+      if (MASQUES[k] || v == null || v === '' || v === 'NC' || (k === 'libelle' && !r.feature.geometry)) return;
       if (typeof v === 'number') v = A.fmt(v, 2);
       else if (/^\d{4}-\d{2}-\d{2}T/.test(v)) v = new Date(v).toLocaleString('fr-FR');
       rows.push([LIBELLES[k] || k, v]);

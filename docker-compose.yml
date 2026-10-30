@@ -104,6 +104,24 @@ services:
       db:
         condition: service_healthy
 
+  # Relief et risques naturels à partir du MNT Copernicus (lancé à la demande) :
+  #   docker compose --profile outils run --rm relief
+  relief:
+    image: ghcr.io/osgeo/gdal:ubuntu-small-3.9.2
+    profiles: ["outils"]
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./data:/data:ro
+      - ./scripts/relief:/app:ro
+      - ./data/public/relief:/out
+    command: ["python3", "/app/relief.py"]
+    depends_on:
+      db:
+        condition: service_healthy
+
   web:
     image: nginx:1.27-alpine
     restart: unless-stopped
@@ -112,6 +130,7 @@ services:
     volumes:
       - ./web:/usr/share/nginx/html:ro
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./data/public/relief:/srv/relief:ro
     depends_on:
       - api
       - geoserver

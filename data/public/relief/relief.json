@@ -1,0 +1,75 @@
+{
+ "source": "Copernicus GLO-30 DEM (© DLR e.V. 2010-2014 et © Airbus Defence and Space GmbH 2014-2018, fourni dans le cadre du programme Copernicus)",
+ "methode": "Pentes : opérateur de Horn sur le MNT lissé 3×3. Zones inondables : hauteur au-dessus du drainage (HAND), réseau de drainage = cellules drainant plus de 0.5 km².",
+ "largeur": 625,
+ "hauteur": 667,
+ "x0": -12.39263888888889,
+ "y0": 11.413194444444445,
+ "dx": 0.0002777777777777778,
+ "dy": -0.0002777777777777778,
+ "pas_m": [
+  30.3,
+  30.7
+ ],
+ "image_bounds": [
+  [
+   11.228055555555557,
+   -12.392777777777779
+  ],
+  [
+   11.413333333333334,
+   -12.219166666666668
+  ]
+ ],
+ "bandes": [
+  {
+   "nom": "altitude",
+   "type": "uint16",
+   "echelle": 0.1,
+   "unite": "m"
+  },
+  {
+   "nom": "pente",
+   "type": "uint8",
+   "echelle": 0.5,
+   "unite": "%",
+   "max": 254
+  },
+  {
+   "nom": "hand",
+   "type": "uint8",
+   "echelle": 0.1,
+   "unite": "m",
+   "max": 254,
+   "hors_commune": 255
+  }
+ ],
+ "classes_pente": [
+  5,
+  15,
+  30
+ ],
+ "classes_hand": [
+  2,
+  5
+ ],
+ "seuil_drainage_km2": 0.5,
+ "stats": {
+  "altitude_min": 863.5,
+  "altitude_max": 1225.5,
+  "altitude_moyenne": 1046.4,
+  "pente_moyenne": 9.2,
+  "surface_km2": 193.46,
+  "pentes_km2": [
+   66.02,
+   94.84,
+   28.2,
+   4.41
+  ],
+  "hand_km2": [
+   15.76,
+   12.5,
+   165.21
+  ]
+ }
+}

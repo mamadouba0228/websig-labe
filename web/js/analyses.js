@@ -170,8 +170,7 @@
   document.querySelectorAll('.ana-switch button').forEach(function (b) {
     b.addEventListener('click', function () {
       document.querySelectorAll('.ana-switch button').forEach(function (x) { x.classList.toggle('active', x === b); });
-      $('ana-iso').classList.toggle('hidden', b.dataset.ana !== 'iso');
-      $('ana-buf').classList.toggle('hidden', b.dataset.ana !== 'buf');
+      document.querySelectorAll('.ana-switch button').forEach(function (x) { $('ana-' + x.dataset.ana).classList.toggle('hidden', x !== b); });
     });
   });
   $('ana-clear').addEventListener('click', function () {

@@ -173,6 +173,7 @@
       <div class="ana-switch">
         <button class="active" data-ana="iso" type="button">⏱ Isochrones</button>
         <button data-ana="buf" type="button">◎ Tampons</button>
+        <button data-ana="rel" type="button">⛰ Relief</button>
       </div>
 
       <div id="ana-iso">
@@ -217,6 +218,22 @@
         <p class="hint">Plusieurs anneaux possibles, ex. « 50, 100, 200 ».</p>
         <div class="row"><button id="buf-run" class="primary" type="button">Calculer le tampon</button></div>
         <div id="buf-result"></div>
+      </div>
+
+      <div id="ana-rel" class="hidden">
+        <p class="hint">Relief, pentes et zones inondables, d'après le modèle numérique de terrain Copernicus (30 m). Les couches se trouvent aussi dans l'onglet « Couches ».</p>
+        <div id="rel-resume"><p class="hint">Chargement…</p></div>
+
+        <h4 class="rel-titre">Bâtiments exposés</h4>
+        <label class="field">Inondation : seuils de hauteur au-dessus du drainage (m)<input id="rel-hand" value="2, 5"></label>
+        <label class="field">Pentes : seuils (%)<input id="rel-pente" value="15, 30"></label>
+        <div class="row"><button id="rel-run" class="primary" type="button">Analyser les bâtiments</button></div>
+        <div id="rel-result"></div>
+
+        <h4 class="rel-titre">Profil en long</h4>
+        <p class="hint">Tracez une ligne (rue, canal, projet de voie) : altitude, dénivelés et pentes le long du tracé.</p>
+        <div class="row"><button id="rel-profil" type="button">✎ Tracer le profil</button></div>
+        <div id="rel-profil-result"></div>
       </div>
 
       <div class="row"><button id="ana-clear" type="button">Effacer les analyses</button></div>
@@ -376,6 +393,7 @@
   <script src="https://cdn.jsdelivr.net/npm/d3-array@3.2.4/dist/d3-array.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/d3-contour@4.0.2/dist/d3-contour.min.js"></script>
   <script src="js/analyses.js"></script>
+  <script src="js/relief.js"></script>
   <script src="js/identify.js"></script>
   <script src="js/espace.js"></script>
 </body>

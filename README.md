@@ -96,6 +96,28 @@ Onglet « Analyses » de la carte publique et de l'espace agents (calcul dans le
 Méthode : champ de temps (Dijkstra multi-sources) ou de distance calculé sur une grille fine (20 m pour les isochrones,
 ≈ distance/10 pour les tampons), contours tracés avec d3-contour. Les bâtiments sont comptés par leur point central.
 
+## Relief et risques naturels
+
+Modèle numérique de terrain **Copernicus GLO-30** (30 m, gratuit), traité par `scripts/relief/relief.py`
+(conteneur GDAL, environ 30 s) :
+
+```powershell
+docker compose --profile outils run --rm relief    # écrit data/public/relief/ et la table ref.zones_inondables
+```
+
+- **Couches** (onglet « Couches », groupe « Relief et risques naturels ») : relief ombré, courbes de niveau (10 m),
+  pentes (5 / 15 / 30 %), zones inondables.
+- **Zones inondables** : méthode HAND (hauteur au-dessus du drainage le plus proche). Les écoulements sont calculés
+  (comblement des cuvettes, réseau de drainage = cellules drainant plus de 0,5 km²) ; aléa **fort** à moins de 2 m
+  au-dessus du drainage, **moyen** de 2 à 5 m.
+- **Onglet Analyses → ⛰ Relief** : chiffres de la commune, **bâtiments exposés** (inondation, pentes fortes),
+  seuils modifiables, détail **par quartier** (liste des bâtiments, export CSV), **profil en long** d'un tracé
+  (altitude, dénivelés, pentes, export CSV).
+- **Outil ⓘ** : altitude, pente, hauteur au-dessus du drainage et aléa au point cliqué (une fois le relief chargé).
+
+Limite : Copernicus est un modèle de *surface* (une partie des arbres et des toits est incluse). Les résultats servent
+à **repérer les secteurs à vérifier** sur le terrain, pas à établir un zonage réglementaire.
+
 ## Hébergement
 
 | Partie | Où | Adresse |
@@ -180,3 +202,4 @@ docker compose run --rm geoserver-init
 
 - © contributeurs OpenStreetMap, licence ODbL (via OSM2IGEO Guinée, mars 2023).
 - Fonds de carte : OpenStreetMap, Esri World Imagery, OpenTopoMap, CARTO.
+- Relief : Copernicus GLO-30 DEM, © DLR e.V. 2010-2014 et © Airbus Defence and Space GmbH 2014-2018, fourni dans le cadre du programme Copernicus.
