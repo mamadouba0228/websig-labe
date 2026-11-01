@@ -152,6 +152,42 @@ et les superviseurs. Tous les agents peuvent saisir des points, faire des consta
 - Tables : `dech.points`, `dech.constats`, `dech.tournees`, `dech.passages`, `dech.passages_points`,
   `dech.parametres`, `dech.bati_quartier`.
 
+## Protection de l'environnement
+
+Onglet **Environnement** de l'espace agents (schéma `env`). Organisent (zones, mises en demeure, sanctions,
+import satellite, paramètres) : le service **Environnement et cadre de vie** (nouveau service), l'**Hygiène et
+salubrité** et les superviseurs. Tous les agents signalent, constatent, plantent et suivent.
+
+- **Zones protégées** (`ZP-0001`…), avec une règle : protection intégrale, inconstructible ou constructible sous
+  conditions. **Calculées** à partir des données de la commune : berges des cours d'eau (largeur du paramètre
+  du foncier, 10 m), pentes de plus de 30 % (grille du relief, 30 m), bas-fonds (zones inondables d'aléa fort),
+  boisements (OpenStreetMap) ; **dessinées** : forêts classées, espaces verts, zones de reboisement ; **périmètres
+  des points d'eau** (50 m par défaut, inconstructibles), créés et mis à jour avec chaque source, puits ou forage.
+  Les zones s'ajoutent aux **contrôles du foncier** : protection intégrale = contrôle bloquant, inconstructible =
+  alerte. Fiche : bâtiments dans la zone (par quartier, sur la carte), parcelles concernées, atteintes.
+- **Atteintes à l'environnement** (`AE-AAAA-0001`) : coupe d'arbres, feu, extraction de sable, occupation de berge,
+  eaux usées, pollution d'une source, érosion, carrière sauvage. Signalées sur la carte (point ou surface) ou au GPS,
+  avec photo ; zones protégées touchées indiquées dès la saisie. Circuit : Signalée → Constatée → Mise en demeure
+  (délai) → Sanctionnée (amende) / Remise en état → Close, ou Classée sans suite ; délais dépassés signalés.
+  La **personne mise en cause** n'est visible que du service et de l'agent qui l'a saisie. Les signalements
+  « Coupe d'arbres », « Feu de brousse », « Atteinte à l'environnement » et « Inondation / érosion » de l'onglet
+  Saisie deviennent des dossiers d'atteinte (puis « Traité » à la remise en état ou à la clôture).
+- **Arbres et reboisement** (`PL-0001`) : arbre isolé, alignement (ligne), reboisement (surface), espèces, nombre de
+  plants, organisme, campagne ; **suivis** (plants vivants, état, photo) et taux de survie.
+- **Sources et points d'eau** (`SO-`, `PU-`, `FO-`, `RE-`) : état (permanent, tarit en saison sèche, tari, pollué),
+  usage, aménagement ; constats (débit, qualité) ; bâtiments et dépôts d'ordures (module Déchets) dans le périmètre.
+- **Feux de brousse** : saisis sur le terrain (point ou surface brûlée, cause) ou **importés de la NASA (FIRMS)** :
+  télécharger le CSV des feux actifs (VIIRS ou MODIS) sur https://firms.modaps.eosdis.nasa.gov/download/ et
+  l'importer ; seules les détections de la commune sont gardées, sans doublon. Saisons de novembre à octobre.
+- **Bilan** : atteintes par type et par quartier, délais, mises en demeure dépassées ; plantations et survie par
+  campagne ; points d'eau par état ; feux par saison et par mois ; bâtiments en zone protégée stricte par type de
+  zone et par quartier (liste CSV) ; couverture végétale cartographiée par quartier.
+- Saisies possibles sans réseau (même file d'attente que les déchets). Exports CSV de chaque couche.
+- Carte publique : zones protégées, sources et points d'eau, plantations, feux (pas les atteintes).
+  Fichiers `env_zones`, `env_points_eau`, `env_plantations`, `env_feux` (`.geojson`) sur GitHub Pages.
+- Tables : `env.zones`, `env.atteintes`, `env.atteintes_historique`, `env.plantations`, `env.plantations_suivis`,
+  `env.points_eau`, `env.points_eau_constats`, `env.feux`, `env.parametres`.
+
 ## Table attributaire (bouton ⊞)
 
 Comme dans QGIS : dans l'onglet « Couches », le bouton ⊞ à droite d'une couche ouvre sa table attributaire en bas

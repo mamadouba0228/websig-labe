@@ -664,15 +664,16 @@
   var FILE = 'labe-dech-file', REFUS = 'labe-dech-refus', PASSAGES = 'labe-dech-passages';
   function lireLS(k, def) { try { return JSON.parse(localStorage.getItem(k)) || def; } catch (e) { return def; } }
   function ecrireLS(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
-  function envoyer(methode, chemin, corps) {
+  function envoyer(methode, chemin, corps, absolu) {
+    var appel = absolu ? Auth.api : api;
     function attente() {
-      var l = lireLS(FILE, []); l.push({ id: LabeTerrain.uuid(), m: methode, p: chemin, b: corps, t: Date.now() }); ecrireLS(FILE, l); majFile();
+      var l = lireLS(FILE, []); l.push({ id: LabeTerrain.uuid(), m: methode, p: chemin, b: corps, t: Date.now(), a: !!absolu }); ecrireLS(FILE, l); majFile();
       return { enAttente: true };
     }
     if (!navigator.onLine || lireLS(FILE, []).length) {  // on garde l'ordre des envois : rien ne double la file
       var r = attente(); viderFile(); return Promise.resolve(r);
     }
-    return api(methode, chemin, corps).catch(function (e) { if (!e.status || e.status === 503) return attente(); throw e; });
+    return appel(methode, chemin, corps).catch(function (e) { if (!e.status || e.status === 503) return attente(); throw e; });
   }
   var vidage = false;
   function viderFile() {
@@ -683,7 +684,7 @@
       var l = lireLS(FILE, []);
       if (!l.length) return Promise.resolve();
       var it = l[0];
-      return api(it.m, it.p, it.b).then(function () { envoyes++; return true; }, function (e) {
+      return (it.a ? Auth.api : api)(it.m, it.p, it.b).then(function () { envoyes++; return true; }, function (e) {
         if (!e.status || e.status === 503) return false;     // toujours sans réseau : on réessaiera
         var r = lireLS(REFUS, []); r.push({ t: it.t, p: it.p, message: e.message }); ecrireLS(REFUS, r);
         return true;                                         // refusé par le serveur : retiré de la file, signalé
@@ -695,11 +696,15 @@
     }
     return suivant().then(function () {
       vidage = false; majFile();
-      if (envoyes) { LabeTerrain.toast(envoyes + ' envoi(s) de terrain transmis (déchets).'); charger(); }
+      if (envoyes) {
+        LabeTerrain.toast(envoyes + ' envoi(s) de terrain transmis.'); charger();
+        if (window.LabeEnvironnement) LabeEnvironnement.recharger();
+      }
     }, function () { vidage = false; });
   }
   function majFile() {
     var l = lireLS(FILE, []), r = lireLS(REFUS, []), div = $('dech-file');
+    if (window.LabeEnvironnement) LabeEnvironnement.file(l.length);
     div.innerHTML = (l.length ? '<p class="fon-avert">📶 ' + l.length + ' envoi(s) en attente de réseau, transmis automatiquement. ' +
       '<button type="button" id="dech-file-go">Envoyer maintenant</button></p>' : '') +
       (r.length ? '<div class="fon-avert"><b>Envois refusés par le serveur :</b><ul>' + r.map(function (x) {
@@ -1012,5 +1017,7 @@
     }).catch(fail);
   }
 
-  window.LabeDechets = { start: start, ouvrirPoint: ouvrirPoint, ouvrirTournee: ouvrirTournee, sousOnglet: sousOnglet };
+  window.LabeDechets = { start: start, ouvrirPoint: ouvrirPoint, ouvrirTournee: ouvrirTournee, sousOnglet: sousOnglet,
+    // envoi gardé dans le téléphone sans réseau (chemin complet de l'API, ex. /environnement/atteintes)
+    envoyer: function (methode, chemin, corps) { return envoyer(methode, chemin, corps, true); }, viderFile: viderFile };
 })();

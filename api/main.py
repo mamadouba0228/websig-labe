@@ -30,7 +30,7 @@ DSN = (f"host=db port=5432 dbname={os.environ['POSTGRES_DB']} "
 SERVICES = [
     "Secrétariat général", "Services techniques", "Urbanisme et domaines", "Voirie et assainissement",
     "Hygiène et salubrité", "État civil", "Finances et recettes", "Développement local",
-    "Affaires sociales", "Police municipale", "Autre",
+    "Affaires sociales", "Police municipale", "Environnement et cadre de vie", "Autre",
 ]
 ROLES = ("agent", "superviseur", "admin")
 STATUTS = {"À valider", "Validé", "Affecté", "En cours", "Traité", "Rejeté"}
@@ -79,6 +79,7 @@ def startup():
         adressage.apply_schema(cur)
         foncier.apply_schema(cur)
         dechets.apply_schema(cur)
+        environnement.apply_schema(cur)
         # mises à jour automatiques après une modification du bâti (QGIS…)
         cur.execute((Path(__file__).parent / "reference.sql").read_text(encoding="utf-8"))
         # Premier administrateur, défini dans .env
@@ -605,6 +606,7 @@ import foncier  # noqa: E402
 import foncier_fiscalite  # noqa: E402
 import foncier_gestion  # noqa: E402
 import dechets  # noqa: E402
+import environnement  # noqa: E402
 
 app.include_router(adressage.router)
 app.include_router(suivi.router)
@@ -612,3 +614,4 @@ app.include_router(foncier.router)
 app.include_router(foncier_gestion.router)
 app.include_router(foncier_fiscalite.router)
 app.include_router(dechets.router)
+app.include_router(environnement.router)

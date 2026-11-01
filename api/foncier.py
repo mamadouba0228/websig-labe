@@ -112,7 +112,9 @@ def lire_parties(cur, geometry: dict | None) -> list[str]:
 
 def controler(cur, gj: str, exclure: list[int] | None = None) -> list[dict]:
     cur.execute("SELECT fon.controler(ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326), %s::int[]) AS a", (gj, exclure or []))
-    return cur.fetchone()["a"]
+    alertes = cur.fetchone()["a"]
+    import environnement   # zones protégées (sources, pentes, forêts…), en plus des contrôles du foncier
+    return alertes + environnement.alertes_zones(cur, gj)
 
 
 def bloquants(alertes: list[dict]) -> list[dict]:

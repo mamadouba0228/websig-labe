@@ -37,6 +37,7 @@
       <button class="tab" data-tab="adr">Adressage</button>
       <button class="tab" data-tab="fon">Foncier <span id="fon-badge" class="tab-badge hidden"></span></button>
       <button class="tab" data-tab="dech">Déchets <span id="dech-badge" class="tab-badge hidden"></span></button>
+      <button class="tab" data-tab="env">Environnement <span id="env-badge" class="tab-badge hidden"></span></button>
       <button class="tab" data-tab="iti">Itinéraire</button>
       <button class="tab" data-tab="sel">Sélection</button>
       <button class="tab" data-tab="ana">Analyses</button>
@@ -322,6 +323,100 @@
       <div id="dech-fiche-vue" class="hidden">
         <button id="dech-retour" type="button">← Retour</button>
         <div id="dech-fiche"></div>
+      </div>
+    </section>
+
+    <section id="tab-env" class="panel">
+      <div id="env-liste-vue">
+        <div class="ana-switch env-switch">
+          <button data-env="zon" type="button" class="active">Zones</button>
+          <button data-env="att" type="button">Atteintes <span id="env-att-badge" class="tab-badge hidden"></span></button>
+          <button data-env="arb" type="button">Arbres</button>
+          <button data-env="eau" type="button">Eau</button>
+          <button data-env="feu" type="button">Feux</button>
+          <button data-env="bil" type="button">Bilan</button>
+        </div>
+
+        <div id="env-zon">
+          <div id="env-z-cartes" class="stat-cards suivi-cartes"></div>
+          <div id="env-z-calcul" class="hidden">
+            <p class="hint">Calculer à partir des données de la commune (une zone par thème, à recalculer après une mise à jour des données) :</p>
+            <div class="row">
+              <button type="button" data-calcul="berges">Berges des cours d'eau</button>
+              <button type="button" data-calcul="pentes">Pentes fortes</button>
+              <button type="button" data-calcul="basfonds">Bas-fonds</button>
+              <button type="button" data-calcul="forets">Boisements</button>
+            </div>
+            <div class="row"><button id="env-z-dessiner" class="primary" type="button">⬠ Dessiner une zone (forêt classée, espace vert…)</button></div>
+          </div>
+          <p class="hint">Les zones protégées s'ajoutent aux contrôles du foncier : une parcelle en zone de protection intégrale est bloquée, en zone inconstructible elle reçoit une alerte.</p>
+          <label class="check"><input type="checkbox" id="env-z-bati"> Montrer les bâtiments en zone protégée stricte</label>
+          <ul id="env-zones" class="suivi-liste fon-liste"></ul>
+        </div>
+
+        <div id="env-att" class="hidden">
+          <div class="row">
+            <button id="env-a-point" class="primary" type="button">⚠ Signaler (point)</button>
+            <button id="env-a-surface" type="button">⬠ Délimiter (surface)</button>
+            <button id="env-a-gps" type="button">🚶 À ma position (GPS)</button>
+          </div>
+          <div id="env-signalements"></div>
+          <div class="filters">
+            <select id="env-a-statut"><option value="">En cours</option><option value="tous">Toutes</option></select>
+            <select id="env-a-type"><option value="">Tous les types</option></select>
+            <label class="check"><input type="checkbox" id="env-a-retard"> Délai dépassé</label>
+          </div>
+          <ul id="env-atteintes" class="suivi-liste fon-liste"></ul>
+          <div class="row"><button id="env-a-export" type="button">Atteintes (CSV, Excel)</button></div>
+        </div>
+
+        <div id="env-arb" class="hidden">
+          <div id="env-p-cartes" class="stat-cards suivi-cartes"></div>
+          <div class="row">
+            <button id="env-p-point" class="primary" type="button">🌳 Arbre(s) en un point</button>
+            <button id="env-p-ligne" type="button">Alignement (ligne)</button>
+            <button id="env-p-surface" type="button">⬠ Reboisement (surface)</button>
+          </div>
+          <div class="filters"><select id="env-p-campagne"><option value="">Toutes les campagnes</option></select></div>
+          <ul id="env-plantations" class="suivi-liste fon-liste"></ul>
+          <div class="row"><button id="env-p-export" type="button">Plantations (CSV, Excel)</button></div>
+        </div>
+
+        <div id="env-eau" class="hidden">
+          <div class="row">
+            <button id="env-e-point" class="primary" type="button">💧 Placer un point d'eau</button>
+            <button id="env-e-gps" type="button">🚶 À ma position (GPS)</button>
+          </div>
+          <p class="hint">Chaque source, puits ou forage reçoit un périmètre de protection inconstructible. Les bâtiments et dépôts d'ordures situés dedans sont signalés.</p>
+          <div class="filters">
+            <select id="env-e-type"><option value="">Tous les types</option></select>
+            <select id="env-e-etat"><option value="">Tous les états</option></select>
+          </div>
+          <ul id="env-eaux" class="suivi-liste fon-liste"></ul>
+          <div class="row"><button id="env-e-export" type="button">Points d'eau (CSV, Excel)</button></div>
+        </div>
+
+        <div id="env-feu" class="hidden">
+          <div class="row">
+            <button id="env-f-point" class="primary" type="button">✸ Feu (point)</button>
+            <button id="env-f-surface" type="button">⬠ Surface brûlée</button>
+            <button id="env-f-import-btn" class="hidden" type="button">Importer les détections satellite (FIRMS)</button>
+            <input id="env-f-import" type="file" accept=".csv,text/csv" hidden>
+          </div>
+          <p class="hint" id="env-f-aide"></p>
+          <div class="filters"><select id="env-f-saison"><option value="">Toutes les saisons</option></select></div>
+          <ul id="env-feux" class="suivi-liste fon-liste"></ul>
+          <div class="row"><button id="env-f-export" type="button">Feux (CSV, Excel)</button></div>
+        </div>
+
+        <div id="env-bil" class="hidden">
+          <div id="env-bilan"><p class="hint">Chargement…</p></div>
+          <details class="adr-detail"><summary>Paramètres</summary><div id="env-parametres"></div></details>
+        </div>
+      </div>
+      <div id="env-fiche-vue" class="hidden">
+        <button id="env-retour" type="button">← Retour</button>
+        <div id="env-fiche"></div>
       </div>
     </section>
 
@@ -663,6 +758,20 @@
     </form>
   </div>
 
+  <!-- Environnement : formulaire générique (zones, atteintes, plantations, points d'eau, feux, constats) -->
+  <div id="env-modal" class="modal hidden">
+    <form id="env-form" class="modal-card">
+      <h3 id="env-mf-titre"></h3>
+      <div id="env-mf-alertes"></div>
+      <div id="env-mf-champs"></div>
+      <p class="form-msg" id="env-mf-msg"></p>
+      <div class="row">
+        <button type="button" id="env-mf-annuler">Annuler</button>
+        <button type="submit" class="primary">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+
   <!-- Point de collecte ou dépotoir -->
   <div id="dech-point-modal" class="modal hidden">
     <form id="dech-point-form" class="modal-card">
@@ -754,6 +863,8 @@
   <script src="js/foncier-gestion.js"></script>
   <script src="js/dechets-carte.js"></script>
   <script src="js/dechets.js"></script>
+  <script src="js/environnement-carte.js"></script>
+  <script src="js/environnement.js"></script>
   <script src="js/identify.js"></script>
   <script src="js/espace.js"></script>
 </body>

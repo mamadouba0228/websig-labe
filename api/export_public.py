@@ -103,6 +103,12 @@ def main():
             d = dechets.donnees_publiques(cur)
             write("dechets_points.geojson", d["points"])
             write("dechets_tournees.geojson", d["tournees"])
+        # Environnement : zones protégées, plantations, points d'eau, feux (pas les atteintes : personnes mises en cause)
+        cur.execute("SELECT to_regclass('env.zones') IS NOT NULL AS ok")
+        if cur.fetchone()["ok"]:
+            import environnement
+            for nom, fc in environnement.donnees_publiques(cur).items():
+                write(f"env_{nom}.geojson", fc)
         write("stats.json", compute_stats(cur))
     print("Export terminé.")
 

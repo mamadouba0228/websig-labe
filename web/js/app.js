@@ -19,7 +19,8 @@
     'Foncier & occupation du sol': { color: '#2b8a3e', types: ['Parcelle', 'Lotissement', 'Espace vert', 'Zone agricole',
       'Zone à risque (inondation, érosion)', 'Réserve foncière', 'Autre'] },
     'Signalement': { color: '#c8102e', types: ['Voirie dégradée', 'Éclairage en panne', 'Dépôt d\'ordures',
-      'Inondation / érosion', 'Fuite d\'eau', 'Construction illégale', 'Autre'] },
+      'Inondation / érosion', 'Fuite d\'eau', 'Construction illégale', 'Coupe d\'arbres', 'Feu de brousse',
+      'Atteinte à l\'environnement', 'Autre'] },
     'Correction de la carte': { color: '#ae3ec9', types: ['Bâtiment à ajouter', 'Bâtiment à modifier', 'Bâtiment démoli',
       'Voie à ajouter', 'Voie à modifier', 'Voie disparue'] },
     'Autre': { color: '#6c757d', types: ['Autre'] }
@@ -807,7 +808,14 @@
   // la fiche de l'objet cliqué ne doit pas s'ouvrir pendant qu'un outil attend un clic
   // (les fiches ouvertes par l'outil lui-même portent l'option « outil »)
   map.on('popupopen', function (e) {
-    if (!e.popup.options.outil && Date.now() - derniereCapture < 400) map.closePopup(e.popup);
+    // masquée tout de suite (sinon, pendant son fondu, elle capte les clics suivants du dessin), fermée juste après :
+    // fermer une fiche pendant sa propre ouverture la laisse affichée (Leaflet)
+    var el = e.popup.getElement();
+    if (el) el.style.display = '';   // la même fiche peut avoir été masquée à une ouverture précédente
+    if (!e.popup.options.outil && Date.now() - derniereCapture < 400) {
+      if (el) el.style.display = 'none';
+      setTimeout(function () { map.closePopup(e.popup); }, 0);
+    }
   });
   function capturerClic(fn) { libererClic(fn); captures.push(fn); }
   function libererClic(fn) {

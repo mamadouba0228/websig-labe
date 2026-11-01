@@ -15,7 +15,8 @@
   var ETAPES = ['Déposé', 'En instruction', 'Visite effectuée', 'Avis', 'Décision'];
   var LABEL_ZOOM = 18, MAX_LABELS = 150;
   var TYPE_ALERTE = { chevauchement: 'Chevauchement', commune: 'Hors commune', emprise: 'Emprise de voie', berge: 'Berge de cours d\'eau',
-    eau: 'Plan d\'eau', cimetiere: 'Cimetière', inondation: 'Zone inondable', pente: 'Pente', morcellement: 'Découpage', fusion: 'Fusion', litige: 'Litige en cours' };
+    eau: 'Plan d\'eau', cimetiere: 'Cimetière', inondation: 'Zone inondable', pente: 'Pente', morcellement: 'Découpage', fusion: 'Fusion', litige: 'Litige en cours',
+    environnement: 'Environnement' };
   var AIDE = {
     'Attribution': 'Nouveau terrain attribué par la commune : dessinez ses limites.',
     'Régularisation': 'Occupation de fait à régulariser : choisissez la parcelle recensée, ou dessinez le terrain.',

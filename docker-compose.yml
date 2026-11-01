@@ -82,6 +82,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       APP_ADMIN_EMAIL: ${APP_ADMIN_EMAIL}
       APP_ADMIN_PASSWORD: ${APP_ADMIN_PASSWORD}
+    volumes:
+      - ./data/public/relief:/relief:ro   # grille du relief (zones de pentes fortes)
     depends_on:
       db:
         condition: service_healthy

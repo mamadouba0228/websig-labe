@@ -560,3 +560,20 @@ button.mini { padding: 0 6px; font-size: 12px; margin-left: 2px; }
 .badge.d-En-cours { background: #ffe8cc; color: #a34700; }
 tr.cliquable { cursor: pointer; }
 tr.cliquable:hover td { background: #f8f9fa; }
+
+/* ---------- Protection de l'environnement ---------- */
+.env-atteinte { display: flex; align-items: center; justify-content: center; width: 18px; height: 18px; margin: 3px; transform: rotate(45deg);
+  background: #212529; border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, .45); }
+.env-atteinte b { transform: rotate(-45deg); color: #fff; font: 700 11px/1 system-ui, sans-serif; }
+.env-atteinte.grave { box-shadow: 0 0 0 3px #d03b3b; }
+.env-atteinte.close { background: #fff; border-color: #868e96; box-shadow: none; }
+.env-atteinte.close b { color: #868e96; }
+.badge.e-Protection-intégrale { background: #d3f9d8; color: #1f6f43; font-weight: 600; }
+.badge.e-Inconstructible { background: #e7f5ff; color: #1864ab; }
+.badge.e-Constructible-sous-conditions, .badge.e-inactive, .badge.e-Tari { background: #e9ecef; color: #495057; }
+.badge.e-Signalée, .badge.e-Tarit-en-saison-sèche, .badge.e-g-Moyenne { background: #fff3bf; color: #8a6d00; }
+.badge.e-Constatée, .badge.e-Mise-en-demeure { background: #ffe8cc; color: #a34700; }
+.badge.e-Sanctionnée, .badge.e-Pollué, .badge.e-g-Grave { background: #ffe3e3; color: #c8102e; }
+.badge.e-Remise-en-état, .badge.e-Close, .badge.e-Permanent, .badge.e-g-Faible { background: #d3f9d8; color: #1f6f43; }
+.badge.e-Classée-sans-suite { background: #e9ecef; color: #495057; }
+.env-switch button { padding-left: 6px; padding-right: 6px; }
