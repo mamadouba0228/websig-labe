@@ -717,7 +717,7 @@
     stopSketch();
     if (same) return; // re-clic sur l'outil de mesure = arrêt
     sketch = { mode: mode, pts: [], layer: L.layerGroup().addTo(map), measure: !!opts.measure,
-      onFinish: opts.onFinish, btn: opts.btn, label: opts.label };
+      onFinish: opts.onFinish, onCancel: opts.onCancel, btn: opts.btn, label: opts.label };
     if (opts.btn) opts.btn.classList.add('on');
     map.getContainer().classList.add('crosshair');
     map.doubleClickZoom.disable();
@@ -756,11 +756,16 @@
   sketchBox.addEventListener('click', function (e) {
     var a = e.target.getAttribute('data-a');
     if (!a || !sketch) return;
-    if (a === 'cancel') stopSketch();
+    if (a === 'cancel') annulerSketch();
     if (a === 'undo') { sketch.pts.pop(); drawSketch(); }
     if (a === 'finish') finishSketch();
   });
   L.DomEvent.disableClickPropagation(sketchBox);
+  function annulerSketch() {
+    var cb = sketch && sketch.onCancel;
+    stopSketch();
+    if (cb) cb();
+  }
 
   function finishSketch() {
     var min = { point: 1, line: 2, area: 3 }[sketch.mode];
@@ -815,7 +820,7 @@
     finishSketch();
   });
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') stopSketch();
+    if (e.key === 'Escape') annulerSketch();
   });
 
   // ---------- Outils ----------

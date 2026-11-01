@@ -5,11 +5,11 @@
  * - bibliothèques (CDN) : copie locale d'abord.
  * Les envois (POST, PUT…) ne passent jamais par le cache : sans réseau, la saisie est mise en file d'attente
  * par js/terrain.js et envoyée au retour de la connexion. */
-var VERSION = 'labe-v1';
+var VERSION = 'labe-v2';
 var COQUILLE = ['espace.html', 'index.html', 'css/style.css', 'manifest.webmanifest', 'icons/icone-192.png',
   'js/config.js', 'js/auth.js', 'js/app.js', 'js/terrain.js', 'js/edition.js', 'js/contributions.js', 'js/suivi.js',
   'js/adressage.js', 'js/adressage-public.js', 'js/itineraire.js', 'js/selection.js', 'js/analyses.js', 'js/relief.js',
-  'js/identify.js', 'js/espace.js'];
+  'js/identify.js', 'js/foncier.js', 'js/espace.js'];
 var MAX_TUILES = 4000;
 
 self.addEventListener('install', function (e) {

@@ -21,7 +21,8 @@
             var msg = 'Erreur ' + r.status;
             if (typeof data.detail === 'string') msg = data.detail;
             else if (Array.isArray(data.detail)) msg = 'Champ invalide : ' + data.detail.map(function (d) { return d.loc.slice(-1)[0]; }).join(', ');
-            var err = new Error(msg); err.status = r.status; throw err;
+            else if (data.detail && data.detail.message) msg = data.detail.message;
+            var err = new Error(msg); err.status = r.status; err.detail = data.detail; throw err;
           }
           return data;
         });

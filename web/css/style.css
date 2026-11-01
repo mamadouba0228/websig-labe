@@ -412,3 +412,53 @@ body.drawer-open #map { bottom: 36vh; }
 .tool-bar a.edit-btn { font-size: 17px; font-weight: 700; color: #b8860b; }
 .tool-bar a.edit-btn.on { background: #f2c230; color: #3b2f00; }
 .leaflet-container.edit-cursor, .leaflet-container.edit-cursor .leaflet-interactive { cursor: pointer !important; }
+
+/* Foncier : registre des parcelles, dossiers, contrôles */
+.fon-avert { background: #f8f9fa; border-left: 3px solid #868e96; padding: 6px 8px; border-radius: 4px; }
+.fon-liste li { border-left-width: 5px; }
+.fon-liste li.f-Provisoire { border-left-style: dashed; }
+.fon-liste li.fon-dossier { border-left-color: #e8590c; }
+.fon-liste li.fon-dossier.f-Approuvé { border-left-color: #2b8a3e; }
+.fon-liste li.fon-dossier.f-Rejeté, .fon-liste li.fon-dossier.f-Abandonné { border-left-color: #adb5bd; }
+.badge.f-Provisoire, .badge.f-Déposé { background: #fff3bf; color: #8a6d00; }
+.badge.f-Enregistrée, .badge.f-Approuvé, .badge.f-Avis-favorable { background: #d3f9d8; color: #1f6f43; }
+.badge.f-Archivée, .badge.f-Abandonné { background: #e9ecef; color: #495057; }
+.badge.f-En-instruction, .badge.f-Visite-effectuée { background: #ffe8cc; color: #a34700; }
+.badge.f-Rejeté, .badge.f-Avis-défavorable { background: #ffe3e3; color: #c8102e; }
+.fon-classe { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; }
+.fon-alertes { list-style: none; padding: 0; margin: 6px 0; font-size: 13px; }
+.fon-alertes li { padding: 5px 8px; border-radius: 5px; margin-bottom: 4px; background: #f1f3f5; }
+.fon-alertes li.n-bloquant { background: #ffe3e3; color: #8a1c1c; }
+.fon-alertes li.n-alerte { background: #fff3bf; color: #6b5200; }
+.fon-alertes.sans-haut { margin-top: 0; }
+.fon-ok { font-size: 13px; color: #1f6f43; margin: 6px 0; }
+.fon-pop-alerte { color: #c92a2a; font-size: 12px; margin: 4px 0; }
+.fon-ctl { list-style: none; padding: 0; margin: 4px 0; max-height: 30vh; overflow-y: auto; }
+.fon-ctl li { font-size: 12px; padding: 4px 6px; border-bottom: 1px solid var(--border); cursor: pointer; }
+.fon-ctl li:hover { background: #f1f3f5; }
+.fon-table th { text-align: left; font-weight: 600; color: var(--muted); font-size: 11px; padding: 4px 6px 4px 0; }
+.fon-table td:first-child { width: auto; }
+.fon-table input { width: 70px; padding: 3px; }
+.fon-actions { flex-wrap: wrap; margin-top: 8px; }
+.fon-actions button { flex: 1 0 auto; }
+.fon-sous { background: #f8f9fa; border: 1px solid var(--border); border-radius: 6px; padding: 10px; margin-top: 8px; }
+.fon-sous:empty { display: none; }
+.fon-sous h4 { margin: 0 0 6px; }
+.fon-sous label { display: block; font-size: 12px; margin-bottom: 8px; }
+.fon-sous input:not([type=checkbox]), .fon-sous select, .fon-sous textarea { display: block; width: 100%; margin-top: 4px; padding: 6px; border: 1px solid var(--border); border-radius: 6px; font: inherit; font-size: 13px; }
+.fon-etapes { display: flex; list-style: none; padding: 0; margin: 8px 0; gap: 2px; font-size: 11px; }
+.fon-etapes li { flex: 1; text-align: center; padding: 4px 2px; background: #e9ecef; color: #868e96; }
+.fon-etapes li:first-child { border-radius: 4px 0 0 4px; } .fon-etapes li:last-child { border-radius: 0 4px 4px 0; }
+.fon-etapes li.fait { background: #2b8a3e; color: #fff; }
+.fon-etapes li.actuel { background: #e8590c; color: #fff; font-weight: 600; }
+.fon-df-bloc { font-size: 13px; margin-bottom: 10px; }
+.fon-df-bloc:empty { display: none; }
+.fon-df-bloc button { margin: 4px 4px 0 0; }
+button.petit { padding: 3px 8px; font-size: 12px; }
+.label-parcelle { background: rgba(255,255,255,.8); border: 0; box-shadow: none; padding: 0 3px; font-size: 10px; color: #212529; border-radius: 3px; }
+.label-parcelle::before { display: none; }
+.modal-card .check input { display: inline; width: auto; margin: 0 6px 0 0; }
+.fon-histo li { display: block; }
+#tab-fon .filters select { grid-column: auto; min-width: 0; }
+#tab-fon input.full { display: block; width: 100%; box-sizing: border-box; font: inherit; font-size: 13px; padding: 6px; border: 1px solid var(--border); border-radius: 6px; margin: 4px 0 6px; }
+#tab-fon .row button { min-width: 0; }

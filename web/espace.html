@@ -35,6 +35,7 @@
       <button class="tab active" data-tab="contrib">Saisie <span id="tab-badge" class="tab-badge hidden"></span></button>
       <button class="tab" data-tab="suivi">Suivi <span id="suivi-badge" class="tab-badge hidden"></span></button>
       <button class="tab" data-tab="adr">Adressage</button>
+      <button class="tab" data-tab="fon">Foncier <span id="fon-badge" class="tab-badge hidden"></span></button>
       <button class="tab" data-tab="iti">Itinéraire</button>
       <button class="tab" data-tab="sel">Sélection</button>
       <button class="tab" data-tab="ana">Analyses</button>
@@ -165,6 +166,62 @@
           </div>
           <p class="hint">L'export des adresses suit le quartier choisi ci-dessus (vide = toute la commune). Il sert à commander les plaques.</p>
         </div>
+      </div>
+    </section>
+
+    <section id="tab-fon" class="panel">
+      <div id="fon-liste-vue">
+        <h3>Registre foncier</h3>
+        <div id="fon-cartes" class="stat-cards suivi-cartes"></div>
+        <p class="hint fon-avert">Le registre communal sert au recensement et au suivi des terrains. Il ne remplace pas le titre foncier délivré par les services de l'État (Conservation foncière).</p>
+        <div class="row">
+          <button id="fon-ajouter" class="primary" type="button">⬠ Recenser une parcelle</button>
+          <button id="fon-ajouter-gps" type="button">🚶 En marchant (GPS)</button>
+        </div>
+        <div class="row">
+          <button id="fon-nouveau-dossier" type="button">+ Nouveau dossier foncier</button>
+          <button id="fon-import-btn" type="button">Importer un levé (GeoJSON)</button>
+          <input id="fon-import" type="file" accept=".geojson,.json,application/geo+json" hidden>
+        </div>
+
+        <h3>Parcelles</h3>
+        <input id="fon-recherche" class="full" type="search" placeholder="Rechercher : numéro, référence d'acte, lotissement…">
+        <div class="filters">
+          <select id="fon-f-statut"><option value="">Tous les statuts juridiques</option></select>
+          <select id="fon-f-etat"><option value="">Provisoires et enregistrées</option><option>Provisoire</option><option>Enregistrée</option><option value="Archivée">Archivées (historique)</option></select>
+          <select id="fon-f-quartier"><option value="">Tous les quartiers</option></select>
+          <label class="check"><input type="checkbox" id="fon-f-alertes"> Avec alertes</label>
+        </div>
+        <p class="hint" id="fon-compte"></p>
+        <ul id="fon-liste" class="suivi-liste fon-liste"></ul>
+
+        <h3>Dossiers fonciers</h3>
+        <div class="filters">
+          <select id="fon-d-statut">
+            <option value="">En cours (non clos)</option><option value="tous">Tous</option>
+            <option>Déposé</option><option>En instruction</option><option>Visite effectuée</option><option>Avis favorable</option>
+            <option>Avis défavorable</option><option>Approuvé</option><option>Rejeté</option><option>Abandonné</option>
+          </select>
+          <select id="fon-d-type"><option value="">Tous les types</option></select>
+          <label class="check"><input type="checkbox" id="fon-d-mien"> Que j'instruis</label>
+        </div>
+        <ul id="fon-dossiers" class="suivi-liste fon-liste"></ul>
+
+        <h3>Contrôles</h3>
+        <p class="hint">Chevauchements entre parcelles, empiètements sur les voies et le domaine public (berges, plans d'eau, cimetières), zones inondables, bâtiments sans parcelle.</p>
+        <div id="fon-controles"></div>
+
+        <h3>Par quartier</h3>
+        <div id="fon-quartiers"></div>
+        <div class="row">
+          <button id="fon-export" type="button">Registre (CSV, Excel)</button>
+          <button id="fon-recontroler" class="validator-only-fon hidden" type="button">Refaire tous les contrôles</button>
+        </div>
+        <details class="adr-detail"><summary>Paramètres des contrôles</summary><div id="fon-parametres"></div></details>
+      </div>
+      <div id="fon-fiche-vue" class="hidden">
+        <button id="fon-retour" type="button">← Retour au registre</button>
+        <div id="fon-fiche"></div>
       </div>
     </section>
 
@@ -444,6 +501,68 @@
     </form>
   </div>
 
+  <!-- Fiche d'une parcelle (registre foncier) -->
+  <div id="fon-parcelle-modal" class="modal hidden">
+    <form id="fon-parcelle-form" class="modal-card">
+      <h3 id="fon-pf-titre">Nouvelle parcelle</h3>
+      <p class="hint" id="fon-pf-mesure"></p>
+      <div id="fon-pf-alertes"></div>
+      <div class="grid2">
+        <label>Usage<select name="usage"></select></label>
+        <label>Statut juridique<select name="statut_juridique"></select></label>
+      </div>
+      <div class="grid2">
+        <label>Référence de l'acte<input name="reference_acte" maxlength="120" placeholder="ex. TF n° 1234/LB, PH n° 56"></label>
+        <label>Date de l'acte<input name="date_acte" type="date"></label>
+      </div>
+      <div class="grid2">
+        <label>Lotissement<input name="lotissement" maxlength="120" placeholder="ex. Lotissement de Tata 2"></label>
+        <label>N° de lot<input name="lot" maxlength="30"></label>
+      </div>
+      <div class="grid2">
+        <label>Origine des limites<select name="source_geom"></select></label>
+        <label>Précision (m)<input name="precision_m" type="number" min="0" max="100" step="0.1"></label>
+      </div>
+      <label>Observations<textarea name="observations" rows="2" maxlength="2000" placeholder="Occupation, clôture, bornes, voisins…"></textarea></label>
+      <label id="fon-pf-motif" class="hidden">Motif de la modification *<input name="commentaire" maxlength="1000"></label>
+      <label id="fon-pf-forcer" class="check hidden"><input type="checkbox" name="forcer"> Enregistrer malgré le contrôle bloquant (superviseur)</label>
+      <p class="form-msg" id="fon-pf-msg"></p>
+      <div class="row">
+        <button type="button" id="fon-pf-annuler">Annuler</button>
+        <button type="submit" class="primary">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Nouveau dossier foncier -->
+  <div id="fon-dossier-modal" class="modal hidden">
+    <form id="fon-dossier-form" class="modal-card">
+      <h3>Nouveau dossier foncier</h3>
+      <label>Type de demande *<select name="type" required></select></label>
+      <p class="hint" id="fon-df-aide"></p>
+      <div id="fon-df-parcelles" class="fon-df-bloc"></div>
+      <div id="fon-df-limites" class="fon-df-bloc"></div>
+      <div id="fon-df-alertes"></div>
+      <div class="grid2">
+        <label>Demandeur *<input name="demandeur_nom" required minlength="2" maxlength="150" placeholder="Nom et prénom, ou raison sociale"></label>
+        <label>Téléphone<input name="demandeur_telephone" maxlength="30" placeholder="+224 …"></label>
+      </div>
+      <label>Pièce d'identité<input name="demandeur_piece" maxlength="60" placeholder="ex. CNI n° …"></label>
+      <div class="grid2" id="fon-df-juridique">
+        <label>Statut après décision<select name="statut_juridique"></select></label>
+        <label>Référence de l'acte<input name="reference_acte" maxlength="120"></label>
+      </div>
+      <label id="fon-df-usage">Usage demandé<select name="usage_demande"></select></label>
+      <label>Objet de la demande<textarea name="objet" rows="2" maxlength="2000"></textarea></label>
+      <label>Échéance d'instruction<input name="echeance" type="date"></label>
+      <p class="form-msg" id="fon-df-msg"></p>
+      <div class="row">
+        <button type="button" id="fon-df-annuler">Annuler</button>
+        <button type="submit" class="primary">Déposer le dossier</button>
+      </div>
+    </form>
+  </div>
+
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="js/config.js"></script>
   <script src="js/auth.js"></script>
@@ -459,6 +578,7 @@
   <script src="https://cdn.jsdelivr.net/npm/d3-contour@4.0.2/dist/d3-contour.min.js"></script>
   <script src="js/analyses.js"></script>
   <script src="js/relief.js"></script>
+  <script src="js/foncier.js"></script>
   <script src="js/identify.js"></script>
   <script src="js/espace.js"></script>
 </body>

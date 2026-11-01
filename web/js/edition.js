@@ -88,7 +88,9 @@
       if (save) save(g);
     }
   });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && ed) arreter(); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && ed) { var cb = ed.opts.onCancel; arreter(); if (cb) cb(); }
+  });
   function arreter() {
     if (!ed) return;
     map.removeLayer(ed.layer);

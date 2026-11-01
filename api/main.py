@@ -77,6 +77,7 @@ def startup():
     with cursor() as cur:
         cur.execute((Path(__file__).parent / "schema.sql").read_text(encoding="utf-8"))
         adressage.apply_schema(cur)
+        foncier.apply_schema(cur)
         # Premier administrateur, défini dans .env
         cur.execute("SELECT 1 FROM app.utilisateurs WHERE role = 'admin' LIMIT 1")
         if not cur.fetchone():
@@ -597,6 +598,8 @@ def stats():
 # ---------------------------------------------------------------- modules
 import adressage  # noqa: E402  (importé après les définitions partagées ci-dessus)
 import suivi  # noqa: E402
+import foncier  # noqa: E402
 
 app.include_router(adressage.router)
 app.include_router(suivi.router)
+app.include_router(foncier.router)

@@ -75,6 +75,29 @@ liste triée (retards et priorités d'abord), fiche avec historique complet et p
 **points chauds** (signalements par maille de 250 m et par quartier). Tables : `contrib.contributions`
 (colonnes `service_affecte`, `priorite`, `echeance`, `traite_le`…), `contrib.historique`.
 
+## Foncier
+
+Onglet « Foncier » de l'espace agents. Le registre communal sert au **recensement et au suivi** des terrains :
+il ne remplace pas le titre foncier délivré par les services de l'État (Conservation foncière).
+
+- **Registre des parcelles** : « ⬠ Recenser une parcelle » (dessin), « 🚶 En marchant (GPS) » ou import d'un levé
+  (GeoJSON en WGS84, jusqu'à 500 parcelles). Numéro unique `LAB-<code du quartier>-00001`, superficie et périmètre
+  calculés en UTM 28N, usage, statut juridique (titre foncier, permis d'habiter, attestation de cession, acte coutumier,
+  domaine public, réserve communale, non documenté), référence de l'acte, lotissement et lot, origine et précision des limites.
+  Une parcelle est **provisoire** jusqu'à sa validation par un superviseur (**enregistrée**) ; elle est **archivée**
+  après un morcellement ou une fusion. Chaque changement (attributs, limites) est gardé dans l'historique.
+- **Dossiers fonciers** : attribution, régularisation, morcellement (découpage par une ou plusieurs lignes), fusion,
+  mutation (vente, succession, donation), bornage, changement d'usage. Circuit : **Déposé** → **En instruction**
+  (service Urbanisme et domaines) → **Visite effectuée** (compte rendu, limites relevées) → **Avis favorable / défavorable**
+  → **Approuvé** (superviseur, référence de la décision) ou **Rejeté**. La décision approuvée est appliquée au registre.
+- **Contrôles** (`fon.controler`) au dessin, à la validation et à la décision : chevauchement avec une autre parcelle
+  (bloquant au-delà de 2 m²), empiètement sur l'emprise des voies (largeur selon la classe), bande de 10 m le long des
+  cours d'eau, plans d'eau, cimetières, zones inondables (MNT), pente (dans le navigateur), sortie de la commune.
+  Un superviseur peut passer outre un contrôle bloquant en donnant un motif. Contrôle d'ensemble : chevauchements,
+  parcelles à risque, bâtiments sans parcelle par quartier. Seuils modifiables (`fon.parametres`, administrateur).
+- Tableau par quartier, export CSV du registre. Tables : `fon.parcelles`, `fon.parcelles_historique`, `fon.dossiers`,
+  `fon.dossiers_historique`. Ces données ne sont pas publiées sur la carte publique.
+
 ## Identification des entités (bouton ⓘ)
 
 Comme l'outil « Identifier les entités » de QGIS : cliquer sur **ⓘ** (barre d'outils à droite, sous le zoom),
