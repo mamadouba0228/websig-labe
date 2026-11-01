@@ -599,7 +599,11 @@ def stats():
 import adressage  # noqa: E402  (importé après les définitions partagées ci-dessus)
 import suivi  # noqa: E402
 import foncier  # noqa: E402
+import foncier_fiscalite  # noqa: E402
+import foncier_gestion  # noqa: E402
 
 app.include_router(adressage.router)
 app.include_router(suivi.router)
 app.include_router(foncier.router)
+app.include_router(foncier_gestion.router)
+app.include_router(foncier_fiscalite.router)

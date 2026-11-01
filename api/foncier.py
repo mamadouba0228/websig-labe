@@ -42,6 +42,7 @@ REGLES = {
 
 def apply_schema(cur):
     cur.execute((Path(__file__).parent / "foncier.sql").read_text(encoding="utf-8"))
+    cur.execute((Path(__file__).parent / "foncier_gestion.sql").read_text(encoding="utf-8"))
     cur.execute("REFRESH MATERIALIZED VIEW fon.zones_inondables_m")
     # codes des quartiers (partagés avec l'adressage) : préfixe des numéros de parcelle
     cur.execute("SELECT count(*)::int AS n FROM adr.quartiers")
@@ -132,6 +133,8 @@ PARCELLE_COLS = """p.id, p.numero, p.quartier, p.usage, p.statut_juridique, p.re
     c.nom AS cree_par_nom, v.nom AS valide_par_nom,
     (SELECT count(*) FROM fon.dossiers d WHERE p.id = ANY (d.parcelles) AND d.statut NOT IN ('Approuvé', 'Rejeté', 'Abandonné'))::int
         AS dossiers_ouverts,
+    (SELECT count(*) FROM fon.litiges l WHERE p.id = ANY (l.parcelles)
+        AND l.statut IN ('Signalé', 'En médiation', 'Transmis au tribunal'))::int AS litiges_ouverts,
     ST_AsGeoJSON(p.geom, 7)::json AS geometry"""
 PARCELLE_FROM = """ FROM fon.parcelles p LEFT JOIN app.utilisateurs c ON c.id = p.cree_par
     LEFT JOIN app.utilisateurs v ON v.id = p.valide_par """
@@ -551,20 +554,22 @@ DOSSIER_FROM = """ FROM fon.dossiers d LEFT JOIN app.utilisateurs i ON i.id = d.
     LEFT JOIN app.utilisateurs dp ON dp.id = d.depose_par LEFT JOIN app.utilisateurs dd ON dd.id = d.decide_par """
 
 
-def feature_dossier(r: dict) -> dict:
+def feature_dossier(r: dict, u: dict) -> dict:
     geom = r.pop("geometry")
     iso(r, "echeance", "visite_le", "decide_le", "depose_le", "modifie_le")
     r["parcelles_numeros"] = r["parcelles_numeros"] or []
     r["creees_numeros"] = r["creees_numeros"] or []
+    if not (peut_instruire(u) or r["depose_par"] == u["id"]):
+        r["demandeur_telephone"] = r["demandeur_piece"] = None     # données personnelles : accès réservé
     return {"type": "Feature", "id": r["id"], "geometry": geom, "properties": r}
 
 
-def un_dossier(cur, did: int) -> dict:
+def un_dossier(cur, did: int, u: dict) -> dict:
     cur.execute(f"SELECT {DOSSIER_COLS} {DOSSIER_FROM} WHERE d.id = %s", (did,))
     r = cur.fetchone()
     if not r:
         raise HTTPException(404, "Dossier introuvable.")
-    return feature_dossier(r)
+    return feature_dossier(r, u)
 
 
 def historiser_dossier(cur, did: int, uid: int, action: str, avant: str | None, apres: str | None, commentaire: str | None = None):
@@ -642,6 +647,8 @@ def verifier_dossier(cur, type_: str, parcelles: list[int], geometry: dict | Non
                     (parcelles,))
         if cur.fetchone()["n"] != 1:
             raise HTTPException(400, "Les parcelles à fusionner ne sont pas contiguës.")
+    import foncier_gestion   # litiges en cours sur les parcelles concernées (import tardif : modules liés)
+    alertes += foncier_gestion.alertes_litiges(cur, parcelles)
     return parties, alertes
 
 
@@ -649,13 +656,13 @@ def verifier_dossier(cur, type_: str, parcelles: list[int], geometry: dict | Non
 def lister_dossiers(u: dict = Depends(current_user)):
     with cursor() as cur:
         cur.execute(f"SELECT {DOSSIER_COLS} {DOSSIER_FROM} ORDER BY d.depose_le DESC")
-        return {"type": "FeatureCollection", "features": [feature_dossier(r) for r in cur.fetchall()]}
+        return {"type": "FeatureCollection", "features": [feature_dossier(r, u) for r in cur.fetchall()]}
 
 
 @router.get("/dossiers/{did}")
 def fiche_dossier(did: int, u: dict = Depends(current_user)):
     with cursor() as cur:
-        f = un_dossier(cur, did)
+        f = un_dossier(cur, did, u)
         cur.execute("""SELECT h.date, h.action, h.statut_avant, h.statut_apres, h.commentaire, u.nom AS utilisateur
                        FROM fon.dossiers_historique h LEFT JOIN app.utilisateurs u ON u.id = h.utilisateur
                        WHERE h.dossier = %s ORDER BY h.date, h.id""", (did,))
@@ -697,7 +704,7 @@ def deposer(body: DossierIn, u: dict = Depends(current_user)):
         did = cur.fetchone()["id"]
         historiser_dossier(cur, did, u["id"], "dépôt", None, "Déposé", body.objet)
         journal(cur, u["id"], "dépôt de dossier foncier", f"dossier {did}", f"{numero} {body.type}")
-        return un_dossier(cur, did)
+        return un_dossier(cur, did, u)
 
 
 class ActionDossier(BaseModel):
@@ -724,7 +731,7 @@ def action_dossier(did: int, body: ActionDossier, u: dict = Depends(current_user
             if not body.commentaire:
                 raise HTTPException(400, "Commentaire vide.")
             historiser_dossier(cur, did, u["id"], "commentaire", s, s, body.commentaire)
-            return un_dossier(cur, did)
+            return un_dossier(cur, did, u)
         if s in CLOS:
             raise HTTPException(409, f"Dossier clos ({s.lower()}).")
         instructeur_ou_sup = est_superviseur(u) or (d["instructeur"] == u["id"])
@@ -811,7 +818,7 @@ def action_dossier(did: int, body: ActionDossier, u: dict = Depends(current_user
                                                "rejeter": "rejet", "abandonner": "abandon"}[a], s, nouveau, commentaire)
         cur.execute(f"UPDATE fon.dossiers SET {', '.join(sets)} WHERE id = %s", vals + [did])
         journal(cur, u["id"], f"dossier foncier : {a}", f"dossier {did}", d["numero"])
-        return un_dossier(cur, did)
+        return un_dossier(cur, did, u)
 
 
 def appliquer_decision(cur, d: dict, u: dict, body: ActionDossier) -> list[int]:
@@ -887,4 +894,6 @@ def appliquer_decision(cur, d: dict, u: dict, body: ActionDossier) -> list[int]:
         cur.execute(f"UPDATE fon.parcelles SET {', '.join(sets)} WHERE id = %s", vals + [pid])
         cur.execute("UPDATE fon.parcelles SET alertes = fon.controler(geom, ARRAY[id] || meres) WHERE id = %s", (pid,))
         journal(cur, u["id"], f"parcelle : {t.lower()}", f"parcelle {pid}", p["numero"])
+    import foncier_gestion   # les droits (titulaires) suivent la décision
+    foncier_gestion.transferer_titulaires(cur, d, u, creees)
     return creees

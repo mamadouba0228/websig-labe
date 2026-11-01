@@ -171,56 +171,98 @@
 
     <section id="tab-fon" class="panel">
       <div id="fon-liste-vue">
-        <h3>Registre foncier</h3>
-        <div id="fon-cartes" class="stat-cards suivi-cartes"></div>
-        <p class="hint fon-avert">Le registre communal sert au recensement et au suivi des terrains. Il ne remplace pas le titre foncier délivré par les services de l'État (Conservation foncière).</p>
-        <div class="row">
-          <button id="fon-ajouter" class="primary" type="button">⬠ Recenser une parcelle</button>
-          <button id="fon-ajouter-gps" type="button">🚶 En marchant (GPS)</button>
-        </div>
-        <div class="row">
-          <button id="fon-nouveau-dossier" type="button">+ Nouveau dossier foncier</button>
-          <button id="fon-import-btn" type="button">Importer un levé (GeoJSON)</button>
-          <input id="fon-import" type="file" accept=".geojson,.json,application/geo+json" hidden>
+        <div class="ana-switch fon-switch">
+          <button class="active" data-fon="reg" type="button">Registre</button>
+          <button data-fon="dos" type="button">Dossiers <span id="fon-dos-badge" class="tab-badge hidden"></span></button>
+          <button data-fon="lit" type="button">Litiges <span id="fon-lit-badge" class="tab-badge hidden"></span></button>
+          <button data-fon="bil" type="button">Bilan</button>
+          <button data-fon="fis" type="button" class="hidden" id="fon-fis-btn">Fiscalité</button>
         </div>
 
-        <h3>Parcelles</h3>
-        <input id="fon-recherche" class="full" type="search" placeholder="Rechercher : numéro, référence d'acte, lotissement…">
-        <div class="filters">
-          <select id="fon-f-statut"><option value="">Tous les statuts juridiques</option></select>
-          <select id="fon-f-etat"><option value="">Provisoires et enregistrées</option><option>Provisoire</option><option>Enregistrée</option><option value="Archivée">Archivées (historique)</option></select>
-          <select id="fon-f-quartier"><option value="">Tous les quartiers</option></select>
-          <label class="check"><input type="checkbox" id="fon-f-alertes"> Avec alertes</label>
-        </div>
-        <p class="hint" id="fon-compte"></p>
-        <ul id="fon-liste" class="suivi-liste fon-liste"></ul>
+        <div id="fon-reg">
+          <div id="fon-cartes" class="stat-cards suivi-cartes"></div>
+          <p class="hint fon-avert">Le registre communal sert au recensement et au suivi des terrains. Il ne remplace pas le titre foncier délivré par les services de l'État (Conservation foncière).</p>
+          <div class="row">
+            <button id="fon-ajouter" class="primary" type="button">⬠ Recenser une parcelle</button>
+            <button id="fon-ajouter-gps" type="button">🚶 En marchant (GPS)</button>
+          </div>
+          <div class="row">
+            <button id="fon-import-btn" type="button">Importer un levé (GeoJSON)</button>
+            <input id="fon-import" type="file" accept=".geojson,.json,application/geo+json" hidden>
+            <button id="fon-export" type="button">Registre (CSV, Excel)</button>
+          </div>
 
-        <h3>Dossiers fonciers</h3>
-        <div class="filters">
-          <select id="fon-d-statut">
-            <option value="">En cours (non clos)</option><option value="tous">Tous</option>
-            <option>Déposé</option><option>En instruction</option><option>Visite effectuée</option><option>Avis favorable</option>
-            <option>Avis défavorable</option><option>Approuvé</option><option>Rejeté</option><option>Abandonné</option>
-          </select>
-          <select id="fon-d-type"><option value="">Tous les types</option></select>
-          <label class="check"><input type="checkbox" id="fon-d-mien"> Que j'instruis</label>
-        </div>
-        <ul id="fon-dossiers" class="suivi-liste fon-liste"></ul>
+          <h3>Parcelles</h3>
+          <input id="fon-recherche" class="full" type="search" placeholder="Rechercher : numéro, référence d'acte, lotissement…">
+          <div class="filters">
+            <select id="fon-f-statut"><option value="">Tous les statuts juridiques</option></select>
+            <select id="fon-f-etat"><option value="">Provisoires et enregistrées</option><option>Provisoire</option><option>Enregistrée</option><option value="Archivée">Archivées (historique)</option></select>
+            <select id="fon-f-quartier"><option value="">Tous les quartiers</option></select>
+            <label class="check"><input type="checkbox" id="fon-f-alertes"> Avec alertes</label>
+          </div>
+          <p class="hint" id="fon-compte"></p>
+          <ul id="fon-liste" class="suivi-liste fon-liste"></ul>
 
-        <h3>Contrôles</h3>
-        <p class="hint">Chevauchements entre parcelles, empiètements sur les voies et le domaine public (berges, plans d'eau, cimetières), zones inondables, bâtiments sans parcelle.</p>
-        <div id="fon-controles"></div>
+          <div id="fon-titulaires-recherche" class="hidden">
+            <h3>Rechercher une personne</h3>
+            <input id="fon-t-q" class="full" type="search" placeholder="Nom, téléphone ou n° de pièce d'identité du titulaire">
+            <ul id="fon-t-res" class="fon-ctl"></ul>
+            <p class="hint">Recherche réservée au service Urbanisme et domaines et aux superviseurs ; chaque recherche est tracée dans le journal.</p>
+          </div>
 
-        <h3>Par quartier</h3>
-        <div id="fon-quartiers"></div>
-        <div class="row">
-          <button id="fon-export" type="button">Registre (CSV, Excel)</button>
-          <button id="fon-recontroler" class="validator-only-fon hidden" type="button">Refaire tous les contrôles</button>
+          <h3>Contrôles</h3>
+          <p class="hint">Chevauchements entre parcelles, empiètements sur les voies et le domaine public (berges, plans d'eau, cimetières), zones inondables, bâtiments sans parcelle.</p>
+          <div id="fon-controles"></div>
+          <div class="row"><button id="fon-recontroler" class="validator-only-fon hidden" type="button">Refaire tous les contrôles</button></div>
+
+          <h3>Par quartier</h3>
+          <div id="fon-quartiers"></div>
+          <details class="adr-detail"><summary>Paramètres des contrôles</summary><div id="fon-parametres"></div></details>
         </div>
-        <details class="adr-detail"><summary>Paramètres des contrôles</summary><div id="fon-parametres"></div></details>
+
+        <div id="fon-dos" class="hidden">
+          <div class="row"><button id="fon-nouveau-dossier" class="primary" type="button">+ Nouveau dossier foncier</button></div>
+          <div class="filters">
+            <select id="fon-d-statut">
+              <option value="">En cours (non clos)</option><option value="tous">Tous</option>
+              <option>Déposé</option><option>En instruction</option><option>Visite effectuée</option><option>Avis favorable</option>
+              <option>Avis défavorable</option><option>Approuvé</option><option>Rejeté</option><option>Abandonné</option>
+            </select>
+            <select id="fon-d-type"><option value="">Tous les types</option></select>
+            <label class="check"><input type="checkbox" id="fon-d-mien"> Que j'instruis</label>
+          </div>
+          <ul id="fon-dossiers" class="suivi-liste fon-liste"></ul>
+        </div>
+
+        <div id="fon-lit" class="hidden">
+          <div class="row"><button id="fon-l-nouveau" class="primary" type="button">⚖ Signaler un litige</button></div>
+          <div class="filters">
+            <select id="fon-l-statut">
+              <option value="">En cours</option><option value="tous">Tous</option>
+              <option>Signalé</option><option>En médiation</option><option>Transmis au tribunal</option><option>Résolu à l'amiable</option><option>Clos</option>
+            </select>
+            <select id="fon-l-type"><option value="">Tous les types</option></select>
+          </div>
+          <ul id="fon-litiges" class="suivi-liste fon-liste"></ul>
+          <p class="hint">Un litige en cours sur une parcelle bloque la décision des dossiers qui la concernent (sauf décision motivée d'un superviseur).</p>
+        </div>
+
+        <div id="fon-bil" class="hidden"><div id="fon-bilan"><p class="hint">Chargement…</p></div></div>
+
+        <div id="fon-fis" class="hidden">
+          <div class="filters"><select id="fon-fis-annee"></select></div>
+          <div id="fon-fis-avert"></div>
+          <div id="fon-fis-cartes" class="stat-cards"></div>
+          <h3>Par quartier</h3>
+          <div id="fon-fis-quartiers"></div>
+          <h3>Restes à recouvrer</h3>
+          <ul id="fon-fis-restes" class="fon-ctl"></ul>
+          <div class="row"><button id="fon-fis-export" type="button">Rôle prévisionnel (CSV, Excel)</button></div>
+          <details class="adr-detail"><summary>Barème et zones</summary><div id="fon-fis-bareme"></div></details>
+        </div>
       </div>
       <div id="fon-fiche-vue" class="hidden">
-        <button id="fon-retour" type="button">← Retour au registre</button>
+        <button id="fon-retour" type="button">← Retour</button>
         <div id="fon-fiche"></div>
       </div>
     </section>
@@ -579,6 +621,7 @@
   <script src="js/analyses.js"></script>
   <script src="js/relief.js"></script>
   <script src="js/foncier.js"></script>
+  <script src="js/foncier-gestion.js"></script>
   <script src="js/identify.js"></script>
   <script src="js/espace.js"></script>
 </body>

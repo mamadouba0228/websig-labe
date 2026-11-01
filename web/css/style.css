@@ -462,3 +462,37 @@ button.petit { padding: 3px 8px; font-size: 12px; }
 #tab-fon .filters select { grid-column: auto; min-width: 0; }
 #tab-fon input.full { display: block; width: 100%; box-sizing: border-box; font: inherit; font-size: 13px; padding: 6px; border: 1px solid var(--border); border-radius: 6px; margin: 4px 0 6px; }
 #tab-fon .row button { min-width: 0; }
+.fon-switch { grid-auto-flow: row; grid-template-columns: repeat(3, 1fr); }
+.fon-switch button { border-bottom: 1px solid var(--border); }
+.fon-switch .tab-badge { margin-left: 2px; }
+.fon-bloc { margin-top: 10px; }
+.fon-bloc h4 { margin: 8px 0 4px; }
+.fon-tit li { cursor: default; }
+.fon-tit li.inactif { opacity: .6; }
+.fon-tit li button { margin-top: 3px; }
+.fon-pieces-liste li small { color: var(--muted); }
+.fon-ctl li.fon-lit-ouvert { background: #fff5f5; }
+.fon-liste li.fon-litige { border-left-color: #c92a2a; }
+.fon-liste li.fon-litige.f-Résolu-à-l-amiable, .fon-liste li.fon-litige.f-Clos { border-left-color: #adb5bd; }
+.badge.f-Signalé { background: #ffe3e3; color: #c8102e; }
+.badge.f-En-médiation, .badge.f-Transmis-au-tribunal { background: #ffe8cc; color: #a34700; }
+.badge.f-Résolu-à-l-amiable, .badge.f-Clos { background: #e9ecef; color: #495057; }
+.fon-lit-ico { background: #c92a2a; color: #fff; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 1px 4px rgba(0,0,0,.4); font-size: 13px; line-height: 20px; text-align: center; }
+.fon-lab { display: block; font-size: 13px; margin-bottom: 8px; }
+.fon-lab select, .fon-lab textarea { display: block; width: 100%; margin-top: 4px; padding: 6px; border: 1px solid var(--border); border-radius: 6px; font: inherit; }
+.fon-barres { font-size: 12px; }
+.fon-barre { display: grid; grid-template-columns: 38% 1fr auto; gap: 6px; align-items: center; margin: 3px 0; }
+.fon-barre span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fon-barre i { display: block; height: 10px; background: #f1f3f5; border-radius: 0 4px 4px 0; }
+.fon-barre i b { display: block; height: 100%; background: #2b8a3e; border-radius: 0 4px 4px 0; min-width: 2px; }
+.fon-barre em { font-style: normal; color: var(--muted); white-space: nowrap; }
+.fon-col { width: 100%; height: auto; display: block; }
+.fon-col rect { fill: #2b8a3e; }
+.fon-col rect.cible { fill: transparent; }
+.fon-col g:hover rect:not(.cible) { fill: #1f6f43; }
+.fon-col .axe { stroke: #adb5bd; stroke-width: 1; }
+.fon-col text { font-size: 8px; fill: #868e96; text-anchor: middle; }
+.fon-col text.v { fill: #212529; font-weight: 600; }
+.fon-mini { display: inline-block; width: 40px; height: 6px; background: #f1f3f5; border-radius: 3px; margin-left: 4px; vertical-align: middle; }
+.fon-mini b { display: block; height: 100%; background: #2b8a3e; border-radius: 3px; }
+#fon-fis .stat-cards b { font-size: 15px; }

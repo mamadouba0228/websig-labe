@@ -15,7 +15,7 @@
   var ETAPES = ['Déposé', 'En instruction', 'Visite effectuée', 'Avis', 'Décision'];
   var LABEL_ZOOM = 18, MAX_LABELS = 150;
   var TYPE_ALERTE = { chevauchement: 'Chevauchement', commune: 'Hors commune', emprise: 'Emprise de voie', berge: 'Berge de cours d\'eau',
-    eau: 'Plan d\'eau', cimetiere: 'Cimetière', inondation: 'Zone inondable', pente: 'Pente', morcellement: 'Découpage', fusion: 'Fusion' };
+    eau: 'Plan d\'eau', cimetiere: 'Cimetière', inondation: 'Zone inondable', pente: 'Pente', morcellement: 'Découpage', fusion: 'Fusion', litige: 'Litige en cours' };
   var AIDE = {
     'Attribution': 'Nouveau terrain attribué par la commune : dessinez ses limites.',
     'Régularisation': 'Occupation de fait à régulariser : choisissez la parcelle recensée, ou dessinez le terrain.',
@@ -169,12 +169,16 @@
         if (a === 'alertes') { F.alertes = true; F.etat = ''; $('fon-f-etat').value = ''; }
         $('fon-f-alertes').checked = F.alertes;
         changerArchives();
-        (a === 'dossiers' ? $('fon-dossiers') : $('fon-liste')).scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (a === 'dossiers') sousOnglet('dos'); else $('fon-liste').scrollIntoView({ behavior: 'smooth', block: 'start' });
       };
     });
-    var badge = $('fon-badge'), aTraiter = sup() ? n.Provisoire + ouverts.filter(function (d) { return d.properties.statut === 'Avis favorable'; }).length
-      : ouverts.filter(function (d) { return d.properties.instructeur === Auth.user().id; }).length;
-    badge.textContent = aTraiter; badge.classList.toggle('hidden', !aTraiter);
+    var dosATraiter = ouverts.filter(function (d) {
+      var p = d.properties;
+      return sup() ? p.statut === 'Avis favorable' : p.instructeur === Auth.user().id || (LISTES.peut_instruire && p.statut === 'Déposé');
+    }).length;
+    var aTraiter = (sup() ? n.Provisoire : 0) + dosATraiter;
+    $('fon-badge').textContent = aTraiter; $('fon-badge').classList.toggle('hidden', !aTraiter);
+    $('fon-dos-badge').textContent = dosATraiter; $('fon-dos-badge').classList.toggle('hidden', !dosATraiter);
 
     var quartiers = {};
     parcelles.forEach(function (f) { if (f.properties.quartier) quartiers[f.properties.quartier] = 1; });
@@ -339,6 +343,17 @@
     if (document.body.classList.contains('collapsed')) document.body.classList.remove('collapsed');
     $('tab-fon').scrollTop = 0;
   }
+  // ---------- Sous-onglets : registre, dossiers, litiges, bilan, fiscalité ----------
+  var sousCourant = 'reg', surSousOnglet = {};
+  function sousOnglet(k) {
+    sousCourant = k;
+    document.querySelectorAll('.fon-switch button').forEach(function (b) { b.classList.toggle('active', b.dataset.fon === k); });
+    ['reg', 'dos', 'lit', 'bil', 'fis'].forEach(function (x) { $('fon-' + x).classList.toggle('hidden', x !== k); });
+    if (!$('fon-fiche-vue').classList.contains('hidden')) $('fon-retour').click();
+    if (surSousOnglet[k]) surSousOnglet[k]();
+  }
+  document.querySelectorAll('.fon-switch button').forEach(function (b) { b.onclick = function () { sousOnglet(b.dataset.fon); }; });
+
   $('fon-retour').onclick = function () {
     vueFiche = null; surbrillance.clearLayers(); apercu.clearLayers();
     $('fon-fiche-vue').classList.add('hidden'); $('fon-liste-vue').classList.remove('hidden');
@@ -388,6 +403,7 @@
         d.appendChild(h);
       }
       var hist = document.createElement('div');
+      hist.className = 'fon-bloc-histo';
       hist.innerHTML = '<h4>Historique</h4><ul class="histo fon-histo">' + f.historique.map(function (x) {
         return '<li><b>' + esc(x.action) + '</b> <small>' + new Date(x.date).toLocaleString('fr-FR') + (x.utilisateur ? ' · ' + esc(x.utilisateur) : '') +
           (x.dossier_numero ? ' · dossier ' + esc(x.dossier_numero) : '') + '</small>' + (x.commentaire ? '<br>' + esc(x.commentaire) : '') +
@@ -395,6 +411,7 @@
       }).join('') + '</ul>';
       d.appendChild(hist);
       montrerFiche(d);
+      if (window.LabeFoncierGestion) LabeFoncierGestion.completerParcelle(f, d);
       d.querySelectorAll('[data-p]').forEach(function (a) { a.onclick = function (e) { e.preventDefault(); ouvrirParcelle(+a.dataset.p); }; });
       d.querySelectorAll('[data-d]').forEach(function (li) { li.onclick = function () { ouvrirDossier(+li.dataset.d); }; });
       d.querySelectorAll('[data-h]').forEach(function (b) {
@@ -801,8 +818,10 @@
         return '<li><b>' + esc(x.action) + '</b> <small>' + new Date(x.date).toLocaleString('fr-FR') + (x.utilisateur ? ' · ' + esc(x.utilisateur) : '') +
           (x.statut_apres && x.statut_apres !== x.statut_avant ? ' · → ' + esc(x.statut_apres) : '') + '</small>' + (x.commentaire ? '<br>' + esc(x.commentaire) : '') + '</li>';
       }).join('') + '</ul>';
+      hist.className = 'fon-bloc-histo';
       d.appendChild(hist);
       montrerFiche(d);
+      if (window.LabeFoncierGestion) LabeFoncierGestion.completerDossier(f, d);
       d.querySelectorAll('[data-p]').forEach(function (a) { a.onclick = function (e) { e.preventDefault(); ouvrirParcelle(+a.dataset.p); }; });
     }).catch(fail);
   }
@@ -898,5 +917,11 @@
   }
 
   window.LabeFoncier = { start: start, ouvrirParcelle: function (id) { ouvrirParcelle(id); }, ouvrirDossier: function (id) { ouvrirDossier(id); },
-    recharger: charger, parcelleEn: parcelleEn };
+    recharger: charger, parcelleEn: parcelleEn,
+    // outils partagés avec foncier-gestion.js (titulaires, pièces, litiges, bilan, fiscalité)
+    outils: { api: api, btn: btn, table: table, dateFr: dateFr, cls: cls, fail: fail, sup: sup, montrerFiche: montrerFiche,
+      surligner: surligner, apercu: apercu, listeAlertes: listeAlertes, choisirParcelles: choisirParcelles, CLASSES: CLASSES,
+      listes: function () { return LISTES; }, parcelle: function (id) { return parById[id] && parById[id].f; },
+      parcelles: function () { return parcelles; }, dossiers: function () { return dossiers; },
+      sousOnglet: sousOnglet, surSousOnglet: surSousOnglet, sousCourant: function () { return sousCourant; } } };
 })();

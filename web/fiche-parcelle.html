@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fiche parcellaire — Commune urbaine de Labé</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="css/certificat.css">
+  <link rel="stylesheet" href="css/fiche-parcelle.css">
+</head>
+<body>
+  <div class="barre no-print" id="barre">
+    <a href="espace.html?onglet=fon">← Espace agents</a>
+    <label class="delivrance">Demandeur <input id="demandeur" placeholder="Nom et prénom" maxlength="150"></label>
+    <label class="delivrance">Motif <input id="motif" placeholder="ex. permis de construire, vente" maxlength="200"></label>
+    <button id="delivrer" class="delivrance" type="button">Délivrer et imprimer</button>
+    <button id="imprimer" class="hidden" type="button">🖨 Imprimer / PDF</button>
+  </div>
+
+  <main id="page" class="page">
+    <p class="chargement">Chargement de la fiche…</p>
+  </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/fiche-parcelle.js"></script>
+</body>
+</html>

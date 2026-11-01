@@ -1,0 +1,33 @@
+/* Fiche parcellaire : compléments à certificat.css */
+.hidden { display: none !important; }
+.page.fiche { padding: 12mm 14mm; }
+.page.fiche h1 { margin: 5mm 0 4mm; font-size: 18pt; }
+.page.fiche .adresse { font-size: 17pt; margin: 3mm 0 4mm; padding: 3mm; }
+.page.fiche .corps { grid-template-columns: 1fr 78mm; }
+.page.fiche #carte { height: 72mm; }
+.page.fiche h2 { font-size: 11pt; color: #1f6f43; margin: 5mm 0 2mm; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #d3e9dc; padding-bottom: 1mm; }
+.page.fiche .details th { width: 38mm; }
+.page.fiche .details { font-size: 9.5pt; }
+.page.fiche .details td, .page.fiche .details th { padding: 1.2mm 2mm 1.2mm 0; }
+.bornes { border-collapse: collapse; width: 100%; font-size: 8.5pt; font-variant-numeric: tabular-nums; }
+.bornes th { background: #f4faf6; color: #1f6f43; text-align: right; padding: 1mm 2mm; font-weight: 600; border-bottom: 1px solid #b2d8c1; }
+.bornes td { text-align: right; padding: 0.8mm 2mm; border-bottom: 1px solid #e9ecef; }
+.bornes th:first-child, .bornes td:first-child { text-align: left; }
+.note { font-size: 8pt; color: #868e96; margin: 1mm 0 0; }
+.contraintes { font-size: 9.5pt; margin: 0; padding-left: 5mm; }
+.contraintes li { margin: 0.8mm 0; }
+.contraintes .grave { color: #c92a2a; font-weight: 600; }
+.mention { font-size: 8.5pt; color: #495057; border: 1px solid #dee2e6; border-radius: 2mm; padding: 2mm 3mm; margin-top: 4mm; text-align: justify; }
+.page.fiche .pied { margin-top: 5mm; }
+.page.fiche .cachet { height: 22mm; }
+.etiquette-borne { background: #fff; border: 1px solid #c92a2a; border-radius: 3px; padding: 0 3px; font-size: 9px; font-weight: 700; color: #c92a2a; box-shadow: none; }
+.etiquette-borne::before, .etiquette-voisin::before { display: none; }
+.etiquette-voisin { background: rgba(255,255,255,.8); border: 0; box-shadow: none; font-size: 8px; color: #495057; padding: 0 2px; }
+.verification { max-width: 140mm; margin: 30mm auto; text-align: center; }
+.verification .resultat { font-size: 14pt; font-weight: 700; padding: 4mm; border-radius: 3mm; margin: 6mm 0; }
+.verification .ok { background: #d3f9d8; color: #1f6f43; }
+.verification .attention { background: #fff3bf; color: #8a6d00; }
+.verification .details { margin: 0 auto; max-width: 120mm; text-align: left; }
+@media print {
+  .page.fiche { height: auto; min-height: 297mm; }
+}

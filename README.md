@@ -95,8 +95,30 @@ il ne remplace pas le titre foncier délivré par les services de l'État (Conse
   cours d'eau, plans d'eau, cimetières, zones inondables (MNT), pente (dans le navigateur), sortie de la commune.
   Un superviseur peut passer outre un contrôle bloquant en donnant un motif. Contrôle d'ensemble : chevauchements,
   parcelles à risque, bâtiments sans parcelle par quartier. Seuils modifiables (`fon.parametres`, administrateur).
-- Tableau par quartier, export CSV du registre. Tables : `fon.parcelles`, `fon.parcelles_historique`, `fon.dossiers`,
-  `fon.dossiers_historique`. Ces données ne sont pas publiées sur la carte publique.
+- **Titulaires et pièces** : titulaires des droits de chaque parcelle (propriétaire, copropriétaire, héritier,
+  occupant…, part, période), recherche d'une personne ; pièces jointes (PDF, JPEG, PNG, 5 Mo) aux parcelles, dossiers
+  et litiges. À la décision d'un dossier, les droits suivent : mutation (ancien titulaire clos, nouveau inscrit),
+  attribution, morcellement et fusion (titulaires reportés sur les nouvelles parcelles).
+  **Données personnelles** (titulaires, pièces, parties d'un litige, coordonnées des demandeurs) : réservées au service
+  Urbanisme et domaines et aux superviseurs ; chaque consultation de pièce et chaque recherche de personne est tracée
+  dans le journal.
+- **Litiges** : signalement (sur des parcelles ou un point hors registre), médiation, réunions et audiences,
+  résolution à l'amiable ou transmission au tribunal, clôture. Un litige en cours **bloque la décision** des dossiers
+  sur les parcelles concernées. Symbole ⚖ sur la carte.
+- **Fiche parcellaire** (`fiche-parcelle.html?parcelle=…`) : page A4 imprimable ou en PDF (identification, plan avec
+  les bornes et les voisines, titulaires, bornes en UTM 28N et WGS 84, longueur des côtés, contraintes et litiges).
+  Délivrée seulement pour une parcelle enregistrée ; chaque délivrance reçoit un numéro `FP-AAAA-NNNNN` et un code.
+  Le QR code mène à une **vérification publique** sans aucun nom, qui indique si les limites ont changé depuis.
+- **Bilan** : parcelles par statut et par usage, part du bâti couvert, dossiers par type et délais, activité sur 12 mois,
+  litiges par type et par quartier.
+- **Fiscalité locale (estimation)** : montant indicatif par parcelle = (superficie × tarif terrain + emprise bâtie ×
+  tarif bâti) × coefficient de l'usage, minimum par zone (A, B, C selon le quartier), exonérations (domaine public,
+  réserve, équipement public, culte…). Rôle prévisionnel (CSV), paiements et quittances (service Finances et recettes),
+  taux de recouvrement. **Le barème fourni est un exemple** : il doit être fixé par le service des finances selon la
+  loi de finances en vigueur (modifiable par l'administrateur, puis « Marquer le barème comme validé »).
+- Tables : `fon.parcelles`, `fon.parcelles_historique`, `fon.dossiers`, `fon.dossiers_historique`, `fon.titulaires`,
+  `fon.pieces`, `fon.litiges`, `fon.litiges_historique`, `fon.fiches`, `fon.zones_fiscales`, `fon.bareme`,
+  `fon.coef_usage`, `fon.paiements` (vue `fon.assiette`). Rien de tout cela n'est publié sur la carte publique.
 
 ## Identification des entités (bouton ⓘ)
 

@@ -167,10 +167,10 @@
   }
 
   // ---------- Sous-onglets ----------
-  document.querySelectorAll('.ana-switch button').forEach(function (b) {
+  document.querySelectorAll('#tab-ana .ana-switch button').forEach(function (b) {
     b.addEventListener('click', function () {
-      document.querySelectorAll('.ana-switch button').forEach(function (x) { x.classList.toggle('active', x === b); });
-      document.querySelectorAll('.ana-switch button').forEach(function (x) { $('ana-' + x.dataset.ana).classList.toggle('hidden', x !== b); });
+      document.querySelectorAll('#tab-ana .ana-switch button').forEach(function (x) { x.classList.toggle('active', x === b); });
+      document.querySelectorAll('#tab-ana .ana-switch button').forEach(function (x) { $('ana-' + x.dataset.ana).classList.toggle('hidden', x !== b); });
     });
   });
   $('ana-clear').addEventListener('click', function () {
