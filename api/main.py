@@ -79,6 +79,8 @@ def startup():
         adressage.apply_schema(cur)
         foncier.apply_schema(cur)
         dechets.apply_schema(cur)
+        # mises à jour automatiques après une modification du bâti (QGIS…)
+        cur.execute((Path(__file__).parent / "reference.sql").read_text(encoding="utf-8"))
         # Premier administrateur, défini dans .env
         cur.execute("SELECT 1 FROM app.utilisateurs WHERE role = 'admin' LIMIT 1")
         if not cur.fetchone():

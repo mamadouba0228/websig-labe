@@ -309,7 +309,19 @@ Réimporter les données de référence (écrase le schéma `ref`) :
 ```powershell
 $env:FORCE_IMPORT=1; docker compose run --rm import; Remove-Item Env:FORCE_IMPORT
 docker compose run --rm geoserver-init
+docker compose restart api      # remet en place les mises à jour automatiques du bâti
 ```
+
+### Modifier le bâti et les cours d'eau dans QGIS
+
+Connexion PostgreSQL dans QGIS : hôte `localhost`, port `5433`, base `labe`, utilisateur `labe`, mot de passe
+`POSTGRES_PASSWORD` du fichier `.env`. Couches `ref.batiments` (polygones : `nature`) et `ref.cours_eau`
+(lignes : `nom`, `regime` = `Permanent` ou `Intermittent`), en EPSG:4326. Ne pas remplir `gid` (numéro automatique).
+
+Après chaque ajout, déplacement ou suppression d'un bâtiment, la base met à jour toute seule (déclencheurs de
+`api/reference.sql`) : le centre du bâtiment pour l'adressage et le foncier, son quartier pour la couverture des
+déchets, le nombre de bâtiments des quartiers, et détache l'adresse d'un bâtiment supprimé (l'adresse est gardée).
+La carte locale est à jour immédiatement ; la carte publique GitHub après `scripts\publier.ps1`.
 
 ## Données
 
