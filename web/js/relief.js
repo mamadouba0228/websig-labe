@@ -137,6 +137,7 @@
       swatch: '<span class="swatch" style="background:#f76707"></span>',
       legend: [['5 à 15 % (modérée)', COUL_PENTE[1]], ['15 à 30 % (forte)', COUL_PENTE[2]], ['plus de 30 % (très forte)', COUL_PENTE[3]]] });
     A.addOverlay({ name: 'Zones inondables', group: 'Relief et risques naturels', onToggle: image('inondation', 0.9),
+      table: function () { return getJSON(BASE + 'zones_inondables.geojson'); },
       swatch: '<span class="swatch" style="background:#1864ab"></span>',
       legend: [['Aléa fort (moins de 2 m au-dessus du drainage)', COUL_INOND[0]], ['Aléa moyen (2 à 5 m)', COUL_INOND[1]]] });
   });

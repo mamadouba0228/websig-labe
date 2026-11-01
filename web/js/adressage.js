@@ -366,11 +366,12 @@
       A.ready.then(function () {
         A.enregistrerIdentifiable(voiesLayer, 'Voies (adressage)');
         A.enregistrerIdentifiable(adrLayer, 'Adresses');
-        A.addOverlay({ name: 'Voies (adressage)', on: true, group: 'Adressage',
+        A.addOverlay({ name: 'Voies (adressage)', on: true, group: 'Adressage', table: voiesLayer,
           onToggle: function (on) { voiesWanted = on; if (started) refresh(); },
           swatch: '<span class="swatch line" style="background:#7048e8"></span>',
           legend: [['Nom officiel', '#1f6f43', 'line'], ['Nom proposé', '#f08c00', 'line'], ['Code seul / nom d\'usage', '#7048e8', 'line']] });
         A.addOverlay({ name: 'Adresses (zoom ≥ ' + ADR_ZOOM + ')', on: true,
+          table: function () { return Auth.api('GET', '/adressage/table-adresses'); },
           onToggle: function (on) { adrWanted = on; if (started) refresh(); },
           swatch: '<span class="swatch dot" style="background:#f08c00"></span>',
           legend: Object.keys(ADR_COLORS).map(function (k) { return [k, ADR_COLORS[k]]; }) });

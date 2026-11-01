@@ -891,6 +891,20 @@
       .catch(fail).then(function () { b.disabled = false; });
   };
 
+  // table attributaire : tous les attributs utiles du registre (les données personnelles n'y figurent pas)
+  function tableParcelles() {
+    return parcelles.map(function (f) {
+      var p = f.properties;
+      return { layer: parById[p.id] && parById[p.id].l, feature: { type: 'Feature', geometry: f.geometry, properties: {
+        'Numéro': p.numero, 'Quartier': p.quartier, 'Usage': p.usage, 'Statut juridique': p.statut_juridique,
+        'Référence de l\'acte': p.reference_acte, 'Date de l\'acte': p.date_acte, 'Lotissement': p.lotissement, 'Lot': p.lot,
+        'État': p.etat, 'Superficie (m²)': p.superficie_m2, 'Périmètre (m)': p.perimetre_m, 'Origine des limites': p.source_geom,
+        'Précision (m)': p.precision_m, 'Alertes': p.alertes.filter(function (a) { return a.niveau !== 'info'; }).length,
+        'Dossiers en cours': p.dossiers_ouverts, 'Litiges en cours': p.litiges_ouverts, 'Recensée le': p.cree_le,
+        'Validée le': p.valide_le } } };
+    });
+  }
+
   // ---------- Démarrage ----------
   function start() {
     api('GET', '/listes').then(function (l) {
@@ -898,12 +912,12 @@
       remplir($('fon-f-statut'), l.statuts_juridiques, 'Tous les statuts juridiques');
       remplir($('fon-d-type'), l.types_dossier, 'Tous les types');
       document.querySelectorAll('.validator-only-fon').forEach(function (e) { e.classList.toggle('hidden', !sup()); });
-      A.addOverlay({ name: 'Parcelles (registre foncier)', layer: couche, on: true, group: 'Foncier',
+      A.addOverlay({ name: 'Parcelles (registre foncier)', layer: couche, on: true, group: 'Foncier', table: tableParcelles,
         onToggle: function (on) { coucheVoulue = on; if (on) couche.addTo(map); else map.removeLayer(couche); etiquettes(); },
         swatch: '<span class="swatch" style="background:' + CLASSES[1].couleur + '"></span>',
         legend: CLASSES.map(function (c) { return [c.nom + (c.statuts.length > 1 ? ' (' + c.statuts.join(', ').toLowerCase() + ')' : ''), c.couleur]; })
           .concat([['Contour en tirets : provisoire', '#495057', 'line'], ['Contour rouge épais : contrôle bloquant', '#c92a2a', 'line']]) });
-      A.addOverlay({ name: 'Bâtiments sans parcelle (contrôle)', layer: sansParcelle, on: false, group: 'Foncier',
+      A.addOverlay({ name: 'Bâtiments sans parcelle (contrôle)', layer: sansParcelle, on: false, group: 'Foncier', table: false,
         swatch: '<span class="swatch dot" style="background:#c92a2a"></span>' });
       A.enregistrerIdentifiable(couche, 'Parcelles (registre foncier)');
       chargerParametres();

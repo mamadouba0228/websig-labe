@@ -155,6 +155,17 @@
     var lab = document.createElement('label');
     lab.className = 'layer-item';
     lab.innerHTML = '<input type="checkbox"' + (o.on ? ' checked' : '') + '>' + o.swatch + '<span>' + esc(o.name) + '</span>';
+    // table attributaire (comme dans QGIS) : couches vectorielles, ou source fournie par o.table
+    if (o.table !== false && (o.table || o.layer)) {
+      var tb = document.createElement('button');
+      tb.type = 'button'; tb.className = 'table-btn'; tb.textContent = '⊞';
+      tb.title = 'Ouvrir la table attributaire';
+      tb.addEventListener('click', function (e) {
+        e.preventDefault(); e.stopPropagation();
+        if (window.LabeTable) LabeTable.ouvrir(o);
+      });
+      lab.appendChild(tb);
+    }
     ovDiv.appendChild(lab);
     if (o.legend) {
       var ul = document.createElement('ul'); ul.className = 'legend-sub';
@@ -523,9 +534,9 @@
       swatch: '<span class="swatch line" style="background:repeating-linear-gradient(90deg,#c8102e 0 6px,transparent 6px 9px)"></span>' });
     addOverlay({ name: 'Quartiers (' + D.quartiers.features.length + ')', layer: quartiers, on: true,
       swatch: '<span class="swatch" style="background:transparent;border:2px solid #7048e8"></span>' });
-    addOverlay({ name: 'Masque hors commune', layer: mask, on: true,
+    addOverlay({ name: 'Masque hors commune', layer: mask, on: true, table: false,
       swatch: '<span class="swatch" style="background:rgba(0,0,0,.25)"></span>' });
-    addOverlay({ name: 'Bâti (zoom ≥ ' + BATI_MIN_ZOOM + ')', on: true,
+    addOverlay({ name: 'Bâti (zoom ≥ ' + BATI_MIN_ZOOM + ')', on: true, table: function () { return loadOnce('batiments'); },
       onToggle: function (on) { batiWanted = on; updateBati(); },
       swatch: '<span class="swatch" style="background:#868e96"></span>',
       legend: [['Bâtiment', '#868e96'], ['En construction', '#f2c230'], ['Case / hutte', '#a0785a'], ['Scolaire', '#6f42c1']] });

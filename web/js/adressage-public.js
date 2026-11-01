@@ -183,7 +183,7 @@
       swatch: '<span class="swatch line" style="background:#7048e8"></span>',
       legend: [['Nom officiel', '#1f6f43', 'line'], ['Code provisoire / nom d\'usage', '#7048e8', 'line']] });
     var nbProp = adrFeatures.filter(function (f) { return f.properties.statut === 'Proposée'; }).length;
-    A.addOverlay({ name: 'Adresses (' + A.fmt(adrFeatures.length) + ', zoom ≥ ' + ADR_ZOOM + ')', on: true,
+    A.addOverlay({ name: 'Adresses (' + A.fmt(adrFeatures.length) + ', zoom ≥ ' + ADR_ZOOM + ')', on: true, table: adresses,
       onToggle: function (on) { adrWanted = on; refreshLabels(); },
       swatch: '<span class="swatch dot" style="background:' + (nbProp ? '#f08c00' : '#1f6f43') + '"></span>',
       legend: nbProp ? [['Validée par la mairie', '#1f6f43'], ['Proposée (en attente de validation)', '#f08c00']] : null });

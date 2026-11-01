@@ -120,6 +120,21 @@ il ne remplace pas le titre foncier délivré par les services de l'État (Conse
   `fon.pieces`, `fon.litiges`, `fon.litiges_historique`, `fon.fiches`, `fon.zones_fiscales`, `fon.bareme`,
   `fon.coef_usage`, `fon.paiements` (vue `fon.assiette`). Rien de tout cela n'est publié sur la carte publique.
 
+## Table attributaire (bouton ⊞)
+
+Comme dans QGIS : dans l'onglet « Couches », le bouton ⊞ à droite d'une couche ouvre sa table attributaire en bas
+de la carte (carte publique et espace agents ; bâti, voirie, quartiers, équipements, hydrographie, espaces verts,
+zones inondables, voies et adresses, saisies, parcelles, litiges…).
+
+- Tri en cliquant un titre de colonne (▲ / ▼), recherche dans toutes les colonnes, affichage de toutes les entités,
+  de celles **visibles sur la carte** ou des **sélectionnées**.
+- Sélection d'une ligne au clic, **Ctrl** + clic pour en ajouter, **Maj** + clic pour une plage ; les entités
+  sélectionnées sont surlignées en jaune sur la carte. Double-clic : zoom sur l'entité et ouverture de sa fiche.
+- « Zoomer » (sur la sélection ou les entités filtrées), « Colonnes » (colonnes affichées), « CSV » (entités
+  filtrées ou sélectionnées, pour Excel), ⤢ pour agrandir.
+- Surface ou longueur calculée ajoutée quand la couche n'en a pas. Défilement virtuel : le bâti (44 000 entités)
+  s'affiche sans ralentir.
+
 ## Identification des entités (bouton ⓘ)
 
 Comme l'outil « Identifier les entités » de QGIS : cliquer sur **ⓘ** (barre d'outils à droite, sous le zoom),

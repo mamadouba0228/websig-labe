@@ -339,6 +339,14 @@ def _adr_feature(r):
             "properties": r}
 
 
+@router.get("/table-adresses")
+def table_adresses(u: dict = Depends(current_user)):
+    """Toutes les adresses (table attributaire de l'espace agents)."""
+    with cursor() as cur:
+        cur.execute(ADR_SELECT + " ORDER BY v.code, a.numero, a.suffixe")
+        return {"type": "FeatureCollection", "features": [_adr_feature(r) for r in cur.fetchall()]}
+
+
 @router.get("/adresses")
 def lister_adresses(bbox: str = Query(..., description="ouest,sud,est,nord"), u: dict = Depends(current_user)):
     try:
