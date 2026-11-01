@@ -78,6 +78,7 @@ def startup():
         cur.execute((Path(__file__).parent / "schema.sql").read_text(encoding="utf-8"))
         adressage.apply_schema(cur)
         foncier.apply_schema(cur)
+        dechets.apply_schema(cur)
         # Premier administrateur, défini dans .env
         cur.execute("SELECT 1 FROM app.utilisateurs WHERE role = 'admin' LIMIT 1")
         if not cur.fetchone():
@@ -601,9 +602,11 @@ import suivi  # noqa: E402
 import foncier  # noqa: E402
 import foncier_fiscalite  # noqa: E402
 import foncier_gestion  # noqa: E402
+import dechets  # noqa: E402
 
 app.include_router(adressage.router)
 app.include_router(suivi.router)
 app.include_router(foncier.router)
 app.include_router(foncier_gestion.router)
 app.include_router(foncier_fiscalite.router)
+app.include_router(dechets.router)

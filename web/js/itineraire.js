@@ -444,6 +444,42 @@
     parcourir: dijkstraMulti,
     cout: cost,
     VITESSE_PIETON: VITESSE_PIETON,
-    KX: KX, KY: KY
+    KX: KX, KY: KY,
+    trajet: trajet
   };
+
+  // Trajet sur les rues passant par une suite de points (tournées de collecte des déchets).
+  // o.optimiser : ordre de passage optimisé (le premier point reste le départ) ; o.boucle : retour au départ.
+  // Résultat : { ordre, coords: [[lng, lat]…], longueur (m), duree (s) } ou { erreur, index }
+  function trajet(latlngs, m, o) {
+    o = o || {};
+    return ensureGraph().then(function () {
+      var snaps = latlngs.map(function (ll) { return snap(L.latLng(ll), m); });
+      var bad = snaps.indexOf(null);
+      if (bad >= 0) return { erreur: 'à plus de ' + SNAP_MAX_M + ' m d\'une voie praticable' + (m === 'vehicule' ? ' en véhicule' : ''), index: bad };
+      var D = snaps.map(function (s) { return dijkstra(s, m); });
+      var ordre = latlngs.map(function (_, i) { return i; });
+      if (o.optimiser && latlngs.length > 2) {
+        var M = snaps.map(function (_, i) { return snaps.map(function (t, j) { return i === j ? 0 : costTo(D[i], t, m).c; }); });
+        ordre = optimiserOrdre(M, !!o.boucle);
+      }
+      var legs = [];
+      for (var i = 1; i < ordre.length; i++) legs.push([ordre[i - 1], ordre[i]]);
+      if (o.boucle && ordre.length > 1) legs.push([ordre[ordre.length - 1], ordre[0]]);
+      var coords = [], longueur = 0, duree = 0;
+      for (var k = 0; k < legs.length; k++) {
+        var p = pathTo(D[legs[k][0]], snaps[legs[k][1]], m);
+        if (!isFinite(p.cost)) return { erreur: 'pas relié au reste du réseau' + (m === 'vehicule' ? ' (essayez à pied)' : ''), index: legs[k][1] };
+        duree += p.cost;
+        p.steps.forEach(function (st) {
+          longueur += st.len;
+          st.c.forEach(function (c) {
+            var last = coords[coords.length - 1];
+            if (!last || last[0] !== c[0] || last[1] !== c[1]) coords.push([+c[0].toFixed(7), +c[1].toFixed(7)]);
+          });
+        });
+      }
+      return { ordre: ordre, coords: coords, longueur: longueur, duree: duree };
+    });
+  }
 })();

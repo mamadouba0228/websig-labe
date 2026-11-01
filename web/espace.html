@@ -36,6 +36,7 @@
       <button class="tab" data-tab="suivi">Suivi <span id="suivi-badge" class="tab-badge hidden"></span></button>
       <button class="tab" data-tab="adr">Adressage</button>
       <button class="tab" data-tab="fon">Foncier <span id="fon-badge" class="tab-badge hidden"></span></button>
+      <button class="tab" data-tab="dech">Déchets <span id="dech-badge" class="tab-badge hidden"></span></button>
       <button class="tab" data-tab="iti">Itinéraire</button>
       <button class="tab" data-tab="sel">Sélection</button>
       <button class="tab" data-tab="ana">Analyses</button>
@@ -264,6 +265,63 @@
       <div id="fon-fiche-vue" class="hidden">
         <button id="fon-retour" type="button">← Retour</button>
         <div id="fon-fiche"></div>
+      </div>
+    </section>
+
+    <section id="tab-dech" class="panel">
+      <div id="dech-liste-vue">
+        <div class="ana-switch dech-switch">
+          <button data-dech="pts" type="button" class="active">Points</button>
+          <button data-dech="tou" type="button">Tournées</button>
+          <button data-dech="ter" type="button">Terrain <span id="dech-ter-badge" class="tab-badge hidden"></span></button>
+          <button data-dech="bil" type="button">Bilan</button>
+        </div>
+
+        <div id="dech-pts">
+          <div id="dech-cartes" class="stat-cards suivi-cartes"></div>
+          <div class="row">
+            <button id="dech-ajouter" class="primary" type="button">📍 Placer un point</button>
+            <button id="dech-ajouter-gps" type="button">🚶 À ma position (GPS)</button>
+            <button id="dech-export" type="button">Points (CSV, Excel)</button>
+          </div>
+          <p class="hint">Dépôts sauvages, dépotoirs, bacs, points de regroupement… Un point saisi par un agent est publié sur la carte publique après vérification par le service Hygiène et salubrité.</p>
+          <div id="dech-signalements"></div>
+          <input id="dech-recherche" class="full" type="search" placeholder="Rechercher : numéro, nom, description…">
+          <div class="filters">
+            <select id="dech-f-type"><option value="">Tous les types</option></select>
+            <select id="dech-f-etat"><option value="">En service (actifs et saturés)</option><option>Actif</option><option>Saturé</option><option>Fermé</option><option>Résorbé</option><option value="tous">Tous les états</option></select>
+            <select id="dech-f-quartier"><option value="">Tous les quartiers</option></select>
+            <label class="check"><input type="checkbox" id="dech-f-verifier"> À vérifier</label>
+          </div>
+          <p class="hint" id="dech-compte"></p>
+          <ul id="dech-liste" class="suivi-liste fon-liste"></ul>
+        </div>
+
+        <div id="dech-tou" class="hidden">
+          <div class="row">
+            <button id="dech-t-nouvelle" class="primary hidden" type="button">+ Nouvelle tournée</button>
+            <button id="dech-t-export" type="button">Tournées (CSV, Excel)</button>
+          </div>
+          <p class="hint">Une tournée est une suite ordonnée de points de collecte, avec ses jours de passage. Le trajet est calculé sur les rues (ou tracé à la main).</p>
+          <ul id="dech-tournees" class="suivi-liste fon-liste"></ul>
+        </div>
+
+        <div id="dech-ter" class="hidden">
+          <div class="filters"><label>Date <input id="dech-date" type="date"></label></div>
+          <div id="dech-file"></div>
+          <ul id="dech-jour" class="suivi-liste fon-liste"></ul>
+        </div>
+
+        <div id="dech-bil" class="hidden">
+          <div id="dech-bilan"><p class="hint">Chargement…</p></div>
+          <h4>Couverture du service</h4>
+          <div id="dech-couverture"><button id="dech-couv-btn" type="button">Calculer la couverture</button></div>
+          <details class="adr-detail"><summary>Paramètres</summary><div id="dech-parametres"></div></details>
+        </div>
+      </div>
+      <div id="dech-fiche-vue" class="hidden">
+        <button id="dech-retour" type="button">← Retour</button>
+        <div id="dech-fiche"></div>
       </div>
     </section>
 
@@ -605,6 +663,77 @@
     </form>
   </div>
 
+  <!-- Point de collecte ou dépotoir -->
+  <div id="dech-point-modal" class="modal hidden">
+    <form id="dech-point-form" class="modal-card">
+      <h3 id="dech-pf-titre">Nouveau point</h3>
+      <div class="grid2">
+        <label>Type *<select name="type" required></select></label>
+        <label>État<select name="etat"></select></label>
+      </div>
+      <label>Nom ou repère<input name="nom" maxlength="150" placeholder="ex. Bac du marché central, carrefour…"></label>
+      <div class="grid2">
+        <label>Volume estimé (m³)<input name="volume_m3" type="number" min="0" step="0.5"></label>
+        <label>Capacité (m³)<input name="capacite_m3" type="number" min="0" step="0.5" placeholder="bac, dépotoir"></label>
+      </div>
+      <label>Accès<select name="acces"></select></label>
+      <label>Description<textarea name="description" rows="2" maxlength="2000" placeholder="Nature des déchets, gêne, risques (caniveau bouché, école proche…)"></textarea></label>
+      <label>Photo<input name="photo" type="file" accept="image/*" capture="environment"></label>
+      <div id="dech-pf-photo" class="dech-photo"></div>
+      <label id="dech-pf-motif" class="hidden">Motif de la modification<input name="commentaire" maxlength="1000"></label>
+      <label id="dech-pf-forcer" class="check hidden"><input type="checkbox" name="forcer"> C'est bien un autre point (enregistrer quand même)</label>
+      <p class="form-msg" id="dech-pf-msg"></p>
+      <div class="row">
+        <button type="button" id="dech-pf-annuler">Annuler</button>
+        <button type="submit" class="primary">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Constat sur un point -->
+  <div id="dech-constat-modal" class="modal hidden">
+    <form id="dech-constat-form" class="modal-card">
+      <h3 id="dech-cf-titre">Constat</h3>
+      <div class="grid2">
+        <label>État constaté *<select name="etat" required></select></label>
+        <label>Volume estimé (m³)<input name="volume_m3" type="number" min="0" step="0.5"></label>
+      </div>
+      <label>Commentaire<textarea name="commentaire" rows="2" maxlength="1000"></textarea></label>
+      <label>Photo<input name="photo" type="file" accept="image/*" capture="environment"></label>
+      <div id="dech-cf-photo" class="dech-photo"></div>
+      <p class="form-msg" id="dech-cf-msg"></p>
+      <div class="row">
+        <button type="button" id="dech-cf-annuler">Annuler</button>
+        <button type="submit" class="primary">Enregistrer le constat</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Tournée de collecte -->
+  <div id="dech-tournee-modal" class="modal hidden">
+    <form id="dech-tournee-form" class="modal-card">
+      <h3 id="dech-tf-titre">Nouvelle tournée</h3>
+      <label>Nom *<input name="nom" required minlength="2" maxlength="120" placeholder="ex. Centre-ville – marché central"></label>
+      <fieldset class="dech-jours"><legend>Jours de passage</legend><div id="dech-tf-jours"></div></fieldset>
+      <div class="grid2">
+        <label>Heure de départ<input name="heure_depart" type="time"></label>
+        <label>Moyen<select name="moyen"></select></label>
+      </div>
+      <div class="grid2">
+        <label>Véhicule<input name="vehicule" maxlength="80" placeholder="immatriculation, n° du tricycle"></label>
+        <label>Prestataire<input name="prestataire" maxlength="150" placeholder="régie communale, GIE, PME…"></label>
+      </div>
+      <label>Équipe<input name="equipe" maxlength="300" placeholder="chauffeur, ripeurs"></label>
+      <label>Observations<textarea name="observations" rows="2" maxlength="2000"></textarea></label>
+      <label class="check"><input type="checkbox" name="active" checked> Tournée active</label>
+      <p class="form-msg" id="dech-tf-msg"></p>
+      <div class="row">
+        <button type="button" id="dech-tf-annuler">Annuler</button>
+        <button type="submit" class="primary">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="js/config.js"></script>
   <script src="js/auth.js"></script>
@@ -623,6 +752,8 @@
   <script src="js/relief.js"></script>
   <script src="js/foncier.js"></script>
   <script src="js/foncier-gestion.js"></script>
+  <script src="js/dechets-carte.js"></script>
+  <script src="js/dechets.js"></script>
   <script src="js/identify.js"></script>
   <script src="js/espace.js"></script>
 </body>

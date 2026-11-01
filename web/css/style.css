@@ -528,3 +528,35 @@ body.drawer-open.drawer-grand #map { bottom: 75vh; }
   .table-drawer .ta-actions input { width: 100%; }
   .table-drawer.agrandi { height: 85vh; }
 }
+
+/* ---------- Gestion des déchets ---------- */
+.dech-marker { background: none; border: 0; }
+.dech-ico { position: relative; display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%;
+  background: var(--c); color: var(--t); font: 700 11px/1 system-ui, sans-serif; border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, .4); }
+.dech-ico.ferme { background: #fff; border-color: var(--c); color: var(--c); box-shadow: none; }
+.dech-ico.sature { box-shadow: 0 0 0 3px #d03b3b; }
+.dech-ico.a-verifier { border-style: dashed; border-color: #212529; }
+.dech-ico.choisi { box-shadow: 0 0 0 3px #f2c230, 0 0 0 4px rgba(0, 0, 0, .4); }
+.dech-ico i { position: absolute; top: -7px; right: -7px; width: 13px; height: 13px; border-radius: 50%; background: #d03b3b; color: #fff;
+  font: 700 9px/13px system-ui, sans-serif; font-style: normal; text-align: center; border: 1px solid #fff; }
+.dech-photo img { max-width: 100%; max-height: 220px; border-radius: 4px; margin: 6px 0; }
+.dech-ordre { padding-left: 22px; font-size: 13px; }
+.dech-ordre li { margin: 4px 0; cursor: pointer; }
+.dech-ordre li .row { margin: 3px 0 6px; }
+.dech-passage li { padding: 4px 6px; border-radius: 4px; border-left: 3px solid #dee2e6; }
+.dech-passage li.d-Collecté { border-left-color: #0ca30c; background: #f4fbf4; }
+.dech-passage li.d-Saturé { border-left-color: #d03b3b; background: #fff5f5; }
+.dech-passage li.d-Non-collecté { border-left-color: #fab219; background: #fffaeb; }
+.dech-progres { height: 8px; background: #f1f3f5; border-radius: 4px; overflow: hidden; }
+.dech-progres i { display: block; height: 100%; background: #2b8a3e; }
+button.mini { padding: 0 6px; font-size: 12px; margin-left: 2px; }
+.dech-jours { border: 1px solid var(--border); border-radius: 4px; padding: 4px 8px; margin: 6px 0; }
+.dech-jours label.check { display: inline-flex; margin-right: 8px; }
+.fon-liste li.d-inactive { opacity: .6; }
+.badge.d-Actif, .badge.d-verifie, .badge.d-Collecté, .badge.d-Terminé { background: #d3f9d8; color: #1f6f43; }
+.badge.d-Saturé { background: #ffe3e3; color: #c8102e; }
+.badge.d-Fermé, .badge.d-Résorbé, .badge.d-Annulé { background: #e9ecef; color: #495057; }
+.badge.d-a-verifier, .badge.d-Non-collecté { background: #fff3bf; color: #8a6d00; }
+.badge.d-En-cours { background: #ffe8cc; color: #a34700; }
+tr.cliquable { cursor: pointer; }
+tr.cliquable:hover td { background: #f8f9fa; }

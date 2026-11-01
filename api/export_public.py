@@ -96,6 +96,13 @@ def main():
             for f in fc["features"]:
                 f["properties"].pop("ordre", None)
             write("adresses.geojson", fc)
+        # Gestion des déchets : points vérifiés et tournées actives
+        cur.execute("SELECT to_regclass('dech.points') IS NOT NULL AS ok")
+        if cur.fetchone()["ok"]:
+            import dechets
+            d = dechets.donnees_publiques(cur)
+            write("dechets_points.geojson", d["points"])
+            write("dechets_tournees.geojson", d["tournees"])
         write("stats.json", compute_stats(cur))
     print("Export terminé.")
 

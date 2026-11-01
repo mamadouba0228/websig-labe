@@ -120,6 +120,38 @@ il ne remplace pas le titre foncier délivré par les services de l'État (Conse
   `fon.pieces`, `fon.litiges`, `fon.litiges_historique`, `fon.fiches`, `fon.zones_fiscales`, `fon.bareme`,
   `fon.coef_usage`, `fon.paiements` (vue `fon.assiette`). Rien de tout cela n'est publié sur la carte publique.
 
+## Gestion des déchets
+
+Onglet **Déchets** de l'espace agents (schéma `dech`). Peuvent organiser (vérifier les points, créer les tournées,
+annuler un passage, régler les paramètres) : les services **Hygiène et salubrité** et **Voirie et assainissement**,
+et les superviseurs. Tous les agents peuvent saisir des points, faire des constats et relever les passages.
+
+- **Points de collecte et dépotoirs** : dépôt sauvage, dépotoir autorisé, bac / conteneur, point de regroupement,
+  centre de transfert, décharge finale. Placés sur la carte ou à la position GPS, avec état (actif, saturé, fermé,
+  résorbé), volume estimé, capacité, accès (camion, tricycle, à pied), photo. Numéros par type : `DS-00001`,
+  `BC-00001`… Un point à moins de 15 m d'un point existant demande confirmation (doublon). Chaque **constat** (état,
+  volume, photo) est gardé dans l'historique du point. Un point saisi par un agent est **publié sur la carte publique
+  après vérification** par le service (ceux du service sont vérifiés d'office). La couche part vide : les agents la
+  remplissent sur le terrain.
+- **Signalements « Dépôt d'ordures »** (onglet Saisie) : une fois validés, ils apparaissent dans l'onglet Déchets ;
+  le service les convertit en dépôt sauvage (ou les rattache à un point existant à moins de 30 m). Le signalement
+  passe « En cours » au service Hygiène, puis « Traité » quand le dépôt est résorbé.
+- **Tournées** (`T-01`…) : nom, jours de passage, heure de départ, moyen, véhicule, équipe, prestataire. Les points
+  se choisissent en cliquant sur la carte dans l'ordre de passage ; le trajet est **calculé sur les rues** (ordre
+  optimisé, retour au départ en option) ou tracé à la main. Durée estimée = trajet (15 km/h en camion, 10 en tricycle,
+  4 à pied) + un arrêt par point (5 min, réglable). Fiche : quartiers traversés, bâtiments desservis, passages, export GPX.
+- **Terrain** : programme du jour ; « Démarrer » puis, à chaque point, ✓ collecté, ⚠ saturé (le point passe
+  « Saturé ») ou ✗ non collecté avec un motif. **Fonctionne sans réseau** : relevés, constats et nouveaux points
+  sont gardés dans le téléphone et envoyés au retour de la connexion, sans doublon.
+- **Bilan** : dépôts sauvages ouverts par quartier, signalés et résorbés par mois, délai moyen de résorption, points
+  saturés, points sans constat récent, réalisation des tournées sur 30 jours (passages faits / prévus, points collectés,
+  jours manqués), motifs de non-collecte. **Couverture** : part des bâtiments à moins de 200 m (réglable) d'une tournée
+  active ou d'un point de collecte, par quartier, et bâtiments non desservis sur la carte.
+- Exports CSV des points et des tournées. Carte publique : points vérifiés en service et tournées actives avec leurs
+  jours de passage (fichiers `dechets_points.geojson` et `dechets_tournees.geojson` sur GitHub Pages).
+- Tables : `dech.points`, `dech.constats`, `dech.tournees`, `dech.passages`, `dech.passages_points`,
+  `dech.parametres`, `dech.bati_quartier`.
+
 ## Table attributaire (bouton ⊞)
 
 Comme dans QGIS : dans l'onglet « Couches », le bouton ⊞ à droite d'une couche ouvre sa table attributaire en bas
