@@ -92,6 +92,10 @@ def main():
                 {"@key": "passwd", "$": os.environ["POSTGRES_PASSWORD"]},
                 {"@key": "Expose primary keys", "$": "true"},
                 {"@key": "Estimated extends", "$": "false"},
+                # Connexions vérifiées avant usage : un redémarrage de PostGIS ne casse plus les couches
+                {"@key": "validate connections", "$": "true"},
+                {"@key": "Test while idle", "$": "true"},
+                {"@key": "Evictor run periodicity", "$": "300"},
             ]}}}
         url = f"{REST}/workspaces/{WS}/datastores"
         if exists(f"{url}/{store}"):
