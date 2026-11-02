@@ -577,3 +577,17 @@ tr.cliquable:hover td { background: #f8f9fa; }
 .badge.e-Remise-en-état, .badge.e-Close, .badge.e-Permanent, .badge.e-g-Faible { background: #d3f9d8; color: #1f6f43; }
 .badge.e-Classée-sans-suite { background: #e9ecef; color: #495057; }
 .env-switch button { padding-left: 6px; padding-right: 6px; }
+
+/* ---------- Réseaux : éclairage public, bornes-fontaines, pannes et fuites ---------- */
+.res-panne { display: flex; align-items: center; justify-content: center; width: 18px; height: 18px; margin: 3px; border-radius: 3px;
+  background: #212529; color: #fff; font: 700 11px/1 system-ui, sans-serif; border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, .45); }
+.res-panne.urgente { box-shadow: 0 0 0 3px #d03b3b; }
+.res-panne.retard { border-style: dashed; border-color: #d03b3b; }
+.res-panne.close { background: #fff; border-color: #868e96; color: #868e96; box-shadow: none; }
+.badge.r-Signalée, .badge.r-Débit-faible { background: #fff3bf; color: #8a6d00; }
+.badge.r-Transmise { background: #e7f5ff; color: #1864ab; }
+.badge.r-En-réparation { background: #ffe8cc; color: #a34700; }
+.badge.r-Réparée, .badge.r-En-service { background: #d3f9d8; color: #1f6f43; }
+.badge.r-En-panne, .badge.r-Urgente { background: #ffe3e3; color: #c8102e; }
+.badge.r-Classée-sans-suite, .badge.r-Hors-service, .badge.r-Volé---détruit, .badge.r-Fermée { background: #e9ecef; color: #495057; }
+.res-switch button { padding-left: 6px; padding-right: 6px; }

@@ -188,6 +188,34 @@ salubrité** et les superviseurs. Tous les agents signalent, constatent, planten
 - Tables : `env.zones`, `env.atteintes`, `env.atteintes_historique`, `env.plantations`, `env.plantations_suivis`,
   `env.points_eau`, `env.points_eau_constats`, `env.feux`, `env.parametres`.
 
+## Réseaux : éclairage public, bornes-fontaines, pannes et fuites
+
+Onglet **Réseaux** de l'espace agents (schéma `res`). Gèrent (transmission, réparation, classement, paramètres) : les
+**Services techniques**, la **Voirie et assainissement** et les superviseurs. Tous les agents recensent et signalent.
+Les grands réseaux (lignes de l'EDG, conduites de la SEG) ne sont pas gérés ici.
+
+- **Éclairage public** (`LP-0001`…) : lampadaires solaires ou raccordés, lampe, puissance, gestionnaire, état
+  (en service, en panne, hors service, volé / détruit), rue la plus proche calculée. Un lampadaire à moins de 3 m
+  d'un autre demande confirmation. **Rues éclairées** : part de la longueur de chaque rue à moins de 25 m d'un
+  lampadaire en service (rue éclairée, en partie, pas ou peu éclairée).
+- **Bornes-fontaines** (`BF-0001`…) : borne-fontaine, kiosque à eau ou forage équipé, gestionnaire, robinets,
+  prix du bidon de 20 litres, horaires, état (en service, débit faible, en panne, fermée). **Bâtiments loin d'une
+  borne** : à plus de 500 m d'une borne qui donne de l'eau, montrés en rouge.
+- **Pannes et fuites** (`PA-AAAA-0001` pour l'éclairage, `FU-AAAA-0001` pour l'eau) : signalées depuis la fiche d'un
+  lampadaire ou d'une borne, sur la carte ou au GPS, avec photo et urgence. Circuit : Signalée → Transmise (EDG, SEG,
+  entreprise, équipe municipale) → En réparation → Réparée (coût), ou Classée sans suite ; délai visé de 7 jours
+  (éclairage) et 3 jours (eau), dépassements signalés. L'état de l'équipement suit la panne : « En panne » tant
+  qu'elle est ouverte, « En service » à la réparation. Un équipement recensé « En panne » ouvre une panne tout seul.
+  Les signalements « Éclairage en panne » et « Fuite d'eau » de l'onglet Saisie deviennent des interventions,
+  rattachées au lampadaire ou à la borne la plus proche (puis « Traité » à la réparation).
+- **Bilan** : part des rues éclairées et des bâtiments desservis en eau, par quartier ; pannes en cours, en retard,
+  délai moyen de réparation et dépenses par réseau ; pannes par nature et par quartier ; signalements par mois.
+- Saisies possibles sans réseau (même file d'attente que les déchets). Exports CSV : lampadaires, bornes, pannes et
+  fuites, tableau par quartier. Paramètres (portée d'un lampadaire, distance à une borne, délais) dans le Bilan.
+- Carte publique : lampadaires et bornes-fontaines avec leur état (pas les pannes). Fichiers `res_lampadaires`,
+  `res_bornes` (`.geojson`) sur GitHub Pages.
+- Tables : `res.lampadaires`, `res.bornes`, `res.interventions`, `res.interventions_historique`, `res.parametres`.
+
 ## Table attributaire (bouton ⊞)
 
 Comme dans QGIS : dans l'onglet « Couches », le bouton ⊞ à droite d'une couche ouvre sa table attributaire en bas

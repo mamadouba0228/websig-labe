@@ -109,6 +109,12 @@ def main():
             import environnement
             for nom, fc in environnement.donnees_publiques(cur).items():
                 write(f"env_{nom}.geojson", fc)
+        # Réseaux : lampadaires et bornes-fontaines (pas les pannes en cours)
+        cur.execute("SELECT to_regclass('res.lampadaires') IS NOT NULL AS ok")
+        if cur.fetchone()["ok"]:
+            import reseaux
+            for nom, fc in reseaux.donnees_publiques(cur).items():
+                write(f"res_{nom}.geojson", fc)
         write("stats.json", compute_stats(cur))
     print("Export terminé.")
 

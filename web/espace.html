@@ -38,6 +38,7 @@
       <button class="tab" data-tab="fon">Foncier <span id="fon-badge" class="tab-badge hidden"></span></button>
       <button class="tab" data-tab="dech">Déchets <span id="dech-badge" class="tab-badge hidden"></span></button>
       <button class="tab" data-tab="env">Environnement <span id="env-badge" class="tab-badge hidden"></span></button>
+      <button class="tab" data-tab="res">Réseaux <span id="res-badge" class="tab-badge hidden"></span></button>
       <button class="tab" data-tab="iti">Itinéraire</button>
       <button class="tab" data-tab="sel">Sélection</button>
       <button class="tab" data-tab="ana">Analyses</button>
@@ -420,6 +421,74 @@
       </div>
     </section>
 
+    <section id="tab-res" class="panel">
+      <div id="res-liste-vue">
+        <div class="ana-switch res-switch">
+          <button data-res="ecl" type="button" class="active">Éclairage</button>
+          <button data-res="eau" type="button">Bornes-fontaines</button>
+          <button data-res="pan" type="button">Pannes et fuites <span id="res-pan-badge" class="tab-badge hidden"></span></button>
+          <button data-res="bil" type="button">Bilan</button>
+        </div>
+
+        <div id="res-ecl">
+          <div id="res-l-cartes" class="stat-cards suivi-cartes"></div>
+          <div class="row">
+            <button id="res-l-point" class="primary" type="button">💡 Placer un lampadaire</button>
+            <button id="res-l-gps" type="button">🚶 À ma position (GPS)</button>
+          </div>
+          <p class="hint">Recensez chaque lampadaire, même éteint : un lampadaire noté « En panne » ouvre une panne à réparer.</p>
+          <label class="check"><input type="checkbox" id="res-l-voies"> Montrer les rues éclairées et non éclairées</label>
+          <div class="filters">
+            <select id="res-l-etat"><option value="">Tous les états</option></select>
+            <select id="res-l-alim"><option value="">Toutes les alimentations</option></select>
+          </div>
+          <ul id="res-lampadaires" class="suivi-liste fon-liste"></ul>
+          <div class="row"><button id="res-l-export" type="button">Lampadaires (CSV, Excel)</button></div>
+        </div>
+
+        <div id="res-eau" class="hidden">
+          <div id="res-b-cartes" class="stat-cards suivi-cartes"></div>
+          <div class="row">
+            <button id="res-b-point" class="primary" type="button">🚰 Placer une borne-fontaine</button>
+            <button id="res-b-gps" type="button">🚶 À ma position (GPS)</button>
+          </div>
+          <label class="check"><input type="checkbox" id="res-b-loin"> Montrer les bâtiments loin d'une borne en service</label>
+          <div class="filters">
+            <select id="res-b-type"><option value="">Tous les types</option></select>
+            <select id="res-b-etat"><option value="">Tous les états</option></select>
+          </div>
+          <ul id="res-bornes" class="suivi-liste fon-liste"></ul>
+          <div class="row"><button id="res-b-export" type="button">Bornes-fontaines (CSV, Excel)</button></div>
+        </div>
+
+        <div id="res-pan" class="hidden">
+          <div class="row">
+            <button id="res-p-eclairage" class="primary" type="button">💡 Panne d'éclairage</button>
+            <button id="res-p-eau" class="primary" type="button">💧 Fuite ou panne d'eau</button>
+            <button id="res-p-gps" type="button">🚶 À ma position (GPS)</button>
+          </div>
+          <p class="hint">Sur un lampadaire ou une borne déjà recensés, signalez plutôt la panne depuis leur fiche : leur état suit la réparation.</p>
+          <div id="res-signalements"></div>
+          <div class="filters">
+            <select id="res-p-statut"><option value="">En cours</option></select>
+            <select id="res-p-reseau"><option value="">Éclairage et eau</option><option>Éclairage</option><option>Eau</option></select>
+            <label class="check"><input type="checkbox" id="res-p-retard"> Délai dépassé</label>
+          </div>
+          <ul id="res-interventions" class="suivi-liste fon-liste"></ul>
+          <div class="row"><button id="res-p-export" type="button">Pannes et fuites (CSV, Excel)</button></div>
+        </div>
+
+        <div id="res-bil" class="hidden">
+          <div id="res-bilan"><p class="hint">Chargement…</p></div>
+          <details class="adr-detail"><summary>Paramètres</summary><div id="res-parametres"></div></details>
+        </div>
+      </div>
+      <div id="res-fiche-vue" class="hidden">
+        <button id="res-retour" type="button">← Retour</button>
+        <div id="res-fiche"></div>
+      </div>
+    </section>
+
     <section id="tab-iti" class="panel">
       <h3>Itinéraire</h3>
       <div class="iti-modes">
@@ -758,6 +827,19 @@
     </form>
   </div>
 
+  <!-- Réseaux : formulaire générique (lampadaires, bornes, pannes, actions) -->
+  <div id="res-modal" class="modal hidden">
+    <form id="res-form" class="modal-card">
+      <h3 id="res-mf-titre"></h3>
+      <div id="res-mf-champs"></div>
+      <p class="form-msg" id="res-mf-msg"></p>
+      <div class="row">
+        <button type="button" id="res-mf-annuler">Annuler</button>
+        <button type="submit" class="primary">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+
   <!-- Environnement : formulaire générique (zones, atteintes, plantations, points d'eau, feux, constats) -->
   <div id="env-modal" class="modal hidden">
     <form id="env-form" class="modal-card">
@@ -865,6 +947,8 @@
   <script src="js/dechets.js"></script>
   <script src="js/environnement-carte.js"></script>
   <script src="js/environnement.js"></script>
+  <script src="js/reseaux-carte.js"></script>
+  <script src="js/reseaux.js"></script>
   <script src="js/identify.js"></script>
   <script src="js/espace.js"></script>
 </body>
