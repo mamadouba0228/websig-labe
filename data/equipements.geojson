@@ -4,7 +4,7 @@
 "xy_coordinate_resolution": 1e-06,
 "features": [
 { "type": "Feature", "properties": { "CATEGORIE": "Administration", "NOM": "Prefecture", "NATURE": "Mairie" }, "geometry": { "type": "Point", "coordinates": [ -12.286866, 11.315963 ] } },
-{ "type": "Feature", "properties": { "CATEGORIE": "Administration", "NOM": "sapeurs-pompiers de Labé", "NATURE": "Caserne de pompiers" }, "geometry": { "type": "Point", "coordinates": [ -12.283388, 11.314662 ] } },
+{ "type": "Feature", "properties": { "CATEGORIE": "Sécurité", "NOM": "sapeurs-pompiers de Labé", "NATURE": "Caserne de pompiers" }, "geometry": { "type": "Point", "coordinates": [ -12.283388, 11.314662 ] } },
 { "type": "Feature", "properties": { "CATEGORIE": "Administration", "NOM": "Poste Labé", "NATURE": "Bureau ou hôtel des postes" }, "geometry": { "type": "Point", "coordinates": [ -12.284255, 11.315698 ] } },
 { "type": "Feature", "properties": { "CATEGORIE": "Culture", "NOM": "Petit Musée du Fouta", "NATURE": "Musée" }, "geometry": { "type": "Point", "coordinates": [ -12.306539, 11.313182 ] } },
 { "type": "Feature", "properties": { "CATEGORIE": "Commerce", "NOM": "Centre de Formation de l'Elevage de Labé", "NATURE": "Divers commercial" }, "geometry": { "type": "Point", "coordinates": [ -12.275043, 11.359449 ] } },
@@ -25,6 +25,14 @@
 { "type": "Feature", "properties": { "CATEGORIE": "Religion", "NOM": "Cimetière de Malea", "NATURE": "Tombeau" }, "geometry": { "type": "Point", "coordinates": [ -12.277843, 11.3355 ] } },
 { "type": "Feature", "properties": { "CATEGORIE": "Religion", "NOM": "Cimetière de Bowloko", "NATURE": "Tombeau" }, "geometry": { "type": "Point", "coordinates": [ -12.274252, 11.319154 ] } },
 { "type": "Feature", "properties": { "CATEGORIE": "Santé", "NOM": "Centre de santé de Fafabhe", "NATURE": "Hôpital" }, "geometry": { "type": "Point", "coordinates": [ -12.28414, 11.288934 ] } },
-{ "type": "Feature", "properties": { "CATEGORIE": "Santé", "NOM": "Hôpital Régional de Labé", "NATURE": "Hôpital" }, "geometry": { "type": "Point", "coordinates": [ -12.285284, 11.318116 ] } }
+{ "type": "Feature", "properties": { "CATEGORIE": "Santé", "NOM": "Hôpital Régional de Labé", "NATURE": "Hôpital" }, "geometry": { "type": "Point", "coordinates": [ -12.285284, 11.318116 ] } },
+{ "type": "Feature", "properties": { "CATEGORIE": "Transport", "NOM": "Sept-place Gare - aller Sud", "NATURE": "Gare routière" }, "geometry": { "type": "Point", "coordinates": [-12.282954, 11.316825]} },
+{ "type": "Feature", "properties": { "CATEGORIE": "Transport", "NOM": "Gare Voitures Mali", "NATURE": "Gare routière" }, "geometry": { "type": "Point", "coordinates": [-12.281569, 11.331001]} },
+{ "type": "Feature", "properties": { "CATEGORIE": "Transport", "NOM": null, "NATURE": "Gare routière" }, "geometry": { "type": "Point", "coordinates": [-12.272983, 11.322384]} },
+{ "type": "Feature", "properties": { "CATEGORIE": "Sécurité", "NOM": "Direction régionale de Police de Labé", "NATURE": "Police" }, "geometry": { "type": "Point", "coordinates": [-12.283523, 11.315115]} },
+{ "type": "Feature", "properties": { "CATEGORIE": "Sécurité", "NOM": "Brigade de recherche", "NATURE": "Police" }, "geometry": { "type": "Point", "coordinates": [-12.284985, 11.315367]} },
+{ "type": "Feature", "properties": { "CATEGORIE": "Sécurité", "NOM": "Escadron Gendarmerie mobile N8", "NATURE": "Gendarmerie" }, "geometry": { "type": "Point", "coordinates": [-12.287045, 11.31421]} },
+{ "type": "Feature", "properties": { "CATEGORIE": "Sécurité", "NOM": "Douane de Labé", "NATURE": "Douane" }, "geometry": { "type": "Point", "coordinates": [-12.282896, 11.315706]} },
+{ "type": "Feature", "properties": { "CATEGORIE": "Sécurité", "NOM": "Camps El Hadj Alpha Oumar", "NATURE": "Camp militaire" }, "geometry": { "type": "Point", "coordinates": [-12.338216, 11.345758]} }
 ]
 }

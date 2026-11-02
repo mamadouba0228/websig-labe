@@ -61,7 +61,8 @@ def main():
         for layer, cols in LAYERS.items():
             keep = [c.strip() for c in cols.split(",") if c.strip() in existing.get(layer, set())]
             cols_sql = "".join(c + ", " for c in keep)
-            sql = f"SELECT gid AS ordre, {cols_sql}geom FROM ref.{layer}"
+            # ST_CurveToLine : géométries courbes enregistrées par QGIS (MultiCurve, MultiSurface), non prises en charge en GeoJSON
+            sql = f"SELECT gid AS ordre, {cols_sql}ST_CurveToLine(geom) AS geom FROM ref.{layer}"
             fc = feature_collection(cur, sql, 5 if layer == "batiments" else 6)
             for f in fc["features"]:
                 f["properties"].pop("ordre", None)

@@ -13,7 +13,8 @@
   // Catégories des contributions (partagées avec contributions.js)
   var CATEGORIES = {
     'Équipement public': { color: '#1c4e80', types: ['École', 'Centre / poste de santé', 'Pharmacie', 'Forage / puits',
-      'Borne-fontaine', 'Marché', 'Lieu de culte', 'Bâtiment administratif', 'Terrain de sport', 'Gare routière', 'Autre'] },
+      'Borne-fontaine', 'Marché', 'Lieu de culte', 'Bâtiment administratif', 'Terrain de sport', 'Gare routière',
+      'Police / gendarmerie', 'Protection civile / pompiers', 'Camp militaire', 'Autre'] },
     'Voirie & réseaux': { color: '#e8590c', types: ['Route / rue', 'Piste', 'Pont / ouvrage', 'Caniveau',
       'Éclairage public', 'Réseau électrique', 'Réseau d\'eau', 'Autre'] },
     'Foncier & occupation du sol': { color: '#2b8a3e', types: ['Parcelle', 'Lotissement', 'Espace vert', 'Zone agricole',
@@ -136,7 +137,9 @@
     'Religion':       { color: '#1f6f43', sym: '☪' },
     'Commerce':       { color: '#e8590c', sym: '€' },
     'Culture':        { color: '#d63384', sym: 'M' },
-    'Sport':          { color: '#0ca678', sym: 'S' }
+    'Sport':          { color: '#0ca678', sym: 'S' },
+    'Transport':      { color: '#f2c230', sym: 'G', text: '#212529' }, // gares routières
+    'Sécurité':       { color: '#212529', sym: '★' }  // police, gendarmerie, pompiers, douane, camps militaires
   };
 
   // ---------- Registre des couches interrogeables (outil ⓘ) ----------
@@ -510,7 +513,7 @@
         return L.marker(latlng, {
           icon: L.divIcon({
             className: '', iconSize: [24, 24], iconAnchor: [12, 12], popupAnchor: [0, -10],
-            html: '<div class="eq-icon" style="width:24px;height:24px;background:' + s.color + '">' + s.sym + '</div>'
+            html: '<div class="eq-icon" style="width:24px;height:24px;background:' + s.color + (s.text ? ';color:' + s.text : '') + '">' + s.sym + '</div>'
           }),
           title: f.properties.nom || ''
         });
