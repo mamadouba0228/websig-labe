@@ -302,8 +302,9 @@ adresses d'un quartier pour une tournée · bâtiments en zone inondable (proxim
 
 **Sélection par localisation** (bouton « ⧉ Sélection par localisation… », comme l'outil de QGIS) : les objets d'une couche
 dont la relation avec ceux d'une autre couche est **intersecte, touche, contient, chevauche, est disjoint, est à l'intérieur,
-égal ou croise** (plusieurs prédicats cochés : l'un ou l'autre). Option « Entité(s) sélectionnée(s) uniquement » sur la couche
-de comparaison ; la sélection actuelle peut être remplacée, complétée, restreinte ou réduite. Couches : celles de la sélection,
+égal ou croise** (plusieurs prédicats cochés : l'un ou l'autre). La couche de comparaison peut être restreinte à un objet ou à un
+type d'objets (« Seulement les objets » : Nom : Sala, Type de voie : Voie rapide…, comme pour la proximité), ou à ses
+« Entité(s) sélectionnée(s) uniquement » ; exemple : les quartiers qui intersectent la rivière Sala (8) ou qui la croisent (2) ; la sélection actuelle peut être remplacée, complétée, restreinte ou réduite. Couches : celles de la sélection,
 plus les **zones inondables** (aléa fort et moyen du relief). Une couche comparée à elle-même : chaque objet est comparé aux
 autres (ex. bâtiments qui touchent un autre bâtiment). Calcul dans le navigateur (`web/js/topologie.js`), en coordonnées
 planes locales, avec une tolérance de contact de 5 cm (les coordonnées servies sont arrondies à environ 10 cm) : résultats

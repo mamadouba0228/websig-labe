@@ -306,17 +306,36 @@
   });
   $('sel-zone-clear').addEventListener('click', function (e) { e.preventDefault(); setZone(null); });
 
-  // Proximité : filtre optionnel sur la couche de référence (ex. voirie de type « Voie rapide »)
+  // Filtre sur une couche de comparaison : un objet précis ou un type d'objets (« Nom : Sala », « Type de voie : Voie rapide »…)
+  // champs « liste » et champs texte d'au plus 80 valeurs différentes ; les valeurs vides ne sont pas proposées
+  function remplirFiltre(sel, key) {
+    sel.innerHTML = '<option value="">— tous les objets —</option>';
+    if (!key) return Promise.resolve();
+    var def = LAYERS[key];
+    return prepare(key).then(function (items) {
+      if (sel.dataset.couche && sel.dataset.couche !== key) return;
+      def.fields.filter(function (f) { return f[2] !== 'nombre'; }).forEach(function (f) {
+        var vals = distinctValues(items, f[0]).filter(function (v) { return v[0] !== '(vide)' && v[0] !== 'NC'; });
+        if (!vals.length || (f[2] === 'texte' && vals.length > 80)) return;
+        var g = document.createElement('optgroup');
+        g.label = f[1];
+        vals.forEach(function (v) { g.appendChild(new Option(f[1] + ' : ' + v[0] + ' (' + v[1] + ')', f[0] + '\u0001' + v[0])); });
+        sel.appendChild(g);
+      });
+    });
+  }
+  function filtrer(items, valeur) {
+    if (!valeur) return items;
+    var x = valeur.split('\u0001');
+    return items.filter(function (it) { return String(it.p[x[0]] == null ? '' : it.p[x[0]]) === x[1]; });
+  }
+  function libelleFiltre(sel) { return sel.value ? ' (' + sel.options[sel.selectedIndex].text.replace(/ \(\d+\)$/, '') + ')' : ''; }
+  // Proximité : filtre optionnel sur la couche de référence (ex. voirie de type « Voie rapide », la rivière Sala)
   var refVal = $('sel-ref-value');
   refLayer.addEventListener('change', function () {
-    refVal.innerHTML = '<option value="">— tous les objets —</option>';
     $('sel-ref-opts').classList.toggle('hidden', !refLayer.value);
-    if (!refLayer.value) return;
-    var def = LAYERS[refLayer.value], f = def.fields.filter(function (x) { return x[2] === 'liste' && x[0] !== 'quartier'; })[0];
-    if (!f) return;
-    prepare(refLayer.value).then(function (items) {
-      distinctValues(items, f[0]).forEach(function (v) { refVal.add(new Option(f[1] + ' : ' + v[0] + ' (' + v[1] + ')', f[0] + '\u0001' + v[0])); });
-    });
+    refVal.dataset.couche = refLayer.value;
+    remplirFiltre(refVal, refLayer.value);
   });
 
   // ---------- Exécution ----------
@@ -333,10 +352,9 @@
     refReady.then(function (refItems) {
       var near = null, dist = Number($('sel-ref-dist').value) || 50, refDesc = '';
       if (refItems) {
-        var rv = refVal.value.split('\u0001');
-        if (refVal.value) refItems = refItems.filter(function (it) { return String(it.p[rv[0]]) === rv[1]; });
+        refItems = filtrer(refItems, refVal.value);
         near = gridIndex(refItems, Math.max(dist, 50));
-        refDesc = 'à moins de ' + dist + ' m de : ' + LAYERS[refLayer.value].label.toLowerCase() + (refVal.value ? ' (' + rv[1] + ')' : '');
+        refDesc = 'à moins de ' + dist + ' m de : ' + LAYERS[refLayer.value].label.toLowerCase() + libelleFiltre(refVal);
       }
       var zr = zone && zone.type === 'poly' ? zone.ring : null, zc = zone && zone.type === 'cercle' ? m(zone.c) : null;
       var geom = LAYERS[current.key].geom;
@@ -485,13 +503,17 @@
   $('loc-predicats').innerHTML = PREDICATS.map(function (p) {
     return '<label class="check"><input type="checkbox" value="' + p[0] + '"' + (p[0] === 'intersecte' ? ' checked' : '') + '> ' + esc(p[1]) + '</label>';
   }).join('');
+  var locFiltre = $('loc-b-filtre');
+  function majFiltreLoc() { locFiltre.dataset.couche = locB.value; remplirFiltre(locFiltre, locB.value); }
   function majLoc() {
     var ok = !!(result && result.key === locB.value && result.items.length);
     locSel.disabled = !ok;
     if (!ok) locSel.checked = false;
     $('loc-b-sel-n').textContent = ok ? ' (' + A.fmt(result.items.length) + ')' : '';
   }
-  locB.addEventListener('change', majLoc);
+  locB.addEventListener('change', function () { majLoc(); majFiltreLoc(); });
+  // une sélection d'objets et un filtre ne vont pas ensemble : l'un désactive l'autre
+  locSel.addEventListener('change', function () { if (locSel.checked) locFiltre.value = ''; locFiltre.disabled = locSel.checked; });
   function journal(txt) {
     var p = document.createElement('div');
     p.textContent = new Date().toLocaleTimeString('fr-FR') + ' — ' + txt;
@@ -502,6 +524,7 @@
   $('loc-ouvrir').addEventListener('click', function () {
     if (current) locA.value = current.key;
     majLoc(); progression(0); $('loc-msg').textContent = '';
+    if (locFiltre.dataset.couche !== locB.value) majFiltreLoc();
     locModal.classList.remove('hidden');
   });
   $('loc-fermer').addEventListener('click', function () { locModal.classList.add('hidden'); });
@@ -516,13 +539,14 @@
     bouton.disabled = true; progression(0);
     journal('Chargement des couches…');
     Promise.all([prepare(ka), prepare(kb)]).then(function (r) {
-      var itemsB = seulesSel ? result.items : r[1];
+      var itemsB = seulesSel ? result.items : filtrer(r[1], locFiltre.value);
+      if (!itemsB.length) throw new Error('Aucun objet à comparer dans « ' + LAYERS[kb].label + ' ».');
       var actuelle = result && result.key === ka ? result.items : [];
       if ((mode === 'dans' || mode === 'retirer') && !actuelle.length) throw new Error('Aucune sélection actuelle sur la couche « ' + LAYERS[ka].label + ' ».');
       var dejaSel = new Set(actuelle);
       var aExaminer = mode === 'dans' || mode === 'retirer' ? actuelle : mode === 'ajouter' ? r[0].filter(function (it) { return !dejaSel.has(it); }) : r[0];
       journal('Entités de « ' + LAYERS[ka].label + ' » examinées : ' + A.fmt(aExaminer.length) + ', comparées à « ' + LAYERS[kb].label + ' » : ' +
-        A.fmt(itemsB.length) + (seulesSel ? ' sélectionnée(s)' : '') + '.');
+        A.fmt(itemsB.length) + (seulesSel ? ' sélectionnée(s)' : libelleFiltre(locFiltre)) + '.');
       // index des objets de B par cellules de 200 m
       var CELL = 200, grille = {}, marque = new Int32Array(itemsB.length).fill(-1);
       itemsB.forEach(function (it, i) {
@@ -567,7 +591,7 @@
         else if (mode === 'retirer') final = actuelle.filter(function (it) { return !R.has(it); });
         else final = retenus;
         var verbes = PREDICATS.filter(function (p) { return preds.indexOf(p[0]) >= 0; }).map(function (p) { return p[2]; }).join(' ou ');
-        var desc = 'qui ' + verbes + ' : ' + LAYERS[kb].label.toLowerCase() + (seulesSel ? ' (objets sélectionnés)' : '') +
+        var desc = 'qui ' + verbes + ' : ' + LAYERS[kb].label.toLowerCase() + (seulesSel ? ' (objets sélectionnés)' : libelleFiltre(locFiltre)) +
           (mode === 'ajouter' ? ', ajoutés à la sélection' : mode === 'dans' ? ', dans la sélection précédente' : mode === 'retirer' ? ', retirés de la sélection' : '');
         showResult({ key: ka, items: final, desc: desc });
         journal(A.fmt(retenus.length) + ' entité(s) trouvée(s) · ' + A.fmt(final.length) + ' sélectionnée(s) · ' +
