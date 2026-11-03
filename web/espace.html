@@ -31,17 +31,21 @@
   </header>
 
   <aside id="sidebar">
-    <!-- Onglets en deux groupes : outils communs à tous les agents, puis modules des services communaux -->
+    <!-- Onglets : les couches de la carte à part (ouvertes au démarrage), les outils communs, puis les services communaux -->
     <nav class="tabs tabs-groupes">
+      <div class="tab-groupe tab-groupe-carte" role="group" aria-label="Carte">
+        <div class="tab-ligne">
+          <button class="tab tab-couches active" data-tab="layers">Couches de la carte</button>
+        </div>
+      </div>
       <div class="tab-groupe tab-groupe-outils" role="group" aria-labelledby="tg-outils">
         <span class="tab-groupe-titre" id="tg-outils">Outils</span>
         <div class="tab-ligne">
-          <button class="tab active" data-tab="contrib">Saisie <span id="tab-badge" class="tab-badge hidden"></span></button>
+          <button class="tab" data-tab="contrib">Saisie <span id="tab-badge" class="tab-badge hidden"></span></button>
           <button class="tab" data-tab="suivi">Suivi <span id="suivi-badge" class="tab-badge hidden"></span></button>
           <button class="tab" data-tab="iti">Itinéraire</button>
           <button class="tab" data-tab="sel">Sélection</button>
           <button class="tab" data-tab="ana">Analyses</button>
-          <button class="tab" data-tab="layers">Couches</button>
           <button class="tab" data-tab="stats">Statistiques</button>
           <button class="tab" data-tab="account">Mon compte</button>
         </div>
@@ -59,7 +63,7 @@
       </div>
     </nav>
 
-    <section id="tab-contrib" class="panel active">
+    <section id="tab-contrib" class="panel">
       <p id="terrain-reseau" class="terrain-reseau en">● Connecté</p>
       <div id="terrain-file"></div>
       <h3>Ajouter des données</h3>
@@ -691,7 +695,7 @@
       <div class="row"><button id="ana-clear" type="button">Effacer les analyses</button></div>
     </section>
 
-    <section id="tab-layers" class="panel">
+    <section id="tab-layers" class="panel active">
       <h3>Fond de carte</h3>
       <div id="basemaps"></div>
       <h3>Couches thématiques</h3>

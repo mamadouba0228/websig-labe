@@ -612,3 +612,6 @@ tr.cliquable:hover td { background: #f8f9fa; }
 .tab-groupe-services .tab-groupe-titre { color: var(--green); }
 .tab-ligne { display: flex; flex-wrap: wrap; }
 .tab-ligne .tab { flex: 1 0 auto; padding: 8px 8px; }
+.tab-groupe-carte { padding: 4px; }
+.tab-ligne .tab.tab-couches { padding: 8px; font-weight: 600; color: var(--green); border: 1px solid var(--border); border-radius: 6px; }
+.tab-ligne .tab.tab-couches.active { background: var(--green); color: #fff; border-color: var(--green); }
