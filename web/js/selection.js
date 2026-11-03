@@ -498,7 +498,7 @@
   var PREDICATS = [['intersecte', 'intersecte', 'intersectent'], ['touche', 'touche', 'touchent'], ['contient', 'contient', 'contiennent'],
     ['chevauche', 'chevauche', 'chevauchent'], ['disjoint', 'est disjoint', 'sont disjoints de'], ['interieur', 'est à l\'intérieur', 'sont à l\'intérieur de'],
     ['egal', 'égal', 'sont égaux à'], ['croise', 'croise', 'croisent']];
-  var locA = $('loc-a'), locB = $('loc-b'), locSel = $('loc-b-sel'), locMode = $('loc-mode'), locModal = $('loc-modal');
+  var locA = $('loc-a'), locB = $('loc-b'), locModal = $('loc-modal');
   Object.keys(LAYERS).forEach(function (k) { locA.add(new Option(LAYERS[k].label, k)); locB.add(new Option(LAYERS[k].label, k)); });
   locB.value = 'zones_inondables';
   $('loc-predicats').innerHTML = PREDICATS.map(function (p) {
@@ -508,15 +508,7 @@
   function majFiltreLoc() { locFiltre.dataset.couche = locB.value; remplirFiltre(locFiltre, locB.value); }
   function majFiltreA() { locFiltreA.dataset.couche = locA.value; remplirFiltre(locFiltreA, locA.value); }
   locA.addEventListener('change', majFiltreA);
-  function majLoc() {
-    var ok = !!(result && result.key === locB.value && result.items.length);
-    locSel.disabled = !ok;
-    if (!ok) locSel.checked = false;
-    $('loc-b-sel-n').textContent = ok ? ' (' + A.fmt(result.items.length) + ')' : '';
-  }
-  locB.addEventListener('change', function () { majLoc(); majFiltreLoc(); });
-  // une sélection d'objets et un filtre ne vont pas ensemble : l'un désactive l'autre
-  locSel.addEventListener('change', function () { if (locSel.checked) locFiltre.value = ''; locFiltre.disabled = locSel.checked; });
+  locB.addEventListener('change', majFiltreLoc);
   function journal(txt) {
     var p = document.createElement('div');
     p.textContent = new Date().toLocaleTimeString('fr-FR') + ' — ' + txt;
@@ -526,7 +518,7 @@
   function progression(x) { $('loc-barre').style.width = Math.round(100 * x) + '%'; $('loc-pct').textContent = Math.round(100 * x) + ' %'; }
   $('loc-ouvrir').addEventListener('click', function () {
     if (current) locA.value = current.key;
-    majLoc(); progression(0); $('loc-msg').textContent = '';
+    progression(0); $('loc-msg').textContent = '';
     if (locFiltre.dataset.couche !== locB.value) majFiltreLoc();
     if (locFiltreA.dataset.couche !== locA.value) majFiltreA();
     locModal.classList.remove('hidden');
@@ -536,22 +528,17 @@
   $('loc-form').addEventListener('submit', function (e) {
     e.preventDefault();
     var preds = Array.prototype.filter.call($('loc-predicats').querySelectorAll('input'), function (i) { return i.checked; }).map(function (i) { return i.value; });
-    var ka = locA.value, kb = locB.value, mode = locMode.value, seulesSel = locSel.checked && !locSel.disabled;
+    var ka = locA.value, kb = locB.value;
     $('loc-msg').textContent = '';
     if (!preds.length) { $('loc-msg').textContent = 'Cochez au moins un prédicat géométrique.'; return; }
     var bouton = $('loc-executer'), t0 = Date.now();
     bouton.disabled = true; progression(0);
     journal('Chargement des couches…');
     Promise.all([prepare(ka), prepare(kb)]).then(function (r) {
-      var itemsB = seulesSel ? result.items : filtrer(r[1], locFiltre.value);
+      var itemsB = filtrer(r[1], locFiltre.value), aExaminer = filtrer(r[0], locFiltreA.value);
       if (!itemsB.length) throw new Error('Aucun objet à comparer dans « ' + LAYERS[kb].label + ' ».');
-      var actuelle = result && result.key === ka ? result.items : [];
-      if ((mode === 'dans' || mode === 'retirer') && !actuelle.length) throw new Error('Aucune sélection actuelle sur la couche « ' + LAYERS[ka].label + ' ».');
-      var dejaSel = new Set(actuelle);
-      var aExaminer = filtrer(mode === 'dans' || mode === 'retirer' ? actuelle : mode === 'ajouter' ? r[0].filter(function (it) { return !dejaSel.has(it); }) : r[0],
-        locFiltreA.value);
       journal('Entités de « ' + LAYERS[ka].label + ' »' + libelleFiltre(locFiltreA) + ' examinées : ' + A.fmt(aExaminer.length) + ', comparées à « ' + LAYERS[kb].label + ' » : ' +
-        A.fmt(itemsB.length) + (seulesSel ? ' sélectionnée(s)' : libelleFiltre(locFiltre)) + '.');
+        A.fmt(itemsB.length) + libelleFiltre(locFiltre) + '.');
       // index des objets de B par cellules de 200 m
       var CELL = 200, grille = {}, marque = new Int32Array(itemsB.length).fill(-1);
       itemsB.forEach(function (it, i) {
@@ -591,17 +578,10 @@
           } catch (err) { ko(err); }
         })();
       }).then(function (retenus) {
-        var R = new Set(retenus), final;
-        if (mode === 'ajouter') final = actuelle.concat(retenus);
-        else if (mode === 'retirer') final = actuelle.filter(function (it) { return !R.has(it); });
-        else final = retenus;
         var verbes = PREDICATS.filter(function (p) { return preds.indexOf(p[0]) >= 0; }).map(function (p) { return p[2]; }).join(' ou ');
-        var desc = (locFiltreA.value ? libelleFiltre(locFiltreA).slice(2, -1) + ', ' : '') + 'qui ' + verbes + ' : ' + LAYERS[kb].label.toLowerCase() + (seulesSel ? ' (objets sélectionnés)' : libelleFiltre(locFiltre)) +
-          (mode === 'ajouter' ? ', ajoutés à la sélection' : mode === 'dans' ? ', dans la sélection précédente' : mode === 'retirer' ? ', retirés de la sélection' : '');
-        showResult({ key: ka, items: final, desc: desc });
-        journal(A.fmt(retenus.length) + ' entité(s) trouvée(s) · ' + A.fmt(final.length) + ' sélectionnée(s) · ' +
-          ((Date.now() - t0) / 1000).toFixed(1).replace('.', ',') + ' s.');
-        majLoc();
+        var desc = (locFiltreA.value ? libelleFiltre(locFiltreA).slice(2, -1) + ', ' : '') + 'qui ' + verbes + ' : ' + LAYERS[kb].label.toLowerCase() + libelleFiltre(locFiltre);
+        showResult({ key: ka, items: retenus, desc: desc });
+        journal(A.fmt(retenus.length) + ' entité(s) sélectionnée(s) · ' + ((Date.now() - t0) / 1000).toFixed(1).replace('.', ',') + ' s.');
       });
     }).catch(function (err) { $('loc-msg').textContent = err.message; journal('Erreur : ' + err.message); })
       .then(function () { bouton.disabled = false; });
@@ -626,7 +606,6 @@
   function deselectionner() {
     hlLayer.clearLayers(); result = null; closeDrawer();
     $('sel-deselect2').classList.add('hidden');
-    majLoc();
   }
   $('sel-deselect').addEventListener('click', deselectionner);
   $('sel-deselect2').addEventListener('click', deselectionner);
