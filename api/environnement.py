@@ -1170,10 +1170,10 @@ def modifier_parametre(cle: str, body: Parametre, u: dict = Depends(current_user
 def exporter(quoi: str, u: dict = Depends(current_user)):
     with cursor() as cur:
         if quoi == "atteintes":
-            cur.execute("""SELECT numero, type, statut, gravite, description, surface_m2::float, responsable, to_char(echeance, 'YYYY-MM-DD'),
-                                  amende_gnf::float, quartier, array_to_string(zones, ', '),
-                                  round(ST_X(ST_PointOnSurface(geom))::numeric, 6)::float, round(ST_Y(ST_PointOnSurface(geom))::numeric, 6)::float,
-                                  to_char(cree_le, 'YYYY-MM-DD'), to_char(clos_le, 'YYYY-MM-DD')
+            cur.execute("""SELECT numero, type, statut, gravite, description, surface_m2::float, responsable, to_char(echeance, 'YYYY-MM-DD') AS echeance_le,
+                                  amende_gnf::float, quartier, array_to_string(zones, ', ') AS zones_txt,
+                                  round(ST_X(ST_PointOnSurface(geom))::numeric, 6)::float AS lon, round(ST_Y(ST_PointOnSurface(geom))::numeric, 6)::float AS lat,
+                                  to_char(cree_le, 'YYYY-MM-DD') AS signalee_le, to_char(clos_le, 'YYYY-MM-DD') AS close_le
                            FROM env.atteintes ORDER BY numero""")
             rows = cur.fetchall()
             if not peut_gerer(u):
@@ -1183,29 +1183,29 @@ def exporter(quoi: str, u: dict = Depends(current_user)):
                                 "Amende (GNF)", "Quartier", "Zones protégées", "Longitude", "Latitude", "Signalée le", "Close le"],
                                rows, "atteintes_environnement_labe.csv")
         if quoi == "plantations":
-            cur.execute(f"""SELECT p.numero, p.type, p.espece, p.nombre_plants, to_char(p.date_plantation, 'YYYY-MM-DD'), p.campagne,
-                                   p.organisme, p.quartier, s.vivants, to_char(s.date, 'YYYY-MM-DD'),
-                                   round(ST_X(ST_PointOnSurface(p.geom))::numeric, 6)::float, round(ST_Y(ST_PointOnSurface(p.geom))::numeric, 6)::float
+            cur.execute(f"""SELECT p.numero, p.type, p.espece, p.nombre_plants, to_char(p.date_plantation, 'YYYY-MM-DD') AS plantee_le, p.campagne,
+                                   p.organisme, p.quartier, s.vivants, to_char(s.date, 'YYYY-MM-DD') AS dernier_suivi,
+                                   round(ST_X(ST_PointOnSurface(p.geom))::numeric, 6)::float AS lon, round(ST_Y(ST_PointOnSurface(p.geom))::numeric, 6)::float AS lat
                             {PLANTATION_FROM} ORDER BY p.numero""")
             return csv_reponse(["Numéro", "Type", "Espèce", "Plants", "Plantée le", "Campagne", "Organisme", "Quartier",
                                 "Vivants (dernier suivi)", "Dernier suivi", "Longitude", "Latitude"], cur.fetchall(), "plantations_labe.csv")
         if quoi == "points-eau":
-            cur.execute("""SELECT numero, type, nom, etat, usage, CASE WHEN amenage THEN 'oui' ELSE 'non' END,
-                                  COALESCE(perimetre_m, env.param('perimetre_source_m'))::float, quartier,
-                                  round(ST_X(geom)::numeric, 6)::float, round(ST_Y(geom)::numeric, 6)::float,
-                                  to_char(dernier_constat, 'YYYY-MM-DD') FROM env.points_eau ORDER BY numero""")
+            cur.execute("""SELECT numero, type, nom, etat, usage, CASE WHEN amenage THEN 'oui' ELSE 'non' END AS amenage_txt,
+                                  COALESCE(perimetre_m, env.param('perimetre_source_m'))::float AS perimetre, quartier,
+                                  round(ST_X(geom)::numeric, 6)::float AS lon, round(ST_Y(geom)::numeric, 6)::float AS lat,
+                                  to_char(dernier_constat, 'YYYY-MM-DD') AS constat_le FROM env.points_eau ORDER BY numero""")
             return csv_reponse(["Numéro", "Type", "Nom", "État", "Usage", "Aménagé", "Périmètre (m)", "Quartier", "Longitude", "Latitude",
                                 "Dernier constat"], cur.fetchall(), "points_eau_labe.csv")
         if quoi == "feux":
-            cur.execute("""SELECT to_char(date_feu, 'YYYY-MM-DD'), env.saison(date_feu), origine, cause, surface_ha::float, confiance,
-                                  quartier, round(ST_X(ST_PointOnSurface(geom))::numeric, 6)::float,
-                                  round(ST_Y(ST_PointOnSurface(geom))::numeric, 6)::float, description
+            cur.execute("""SELECT to_char(date_feu, 'YYYY-MM-DD') AS jour, env.saison(date_feu) AS saison, origine, cause, surface_ha::float, confiance,
+                                  quartier, round(ST_X(ST_PointOnSurface(geom))::numeric, 6)::float AS lon,
+                                  round(ST_Y(ST_PointOnSurface(geom))::numeric, 6)::float AS lat, description
                            FROM env.feux ORDER BY date_feu""")
             return csv_reponse(["Date", "Saison", "Origine", "Cause", "Surface (ha)", "Confiance", "Quartier", "Longitude", "Latitude",
                                 "Description"], cur.fetchall(), "feux_brousse_labe.csv")
         if quoi == "batiments-zones":
             cur.execute("""SELECT b.gid, q.quartier, z.code, z.type, z.nom, z.regle,
-                                  round(ST_X(ST_Transform(b.p, 4326))::numeric, 6)::float, round(ST_Y(ST_Transform(b.p, 4326))::numeric, 6)::float
+                                  round(ST_X(ST_Transform(b.p, 4326))::numeric, 6)::float AS lon, round(ST_Y(ST_Transform(b.p, 4326))::numeric, 6)::float AS lat
                            FROM env.zones z JOIN adr.batiments_points b ON b.p && z.geom_m AND ST_Intersects(z.geom_m, b.p)
                            LEFT JOIN dech.bati_quartier q ON q.gid = b.gid
                            WHERE z.active AND z.regle = ANY(%s) ORDER BY q.quartier, b.gid""", (list(STRICTES),))

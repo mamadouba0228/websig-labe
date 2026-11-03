@@ -700,6 +700,7 @@
         LabeTerrain.toast(envoyes + ' envoi(s) de terrain transmis.'); charger();
         if (window.LabeEnvironnement) LabeEnvironnement.recharger();
         if (window.LabeReseaux) LabeReseaux.recharger();
+        if (window.LabeMarches) LabeMarches.recharger();
       }
     }, function () { vidage = false; });
   }
@@ -707,6 +708,7 @@
     var l = lireLS(FILE, []), r = lireLS(REFUS, []), div = $('dech-file');
     if (window.LabeEnvironnement) LabeEnvironnement.file(l.length);
     if (window.LabeReseaux) LabeReseaux.file(l.length);
+    if (window.LabeMarches) LabeMarches.file(l.length);
     div.innerHTML = (l.length ? '<p class="fon-avert">📶 ' + l.length + ' envoi(s) en attente de réseau, transmis automatiquement. ' +
       '<button type="button" id="dech-file-go">Envoyer maintenant</button></p>' : '') +
       (r.length ? '<div class="fon-avert"><b>Envois refusés par le serveur :</b><ul>' + r.map(function (x) {

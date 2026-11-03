@@ -216,6 +216,33 @@ Les grands réseaux (lignes de l'EDG, conduites de la SEG) ne sont pas gérés i
   `res_bornes` (`.geojson`) sur GitHub Pages.
 - Tables : `res.lampadaires`, `res.bornes`, `res.interventions`, `res.interventions_historique`, `res.parametres`.
 
+## Marchés et gares routières
+
+Onglet **Marchés** de l'espace agents (schéma `mar`). Gèrent (emplacements, occupants, encaissements, impayés, paramètres) :
+le **Développement local**, les **Finances et recettes** et les superviseurs. Tous les agents recensent les sites.
+
+- **Sites** (`MA-0001` marché, `GR-0001` gare routière) : marché quotidien, hebdomadaire, à bétail, gare routière ; point ou
+  **emprise** dessinée, état (en activité, en travaux, fermé), gestion (régie, concession, syndicat), jours, horaires, responsable,
+  destinations et capacité (gares), tarif du ticket journalier ou du droit de stationnement. Un site du même genre à moins de
+  50 m demande confirmation. « Importer les marchés et gares de la carte » crée un site pour chaque équipement « Marché » ou
+  « Gare routière » (une seule fois) ; les saisies validées « Marché » / « Gare routière » de l'onglet Saisie deviennent des sites.
+- **Emplacements** (`MA-0001-001`…) : boutique, magasin, hangar ou étal, table, place au sol, kiosque, bureau de ligne,
+  stationnement ; créés en série, surface, loyer mensuel, statut (libre, occupé, hors service), occupant, téléphone, activité,
+  date de début (les loyers sont dus à partir de ce mois), position facultative sur la carte. **Occupants et téléphones** :
+  service et superviseurs seulement (ni dans les fiches des autres agents, ni sur la carte publique).
+- **Recettes** : loyer mensuel (un par emplacement et par mois), tickets journaliers et droits de stationnement (nombre × tarif
+  du site), autres droits ; espèces, mobile money, chèque. Chaque encaissement reçoit une **quittance** `QM-AAAA-00001`
+  imprimable (A5, ou PDF) ; il est possible sans réseau (même file d'attente que les déchets). Une quittance ne se supprime
+  pas : un **superviseur** l'annule en donnant le motif (journal).
+- **Impayés** : emplacements occupés dont le loyer d'un mois échu n'est pas encaissé (le mois en cours compte après le jour
+  d'échéance, 10 par défaut), avec les mois dus ; encaissement direct depuis la liste.
+- **Bilan** : sites, emplacements et occupation par site ; pour le service : recettes du mois et de 12 mois, part des loyers
+  du mois encaissés, impayés, annulations, recettes par mois, par site, par nature, par agent, véhicules des gares (30 jours).
+- Exports CSV : sites, emplacements et occupants, recettes d'une période, impayés. Paramètres (jour d'échéance, mois examinés)
+  dans le Bilan.
+- Carte publique : sites avec type, jours, horaires, destinations, emplacements libres (fichier `mar_sites.geojson`).
+- Tables : `mar.sites`, `mar.places`, `mar.perceptions`, `mar.parametres`.
+
 ## Table attributaire (bouton ⊞)
 
 Comme dans QGIS : dans l'onglet « Couches », le bouton ⊞ à droite d'une couche ouvre sa table attributaire en bas

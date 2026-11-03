@@ -591,3 +591,14 @@ tr.cliquable:hover td { background: #f8f9fa; }
 .badge.r-En-panne, .badge.r-Urgente { background: #ffe3e3; color: #c8102e; }
 .badge.r-Classée-sans-suite, .badge.r-Hors-service, .badge.r-Volé---détruit, .badge.r-Fermée { background: #e9ecef; color: #495057; }
 .res-switch button { padding-left: 6px; padding-right: 6px; }
+
+/* Marchés et gares routières */
+.dech-ico.mar-ico { width: 22px; height: 22px; border-radius: 5px; }
+.badge.m-En-activité, .badge.m-Libre, .badge.m-Valide { background: #d3f9d8; color: #1f6f43; }
+.badge.m-Occupée { background: #e7f5ff; color: #1864ab; }
+.badge.m-En-travaux { background: #fff3bf; color: #8a6d00; }
+.badge.m-Fermé, .badge.m-Hors-service { background: #e9ecef; color: #495057; }
+.badge.m-Annulée { background: #ffe3e3; color: #c8102e; }
+.fon-li.annulee b, li.annulee b { text-decoration: line-through; color: #868e96; }
+.mar-switch button { padding-left: 6px; padding-right: 6px; }
+#mar-rec .filters label { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; }

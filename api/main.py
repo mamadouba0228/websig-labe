@@ -81,6 +81,7 @@ def startup():
         dechets.apply_schema(cur)
         environnement.apply_schema(cur)
         reseaux.apply_schema(cur)
+        marches.apply_schema(cur)
         # mises à jour automatiques après une modification du bâti (QGIS…)
         cur.execute((Path(__file__).parent / "reference.sql").read_text(encoding="utf-8"))
         # Premier administrateur, défini dans .env
@@ -609,6 +610,7 @@ import foncier_gestion  # noqa: E402
 import dechets  # noqa: E402
 import environnement  # noqa: E402
 import reseaux  # noqa: E402
+import marches  # noqa: E402
 
 app.include_router(adressage.router)
 app.include_router(suivi.router)
@@ -618,3 +620,4 @@ app.include_router(foncier_fiscalite.router)
 app.include_router(dechets.router)
 app.include_router(environnement.router)
 app.include_router(reseaux.router)
+app.include_router(marches.router)

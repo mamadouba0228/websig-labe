@@ -116,6 +116,11 @@ def main():
             import reseaux
             for nom, fc in reseaux.donnees_publiques(cur).items():
                 write(f"res_{nom}.geojson", fc)
+        # Marchés et gares routières : sites, jours, destinations, emplacements libres (ni occupants ni recettes)
+        cur.execute("SELECT to_regclass('mar.sites') IS NOT NULL AS ok")
+        if cur.fetchone()["ok"]:
+            import marches
+            write("mar_sites.geojson", marches.donnees_publiques(cur)["sites"])
         write("stats.json", compute_stats(cur))
     print("Export terminé.")
 

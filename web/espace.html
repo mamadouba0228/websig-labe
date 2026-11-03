@@ -39,6 +39,7 @@
       <button class="tab" data-tab="dech">Déchets <span id="dech-badge" class="tab-badge hidden"></span></button>
       <button class="tab" data-tab="env">Environnement <span id="env-badge" class="tab-badge hidden"></span></button>
       <button class="tab" data-tab="res">Réseaux <span id="res-badge" class="tab-badge hidden"></span></button>
+      <button class="tab" data-tab="mar">Marchés <span id="mar-badge" class="tab-badge hidden"></span></button>
       <button class="tab" data-tab="iti">Itinéraire</button>
       <button class="tab" data-tab="sel">Sélection</button>
       <button class="tab" data-tab="ana">Analyses</button>
@@ -489,6 +490,63 @@
       </div>
     </section>
 
+    <section id="tab-mar" class="panel">
+      <div id="mar-liste-vue">
+        <div class="ana-switch mar-switch">
+          <button data-mar="sit" type="button" class="active">Sites</button>
+          <button data-mar="rec" type="button" class="mar-gestion hidden">Recettes</button>
+          <button data-mar="imp" type="button" class="mar-gestion hidden">Impayés <span id="mar-imp-badge" class="tab-badge hidden"></span></button>
+          <button data-mar="bil" type="button">Bilan</button>
+        </div>
+
+        <div id="mar-sit">
+          <div id="mar-s-cartes" class="stat-cards suivi-cartes"></div>
+          <div class="row">
+            <button id="mar-s-point" class="primary" type="button">🏪 Placer un marché ou une gare</button>
+            <button id="mar-s-surface" type="button">⬠ Dessiner l'emprise</button>
+            <button id="mar-s-gps" type="button">🚶 À ma position (GPS)</button>
+          </div>
+          <div id="mar-import"></div>
+          <div class="filters">
+            <select id="mar-s-type"><option value="">Tous les types</option></select>
+            <select id="mar-s-etat"><option value="">Tous les états</option></select>
+          </div>
+          <ul id="mar-sites" class="suivi-liste fon-liste"></ul>
+          <div class="row"><button id="mar-s-export" type="button">Sites (CSV, Excel)</button></div>
+        </div>
+
+        <div id="mar-rec" class="hidden">
+          <div id="mar-r-cartes" class="stat-cards suivi-cartes"></div>
+          <div class="row"><button id="mar-r-encaisser" class="primary" type="button">💰 Encaisser des tickets ou des droits</button></div>
+          <p class="hint">Un loyer s'encaisse depuis l'emplacement (fiche du site) ou depuis la liste des impayés. Chaque encaissement donne une quittance numérotée ; seul un superviseur peut l'annuler, avec un motif.</p>
+          <div class="filters">
+            <select id="mar-r-site"><option value="">Tous les sites</option></select>
+            <label>Du <input type="date" id="mar-r-du"></label>
+            <label>au <input type="date" id="mar-r-au"></label>
+          </div>
+          <ul id="mar-recettes" class="suivi-liste fon-liste"></ul>
+          <div class="row"><button id="mar-r-export" type="button">Recettes de la période (CSV, Excel)</button></div>
+        </div>
+
+        <div id="mar-imp" class="hidden">
+          <p class="hint">Emplacements occupés dont le loyer d'un mois échu n'est pas encaissé (le mois en cours compte après le jour d'échéance).</p>
+          <div class="filters"><select id="mar-i-site"><option value="">Tous les sites</option></select></div>
+          <p id="mar-i-total"></p>
+          <ul id="mar-impayes" class="suivi-liste fon-liste"></ul>
+          <div class="row"><button id="mar-i-export" type="button">Impayés (CSV, Excel)</button></div>
+        </div>
+
+        <div id="mar-bil" class="hidden">
+          <div id="mar-bilan"><p class="hint">Chargement…</p></div>
+          <details class="adr-detail"><summary>Paramètres</summary><div id="mar-parametres"></div></details>
+        </div>
+      </div>
+      <div id="mar-fiche-vue" class="hidden">
+        <button id="mar-retour" type="button">← Retour</button>
+        <div id="mar-fiche"></div>
+      </div>
+    </section>
+
     <section id="tab-iti" class="panel">
       <h3>Itinéraire</h3>
       <div class="iti-modes">
@@ -840,6 +898,19 @@
     </form>
   </div>
 
+  <!-- Marchés et gares routières : formulaire générique (sites, emplacements, encaissements, annulation) -->
+  <div id="mar-modal" class="modal hidden">
+    <form id="mar-form" class="modal-card">
+      <h3 id="mar-mf-titre"></h3>
+      <div id="mar-mf-champs"></div>
+      <p class="form-msg" id="mar-mf-msg"></p>
+      <div class="row">
+        <button type="button" id="mar-mf-annuler">Annuler</button>
+        <button type="submit" class="primary">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+
   <!-- Environnement : formulaire générique (zones, atteintes, plantations, points d'eau, feux, constats) -->
   <div id="env-modal" class="modal hidden">
     <form id="env-form" class="modal-card">
@@ -949,6 +1020,8 @@
   <script src="js/environnement.js"></script>
   <script src="js/reseaux-carte.js"></script>
   <script src="js/reseaux.js"></script>
+  <script src="js/marches-carte.js"></script>
+  <script src="js/marches.js"></script>
   <script src="js/identify.js"></script>
   <script src="js/espace.js"></script>
 </body>

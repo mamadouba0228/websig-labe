@@ -507,22 +507,22 @@ def modifier_parametre(cle: str, body: Parametre, u: dict = Depends(current_user
 def exporter(quoi: str, u: dict = Depends(current_user)):
     with cursor() as cur:
         if quoi == "lampadaires":
-            cur.execute("""SELECT numero, alimentation, lampe, puissance_w, hauteur_m::float, etat, gestionnaire, to_char(date_pose, 'YYYY-MM-DD'),
-                                  voie, quartier, round(ST_X(geom)::numeric, 6)::float, round(ST_Y(geom)::numeric, 6)::float,
-                                  to_char(dernier_constat, 'YYYY-MM-DD'), observations FROM res.lampadaires ORDER BY numero""")
+            cur.execute("""SELECT numero, alimentation, lampe, puissance_w, hauteur_m::float, etat, gestionnaire, to_char(date_pose, 'YYYY-MM-DD') AS pose_le,
+                                  voie, quartier, round(ST_X(geom)::numeric, 6)::float AS lon, round(ST_Y(geom)::numeric, 6)::float AS lat,
+                                  to_char(dernier_constat, 'YYYY-MM-DD') AS constat_le, observations FROM res.lampadaires ORDER BY numero""")
             return csv_reponse(["Numéro", "Alimentation", "Lampe", "Puissance (W)", "Hauteur (m)", "État", "Gestionnaire", "Posé le", "Rue",
                                 "Quartier", "Longitude", "Latitude", "Dernier constat", "Observations"], cur.fetchall(), "lampadaires_labe.csv")
         if quoi == "bornes":
-            cur.execute("""SELECT numero, type, nom, etat, gestionnaire, robinets, CASE WHEN payante THEN 'oui' ELSE 'non' END, prix_gnf::float,
-                                  horaires, quartier, round(ST_X(geom)::numeric, 6)::float, round(ST_Y(geom)::numeric, 6)::float,
-                                  to_char(dernier_constat, 'YYYY-MM-DD'), observations FROM res.bornes ORDER BY numero""")
+            cur.execute("""SELECT numero, type, nom, etat, gestionnaire, robinets, CASE WHEN payante THEN 'oui' ELSE 'non' END AS payante_txt, prix_gnf::float,
+                                  horaires, quartier, round(ST_X(geom)::numeric, 6)::float AS lon, round(ST_Y(geom)::numeric, 6)::float AS lat,
+                                  to_char(dernier_constat, 'YYYY-MM-DD') AS constat_le, observations FROM res.bornes ORDER BY numero""")
             return csv_reponse(["Numéro", "Type", "Nom", "État", "Gestionnaire", "Robinets", "Payante", "Prix du bidon (GNF)", "Horaires",
                                 "Quartier", "Longitude", "Latitude", "Dernier constat", "Observations"], cur.fetchall(), "bornes_fontaines_labe.csv")
         if quoi == "interventions":
-            cur.execute("""SELECT i.numero, i.reseau, i.nature, i.statut, i.urgence, COALESCE(l.numero, b.numero), i.description, i.transmise_a,
-                                  i.cout_gnf::float, i.quartier, round(ST_X(i.geom)::numeric, 6)::float, round(ST_Y(i.geom)::numeric, 6)::float,
-                                  to_char(i.cree_le, 'YYYY-MM-DD'), to_char(i.repare_le, 'YYYY-MM-DD'),
-                                  CASE WHEN i.repare_le IS NOT NULL THEN round((EXTRACT(epoch FROM i.repare_le - i.cree_le) / 86400)::numeric, 1)::float END
+            cur.execute("""SELECT i.numero, i.reseau, i.nature, i.statut, i.urgence, COALESCE(l.numero, b.numero) AS equipement, i.description, i.transmise_a,
+                                  i.cout_gnf::float, i.quartier, round(ST_X(i.geom)::numeric, 6)::float AS lon, round(ST_Y(i.geom)::numeric, 6)::float AS lat,
+                                  to_char(i.cree_le, 'YYYY-MM-DD') AS signalee_le, to_char(i.repare_le, 'YYYY-MM-DD') AS reparee_le,
+                                  CASE WHEN i.repare_le IS NOT NULL THEN round((EXTRACT(epoch FROM i.repare_le - i.cree_le) / 86400)::numeric, 1)::float END AS delai_j
                            FROM res.interventions i LEFT JOIN res.lampadaires l ON l.id = i.lampadaire LEFT JOIN res.bornes b ON b.id = i.borne
                            ORDER BY i.numero""")
             return csv_reponse(["Numéro", "Réseau", "Nature", "Statut", "Urgence", "Équipement", "Description", "Transmise à", "Coût (GNF)",
