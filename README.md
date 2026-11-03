@@ -294,7 +294,8 @@ Onglet « Sélection » de la carte publique et de l'espace agents (calcul dans 
 - **sélection spatiale** : zone dessinée, cercle d'un rayon donné, **proximité** d'une autre couche
   (ex. bâtiments à moins de 30 m d'un cours d'eau, d'une route nationale…) ;
 - **résultats** : mise en évidence sur la carte, total (nombre, longueur, surface), **répartition** par champ,
-  tableau triable (clic sur une ligne = zoom), exports **CSV** (Excel) et **GeoJSON** (QGIS).
+  tableau triable (clic sur une ligne = zoom), exports **CSV** (Excel) et **GeoJSON** (QGIS) ; **Désélectionner**
+  (onglet ou tableau) retire la sélection de la carte, ✕ ferme seulement le tableau.
 
 Exemples : bâtiments en construction de Daka 1 · bâtiments de plus de 300 m² · voies sans nom de Madina ·
 adresses d'un quartier pour une tournée · bâtiments en zone inondable (proximité des cours d'eau).
