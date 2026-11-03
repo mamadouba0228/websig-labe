@@ -615,3 +615,9 @@ tr.cliquable:hover td { background: #f8f9fa; }
 .tab-groupe-carte { padding: 4px; }
 .tab-ligne .tab.tab-couches { padding: 8px; font-weight: 600; color: var(--green); border: 1px solid var(--border); border-radius: 6px; }
 .tab-ligne .tab.tab-couches.active { background: var(--green); color: #fff; border-color: var(--green); }
+
+/* Petit téléphone : le titre et l'Administration (tâche de bureau) laissent la place à la recherche et à la déconnexion */
+@media (max-width: 520px) {
+  .topbar .brand { display: none; }
+  #link-admin { display: none !important; }
+}
