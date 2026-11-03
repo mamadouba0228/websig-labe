@@ -380,6 +380,7 @@
       hlLayer.addLayer(L.circleMarker([it.rep[1], it.rep[0]], { radius: 3.5, color: '#fff', weight: 1, fillColor: '#e64980', fillOpacity: 1, interactive: false }));
     });
     hlLayer.bringToFront();
+    $('sel-deselect2').classList.toggle('hidden', !r.items.length);
     renderSummary();
     renderTable();
     drawer.classList.remove('hidden');
@@ -592,8 +593,16 @@
     setTimeout(function () { map.invalidateSize(); }, 50);
   }
   $('sel-close').addEventListener('click', closeDrawer);
+  // désélectionner : plus rien en surbrillance, tableau fermé (les conditions et la zone restent pour une nouvelle recherche)
+  function deselectionner() {
+    hlLayer.clearLayers(); result = null; closeDrawer();
+    $('sel-deselect2').classList.add('hidden');
+    majLoc();
+  }
+  $('sel-deselect').addEventListener('click', deselectionner);
+  $('sel-deselect2').addEventListener('click', deselectionner);
   $('sel-reset').addEventListener('click', function () {
-    hlLayer.clearLayers(); setZone(null); result = null; closeDrawer();
+    deselectionner(); setZone(null);
     refLayer.value = ''; refLayer.dispatchEvent(new Event('change'));
     if (current) { condBox.innerHTML = ''; addCondition(); }
   });
