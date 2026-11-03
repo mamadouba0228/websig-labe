@@ -310,10 +310,11 @@
   // champs « liste » et champs texte d'au plus 80 valeurs différentes ; les valeurs vides ne sont pas proposées
   function remplirFiltre(sel, key) {
     sel.innerHTML = '<option value="">— tous les objets —</option>';
+    var jeton = sel._jeton = (sel._jeton || 0) + 1;     // seul le dernier remplissage demandé s'applique
     if (!key) return Promise.resolve();
     var def = LAYERS[key];
     return prepare(key).then(function (items) {
-      if (sel.dataset.couche && sel.dataset.couche !== key) return;
+      if (sel._jeton !== jeton) return;
       def.fields.filter(function (f) { return f[2] !== 'nombre'; }).forEach(function (f) {
         var vals = distinctValues(items, f[0]).filter(function (v) { return v[0] !== '(vide)' && v[0] !== 'NC'; });
         if (!vals.length || (f[2] === 'texte' && vals.length > 80)) return;
@@ -503,8 +504,10 @@
   $('loc-predicats').innerHTML = PREDICATS.map(function (p) {
     return '<label class="check"><input type="checkbox" value="' + p[0] + '"' + (p[0] === 'intersecte' ? ' checked' : '') + '> ' + esc(p[1]) + '</label>';
   }).join('');
-  var locFiltre = $('loc-b-filtre');
+  var locFiltre = $('loc-b-filtre'), locFiltreA = $('loc-a-filtre');
   function majFiltreLoc() { locFiltre.dataset.couche = locB.value; remplirFiltre(locFiltre, locB.value); }
+  function majFiltreA() { locFiltreA.dataset.couche = locA.value; remplirFiltre(locFiltreA, locA.value); }
+  locA.addEventListener('change', majFiltreA);
   function majLoc() {
     var ok = !!(result && result.key === locB.value && result.items.length);
     locSel.disabled = !ok;
@@ -525,6 +528,7 @@
     if (current) locA.value = current.key;
     majLoc(); progression(0); $('loc-msg').textContent = '';
     if (locFiltre.dataset.couche !== locB.value) majFiltreLoc();
+    if (locFiltreA.dataset.couche !== locA.value) majFiltreA();
     locModal.classList.remove('hidden');
   });
   $('loc-fermer').addEventListener('click', function () { locModal.classList.add('hidden'); });
@@ -544,8 +548,9 @@
       var actuelle = result && result.key === ka ? result.items : [];
       if ((mode === 'dans' || mode === 'retirer') && !actuelle.length) throw new Error('Aucune sélection actuelle sur la couche « ' + LAYERS[ka].label + ' ».');
       var dejaSel = new Set(actuelle);
-      var aExaminer = mode === 'dans' || mode === 'retirer' ? actuelle : mode === 'ajouter' ? r[0].filter(function (it) { return !dejaSel.has(it); }) : r[0];
-      journal('Entités de « ' + LAYERS[ka].label + ' » examinées : ' + A.fmt(aExaminer.length) + ', comparées à « ' + LAYERS[kb].label + ' » : ' +
+      var aExaminer = filtrer(mode === 'dans' || mode === 'retirer' ? actuelle : mode === 'ajouter' ? r[0].filter(function (it) { return !dejaSel.has(it); }) : r[0],
+        locFiltreA.value);
+      journal('Entités de « ' + LAYERS[ka].label + ' »' + libelleFiltre(locFiltreA) + ' examinées : ' + A.fmt(aExaminer.length) + ', comparées à « ' + LAYERS[kb].label + ' » : ' +
         A.fmt(itemsB.length) + (seulesSel ? ' sélectionnée(s)' : libelleFiltre(locFiltre)) + '.');
       // index des objets de B par cellules de 200 m
       var CELL = 200, grille = {}, marque = new Int32Array(itemsB.length).fill(-1);
@@ -591,7 +596,7 @@
         else if (mode === 'retirer') final = actuelle.filter(function (it) { return !R.has(it); });
         else final = retenus;
         var verbes = PREDICATS.filter(function (p) { return preds.indexOf(p[0]) >= 0; }).map(function (p) { return p[2]; }).join(' ou ');
-        var desc = 'qui ' + verbes + ' : ' + LAYERS[kb].label.toLowerCase() + (seulesSel ? ' (objets sélectionnés)' : libelleFiltre(locFiltre)) +
+        var desc = (locFiltreA.value ? libelleFiltre(locFiltreA).slice(2, -1) + ', ' : '') + 'qui ' + verbes + ' : ' + LAYERS[kb].label.toLowerCase() + (seulesSel ? ' (objets sélectionnés)' : libelleFiltre(locFiltre)) +
           (mode === 'ajouter' ? ', ajoutés à la sélection' : mode === 'dans' ? ', dans la sélection précédente' : mode === 'retirer' ? ', retirés de la sélection' : '');
         showResult({ key: ka, items: final, desc: desc });
         journal(A.fmt(retenus.length) + ' entité(s) trouvée(s) · ' + A.fmt(final.length) + ' sélectionnée(s) · ' +
