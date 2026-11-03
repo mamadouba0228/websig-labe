@@ -28,7 +28,12 @@
       fields: [['nom', 'Nom', 'texte'], ['superficie_km2', 'Superficie (km²)', 'nombre'], ['nb_batiments', 'Bâtiments', 'nombre'],
         ['densite', 'Bâtiments / km²', 'nombre']] },
     cours_eau: { label: 'Cours d\'eau', src: 'cours_eau', geom: 'line', title: function (p) { return p.nom || 'Cours d\'eau'; },
-      fields: [['nom', 'Nom', 'texte'], ['regime', 'Régime', 'liste'], ['longueur_m', 'Longueur (m)', 'nombre'], ['quartier', 'Quartier', 'liste']] }
+      fields: [['nom', 'Nom', 'texte'], ['regime', 'Régime', 'liste'], ['longueur_m', 'Longueur (m)', 'nombre'], ['quartier', 'Quartier', 'liste']] },
+    // calculées par scripts/relief (modèle de terrain) : aléa fort et moyen
+    zones_inondables: { label: 'Zones inondables', geom: 'polygon', sansQuartier: true,
+      load: function () { return fetch('data/relief/zones_inondables.geojson').then(function (r) { if (!r.ok) throw new Error('zones inondables indisponibles'); return r.json(); }); },
+      title: function (p) { return 'Aléa ' + String(p.alea || '').toLowerCase(); },
+      fields: [['alea', 'Aléa', 'liste'], ['critere', 'Critère', 'texte'], ['surface_ha', 'Surface (ha)', 'nombre']] }
   };
   var OPS = {
     liste: [['in', 'est parmi'], ['notin', 'n\'est pas parmi']],
@@ -110,7 +115,7 @@
   function prepare(key) {
     if (prepared[key]) return prepared[key];
     var def = LAYERS[key], src = typeof def.src === 'function' ? def.src() : def.src;
-    prepared[key] = Promise.all([A.loadOnce(src), quartierIndex()]).then(function (r) {
+    prepared[key] = Promise.all([def.load ? def.load() : A.loadOnce(src), quartierIndex()]).then(function (r) {
       // les géométries vides ou incomplètes (ex. polygone réduit à rien par le découpage) sont ignorées
       return r[0].features.map(function (f) {
         if (!f.geometry || !f.geometry.coordinates) return null;
@@ -128,7 +133,7 @@
           if (key === 'batiments') p.surface_m2 = Math.round(g.rings.reduce(function (s, rg) { return s + ringArea(rg[0]); }, 0));
           if (key === 'quartiers') p.densite = p.superficie_km2 ? Math.round(p.nb_batiments / p.superficie_km2) : 0;
         }
-        if (key !== 'quartiers' && p.quartier == null) p.quartier = quartierOf(rep);
+        if (key !== 'quartiers' && !def.sansQuartier && p.quartier == null) p.quartier = quartierOf(rep);
         return { f: f, p: p, rep: rep, g: g };
       }).filter(Boolean);
     });
@@ -467,6 +472,111 @@
     }) };
     download(JSON.stringify(fc), 'selection_' + result.key + '.geojson', 'application/geo+json');
   });
+  // ---------- Sélection par localisation (comme l'outil de QGIS) ----------
+  // un objet de la couche A est retenu si l'un des prédicats cochés est vrai avec au moins un objet de la couche B ;
+  // « est disjoint » : aucun objet de B ne le touche. Sur une même couche, un objet n'est pas comparé à lui-même.
+  var PREDICATS = [['intersecte', 'intersecte', 'intersectent'], ['touche', 'touche', 'touchent'], ['contient', 'contient', 'contiennent'],
+    ['chevauche', 'chevauche', 'chevauchent'], ['disjoint', 'est disjoint', 'sont disjoints de'], ['interieur', 'est à l\'intérieur', 'sont à l\'intérieur de'],
+    ['egal', 'égal', 'sont égaux à'], ['croise', 'croise', 'croisent']];
+  var locA = $('loc-a'), locB = $('loc-b'), locSel = $('loc-b-sel'), locMode = $('loc-mode'), locModal = $('loc-modal');
+  Object.keys(LAYERS).forEach(function (k) { locA.add(new Option(LAYERS[k].label, k)); locB.add(new Option(LAYERS[k].label, k)); });
+  locB.value = 'zones_inondables';
+  $('loc-predicats').innerHTML = PREDICATS.map(function (p) {
+    return '<label class="check"><input type="checkbox" value="' + p[0] + '"' + (p[0] === 'intersecte' ? ' checked' : '') + '> ' + esc(p[1]) + '</label>';
+  }).join('');
+  function majLoc() {
+    var ok = !!(result && result.key === locB.value && result.items.length);
+    locSel.disabled = !ok;
+    if (!ok) locSel.checked = false;
+    $('loc-b-sel-n').textContent = ok ? ' (' + A.fmt(result.items.length) + ')' : '';
+  }
+  locB.addEventListener('change', majLoc);
+  function journal(txt) {
+    var p = document.createElement('div');
+    p.textContent = new Date().toLocaleTimeString('fr-FR') + ' — ' + txt;
+    $('loc-journal').appendChild(p);
+    $('loc-journal').scrollTop = 1e6;
+  }
+  function progression(x) { $('loc-barre').style.width = Math.round(100 * x) + '%'; $('loc-pct').textContent = Math.round(100 * x) + ' %'; }
+  $('loc-ouvrir').addEventListener('click', function () {
+    if (current) locA.value = current.key;
+    majLoc(); progression(0); $('loc-msg').textContent = '';
+    locModal.classList.remove('hidden');
+  });
+  $('loc-fermer').addEventListener('click', function () { locModal.classList.add('hidden'); });
+  function topo(it) { return it._topo || (it._topo = LabeTopo.preparer(it.f.geometry)); }
+  $('loc-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var preds = Array.prototype.filter.call($('loc-predicats').querySelectorAll('input'), function (i) { return i.checked; }).map(function (i) { return i.value; });
+    var ka = locA.value, kb = locB.value, mode = locMode.value, seulesSel = locSel.checked && !locSel.disabled;
+    $('loc-msg').textContent = '';
+    if (!preds.length) { $('loc-msg').textContent = 'Cochez au moins un prédicat géométrique.'; return; }
+    var bouton = $('loc-executer'), t0 = Date.now();
+    bouton.disabled = true; progression(0);
+    journal('Chargement des couches…');
+    Promise.all([prepare(ka), prepare(kb)]).then(function (r) {
+      var itemsB = seulesSel ? result.items : r[1];
+      var actuelle = result && result.key === ka ? result.items : [];
+      if ((mode === 'dans' || mode === 'retirer') && !actuelle.length) throw new Error('Aucune sélection actuelle sur la couche « ' + LAYERS[ka].label + ' ».');
+      var dejaSel = new Set(actuelle);
+      var aExaminer = mode === 'dans' || mode === 'retirer' ? actuelle : mode === 'ajouter' ? r[0].filter(function (it) { return !dejaSel.has(it); }) : r[0];
+      journal('Entités de « ' + LAYERS[ka].label + ' » examinées : ' + A.fmt(aExaminer.length) + ', comparées à « ' + LAYERS[kb].label + ' » : ' +
+        A.fmt(itemsB.length) + (seulesSel ? ' sélectionnée(s)' : '') + '.');
+      // index des objets de B par cellules de 200 m
+      var CELL = 200, grille = {}, marque = new Int32Array(itemsB.length).fill(-1);
+      itemsB.forEach(function (it, i) {
+        var bb = topo(it).bb;
+        for (var x = Math.floor(bb[0] / CELL); x <= Math.floor(bb[2] / CELL); x++)
+          for (var y = Math.floor(bb[1] / CELL); y <= Math.floor(bb[3] / CELL); y++) (grille[x + ':' + y] || (grille[x + ':' + y] = [])).push(i);
+      });
+      var autres = preds.filter(function (p) { return p !== 'disjoint'; }), disjoint = preds.indexOf('disjoint') >= 0, memeCouche = ka === kb;
+      var retenus = [];
+      return new Promise(function (ok, ko) {
+        var n = 0;
+        (function lot() {
+          try {
+            var fin = Math.min(n + 400, aExaminer.length);
+            for (; n < fin; n++) {
+              var a = aExaminer[n], ga = topo(a), bb = ga.bb, vrai = false, touche = false;
+              for (var x = Math.floor(bb[0] / CELL); x <= Math.floor(bb[2] / CELL) && !vrai; x++)
+                for (var y = Math.floor(bb[1] / CELL); y <= Math.floor(bb[3] / CELL) && !vrai; y++) {
+                  var liste = grille[x + ':' + y];
+                  if (!liste) continue;
+                  for (var k = 0; k < liste.length && !vrai; k++) {
+                    var i = liste[k];
+                    if (marque[i] === n) continue;
+                    marque[i] = n;
+                    var b = itemsB[i];
+                    if (memeCouche && b === a) continue;
+                    var rel = LabeTopo.relations(ga, topo(b));
+                    if (rel.intersecte) touche = true;
+                    for (var q = 0; q < autres.length; q++) if (rel[autres[q]]) { vrai = true; break; }
+                  }
+                }
+              if (!vrai && disjoint) vrai = !touche;
+              if (vrai) retenus.push(a);
+            }
+            progression(aExaminer.length ? n / aExaminer.length : 1);
+            if (n < aExaminer.length) setTimeout(lot, 0); else ok(retenus);
+          } catch (err) { ko(err); }
+        })();
+      }).then(function (retenus) {
+        var R = new Set(retenus), final;
+        if (mode === 'ajouter') final = actuelle.concat(retenus);
+        else if (mode === 'retirer') final = actuelle.filter(function (it) { return !R.has(it); });
+        else final = retenus;
+        var verbes = PREDICATS.filter(function (p) { return preds.indexOf(p[0]) >= 0; }).map(function (p) { return p[2]; }).join(' ou ');
+        var desc = 'qui ' + verbes + ' : ' + LAYERS[kb].label.toLowerCase() + (seulesSel ? ' (objets sélectionnés)' : '') +
+          (mode === 'ajouter' ? ', ajoutés à la sélection' : mode === 'dans' ? ', dans la sélection précédente' : mode === 'retirer' ? ', retirés de la sélection' : '');
+        showResult({ key: ka, items: final, desc: desc });
+        journal(A.fmt(retenus.length) + ' entité(s) trouvée(s) · ' + A.fmt(final.length) + ' sélectionnée(s) · ' +
+          ((Date.now() - t0) / 1000).toFixed(1).replace('.', ',') + ' s.');
+        majLoc();
+      });
+    }).catch(function (err) { $('loc-msg').textContent = err.message; journal('Erreur : ' + err.message); })
+      .then(function () { bouton.disabled = false; });
+  });
+
   // API partagée (analyses : tampons, isochrones)
   A.selection = {
     LAYERS: LAYERS,

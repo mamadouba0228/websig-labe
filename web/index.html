@@ -68,6 +68,8 @@
 
     <section id="tab-sel" class="panel">
       <h3>Sélection des données</h3>
+      <div class="row"><button id="loc-ouvrir" type="button">⧉ Sélection par localisation…</button></div>
+      <p class="hint">Comme dans QGIS : les objets d'une couche qui intersectent, touchent, contiennent… ceux d'une autre couche.</p>
       <select id="sel-layer" class="full"><option value="">— choisir une couche —</option></select>
       <p class="hint" id="sel-status">Choisissez une couche, puis ajoutez des conditions et/ou une zone.</p>
       <div id="sel-builder" class="hidden">
@@ -197,6 +199,40 @@
 
   <div id="load-status" class="load-status">Chargement des couches…</div>
   <!-- Résultats de la sélection -->
+  <!-- Sélection par localisation (comme l'outil de QGIS) : fenêtre flottante, la carte reste visible -->
+  <div id="loc-modal" class="modal loc-flottant hidden">
+    <form id="loc-form" class="modal-card loc-card">
+      <h3>Sélection par localisation</h3>
+      <label>Sélectionnez les entités depuis
+        <select id="loc-a"></select>
+      </label>
+      <fieldset class="loc-predicats">
+        <legend>Où les entités (prédicat géométrique)</legend>
+        <div id="loc-predicats"></div>
+      </fieldset>
+      <label>En comparant les entités de
+        <select id="loc-b"></select>
+      </label>
+      <label class="check"><input type="checkbox" id="loc-b-sel" disabled> Entité(s) sélectionnée(s) uniquement<span id="loc-b-sel-n"></span></label>
+      <label>Modifier la sélection actuelle en
+        <select id="loc-mode">
+          <option value="nouvelle">Créer une nouvelle sélection</option>
+          <option value="ajouter">Ajouter à la sélection actuelle</option>
+          <option value="dans">Sélectionner dans la sélection actuelle</option>
+          <option value="retirer">Supprimer de la sélection actuelle</option>
+        </select>
+      </label>
+      <p class="hint">Un objet est retenu si l'un des prédicats cochés est vrai avec au moins un objet de l'autre couche. Contacts au centimètre près (tolérance de 5 cm). Une couche comparée à elle-même : chaque objet est comparé aux autres.</p>
+      <div class="loc-progression"><div id="loc-barre"></div><span id="loc-pct">0 %</span></div>
+      <div id="loc-journal" class="loc-journal"></div>
+      <p class="form-msg" id="loc-msg"></p>
+      <div class="row">
+        <button type="button" id="loc-fermer">Fermer</button>
+        <button type="submit" id="loc-executer" class="primary">Exécuter</button>
+      </div>
+    </form>
+  </div>
+
   <div id="sel-drawer" class="sel-drawer hidden">
     <div class="sel-drawer-head">
       <div id="sel-summary"></div>
@@ -223,6 +259,7 @@
   <script src="js/table-attributaire.js"></script>
   <script src="js/adressage-public.js"></script>
   <script src="js/itineraire.js"></script>
+  <script src="js/topologie.js"></script>
   <script src="js/selection.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/d3-array@3.2.4/dist/d3-array.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/d3-contour@4.0.2/dist/d3-contour.min.js"></script>

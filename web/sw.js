@@ -5,10 +5,10 @@
  * - bibliothèques (CDN) : copie locale d'abord.
  * Les envois (POST, PUT…) ne passent jamais par le cache : sans réseau, la saisie est mise en file d'attente
  * par js/terrain.js et envoyée au retour de la connexion. */
-var VERSION = 'labe-v12';
+var VERSION = 'labe-v13';
 var COQUILLE = ['espace.html', 'index.html', 'css/style.css', 'manifest.webmanifest', 'icons/icone-192.png',
   'js/config.js', 'js/auth.js', 'js/app.js', 'js/table-attributaire.js', 'js/terrain.js', 'js/edition.js', 'js/contributions.js', 'js/suivi.js',
-  'js/adressage.js', 'js/adressage-public.js', 'js/itineraire.js', 'js/selection.js', 'js/analyses.js', 'js/relief.js',
+  'js/adressage.js', 'js/adressage-public.js', 'js/itineraire.js', 'js/topologie.js', 'js/selection.js', 'js/analyses.js', 'js/relief.js',
   'js/identify.js', 'js/foncier.js', 'js/foncier-gestion.js', 'js/dechets-carte.js', 'js/dechets.js', 'js/environnement-carte.js', 'js/environnement.js', 'js/reseaux-carte.js', 'js/reseaux.js', 'js/marches-carte.js', 'js/marches.js', 'js/espace.js'];
 var MAX_TUILES = 4000;
 

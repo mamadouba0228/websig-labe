@@ -299,6 +299,16 @@ Onglet « Sélection » de la carte publique et de l'espace agents (calcul dans 
 Exemples : bâtiments en construction de Daka 1 · bâtiments de plus de 300 m² · voies sans nom de Madina ·
 adresses d'un quartier pour une tournée · bâtiments en zone inondable (proximité des cours d'eau).
 
+**Sélection par localisation** (bouton « ⧉ Sélection par localisation… », comme l'outil de QGIS) : les objets d'une couche
+dont la relation avec ceux d'une autre couche est **intersecte, touche, contient, chevauche, est disjoint, est à l'intérieur,
+égal ou croise** (plusieurs prédicats cochés : l'un ou l'autre). Option « Entité(s) sélectionnée(s) uniquement » sur la couche
+de comparaison ; la sélection actuelle peut être remplacée, complétée, restreinte ou réduite. Couches : celles de la sélection,
+plus les **zones inondables** (aléa fort et moyen du relief). Une couche comparée à elle-même : chaque objet est comparé aux
+autres (ex. bâtiments qui touchent un autre bâtiment). Calcul dans le navigateur (`web/js/topologie.js`), en coordonnées
+planes locales, avec une tolérance de contact de 5 cm (les coordonnées servies sont arrondies à environ 10 cm) : résultats
+identiques à PostGIS, sauf pour les contacts de quelques centimètres (bâtiments voisins, rivière qui longe une limite de
+quartier). Environ 1 s pour les 44 000 bâtiments comparés aux zones inondables.
+
 ## Analyses : isochrones et tampons
 
 Onglet « Analyses » de la carte publique et de l'espace agents (calcul dans le navigateur, fonctionne aussi sur GitHub Pages).
