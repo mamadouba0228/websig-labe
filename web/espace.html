@@ -31,21 +31,32 @@
   </header>
 
   <aside id="sidebar">
-    <nav class="tabs">
-      <button class="tab active" data-tab="contrib">Saisie <span id="tab-badge" class="tab-badge hidden"></span></button>
-      <button class="tab" data-tab="suivi">Suivi <span id="suivi-badge" class="tab-badge hidden"></span></button>
-      <button class="tab" data-tab="adr">Adressage</button>
-      <button class="tab" data-tab="fon">Foncier <span id="fon-badge" class="tab-badge hidden"></span></button>
-      <button class="tab" data-tab="dech">Déchets <span id="dech-badge" class="tab-badge hidden"></span></button>
-      <button class="tab" data-tab="env">Environnement <span id="env-badge" class="tab-badge hidden"></span></button>
-      <button class="tab" data-tab="res">Réseaux <span id="res-badge" class="tab-badge hidden"></span></button>
-      <button class="tab" data-tab="mar">Marchés <span id="mar-badge" class="tab-badge hidden"></span></button>
-      <button class="tab" data-tab="iti">Itinéraire</button>
-      <button class="tab" data-tab="sel">Sélection</button>
-      <button class="tab" data-tab="ana">Analyses</button>
-      <button class="tab" data-tab="layers">Couches</button>
-      <button class="tab" data-tab="stats">Statistiques</button>
-      <button class="tab" data-tab="account">Mon compte</button>
+    <!-- Onglets en deux groupes : outils communs à tous les agents, puis modules des services communaux -->
+    <nav class="tabs tabs-groupes">
+      <div class="tab-groupe tab-groupe-outils" role="group" aria-labelledby="tg-outils">
+        <span class="tab-groupe-titre" id="tg-outils">Outils</span>
+        <div class="tab-ligne">
+          <button class="tab active" data-tab="contrib">Saisie <span id="tab-badge" class="tab-badge hidden"></span></button>
+          <button class="tab" data-tab="suivi">Suivi <span id="suivi-badge" class="tab-badge hidden"></span></button>
+          <button class="tab" data-tab="iti">Itinéraire</button>
+          <button class="tab" data-tab="sel">Sélection</button>
+          <button class="tab" data-tab="ana">Analyses</button>
+          <button class="tab" data-tab="layers">Couches</button>
+          <button class="tab" data-tab="stats">Statistiques</button>
+          <button class="tab" data-tab="account">Mon compte</button>
+        </div>
+      </div>
+      <div class="tab-groupe tab-groupe-services" role="group" aria-labelledby="tg-services">
+        <span class="tab-groupe-titre" id="tg-services">Services communaux</span>
+        <div class="tab-ligne">
+          <button class="tab" data-tab="adr">Adressage</button>
+          <button class="tab" data-tab="fon">Foncier <span id="fon-badge" class="tab-badge hidden"></span></button>
+          <button class="tab" data-tab="dech">Déchets <span id="dech-badge" class="tab-badge hidden"></span></button>
+          <button class="tab" data-tab="env">Environnement <span id="env-badge" class="tab-badge hidden"></span></button>
+          <button class="tab" data-tab="res">Réseaux <span id="res-badge" class="tab-badge hidden"></span></button>
+          <button class="tab" data-tab="mar">Marchés <span id="mar-badge" class="tab-badge hidden"></span></button>
+        </div>
+      </div>
     </nav>
 
     <section id="tab-contrib" class="panel active">

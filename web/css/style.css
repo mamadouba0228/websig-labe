@@ -602,3 +602,13 @@ tr.cliquable:hover td { background: #f8f9fa; }
 .fon-li.annulee b, li.annulee b { text-decoration: line-through; color: #868e96; }
 .mar-switch button { padding-left: 6px; padding-right: 6px; }
 #mar-rec .filters label { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; }
+
+/* Espace agents : onglets en deux groupes (outils communs, services communaux) */
+.tabs.tabs-groupes { display: block; padding: 0; }
+.tab-groupe { padding: 4px 4px 0; }
+.tab-groupe + .tab-groupe { border-top: 1px solid var(--border); }
+.tab-groupe-services { background: #f3f8f4; }
+.tab-groupe-titre { display: block; padding: 2px 6px 0; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.tab-groupe-services .tab-groupe-titre { color: var(--green); }
+.tab-ligne { display: flex; flex-wrap: wrap; }
+.tab-ligne .tab { flex: 1 0 auto; padding: 8px 8px; }
