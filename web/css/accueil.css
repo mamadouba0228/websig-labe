@@ -55,7 +55,10 @@ body.accueil { height: auto; background: #fff; overflow: auto; }
 .acc-outils li::before { content: ""; position: absolute; left: 0; top: 7px; width: 10px; height: 10px; border-radius: 50%; background: var(--yellow); }
 .acc-outils b { color: var(--green-dark); }
 
-.acc-apropos { display: grid; grid-template-columns: 2fr 1fr; gap: 36px; }
+.acc-apropos { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 5fr) minmax(0, 3fr); gap: 32px; align-items: start; }
+.acc-photo { margin: 6px 0 0; }
+.acc-photo img { display: block; width: 100%; height: auto; border-radius: 10px; border: 1px solid var(--border); box-shadow: 0 6px 18px rgba(0,0,0,.12); }
+.acc-photo figcaption { margin-top: 8px; font-size: 13px; color: var(--muted); text-align: center; }
 .acc-apropos p { line-height: 1.6; color: #3c4741; }
 
 .acc-pied { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; padding: 18px 24px;
@@ -66,6 +69,7 @@ body.accueil { height: auto; background: #fff; overflow: auto; }
   .acc-hero h1 { font-size: 27px; }
   .acc-cartes, .acc-services, .acc-outils { grid-template-columns: 1fr 1fr; }
   .acc-apropos { grid-template-columns: 1fr; gap: 0; }
+  .acc-photo { max-width: 597px; margin: 0 auto 20px; }
 }
 @media (max-width: 600px) {
   .acc-cartes, .acc-services, .acc-outils { grid-template-columns: 1fr; }
