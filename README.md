@@ -2,7 +2,9 @@
 
 Système d'information géographique web de la commune urbaine de Labé (Guinée) :
 
-- **Carte publique** : consultation libre, sans compte, en lecture seule (limites, 28 quartiers,
+- **Page d'accueil** (`index.html`) : présentation, chiffres clés, accès aux trois espaces ci-dessous, services
+  communaux et outils. Les anciens liens de carte (`index.html#zoom/lat/lon`) sont renvoyés vers `carte.html`.
+- **Carte publique** (`carte.html`) : consultation libre, sans compte, en lecture seule (limites, 28 quartiers,
   voirie, bâti, hydrographie, équipements, données validées par la mairie).
 - **Espace agents** : les agents des services communaux, avec un compte créé par l'administrateur,
   saisissent des données (points, lignes, surfaces, photos, import GeoJSON).

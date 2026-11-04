@@ -28,7 +28,8 @@ jobs:
           ESPACE_URL: ${{ vars.ESPACE_URL }}
         run: |
           mkdir -p _site/js _site/data
-          cp web/index.html web/certificat.html _site/
+          cp web/index.html web/carte.html web/certificat.html _site/
+          cp -r web/img _site/
           cp -r web/css _site/
           cp web/js/app.js web/js/adressage-public.js web/js/itineraire.js web/js/topologie.js web/js/selection.js web/js/analyses.js web/js/relief.js web/js/identify.js web/js/certificat.js web/js/table-attributaire.js web/js/dechets-carte.js web/js/environnement-carte.js web/js/reseaux-carte.js web/js/marches-carte.js _site/js/
           cp data/public/*.geojson data/public/stats.json _site/data/

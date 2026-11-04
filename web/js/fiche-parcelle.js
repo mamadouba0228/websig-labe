@@ -18,7 +18,7 @@
   // ---------- Vérification publique ----------
   function verifier() {
     $('barre').querySelectorAll('.delivrance').forEach(function (e) { e.classList.add('hidden'); });
-    $('barre').querySelector('a').href = 'index.html';
+    $('barre').querySelector('a').href = 'carte.html';
     $('barre').querySelector('a').textContent = '← Carte de la commune';
     fetch('/api/foncier/fiches/verifier?numero=' + encodeURIComponent(verif) + '&code=' + encodeURIComponent(code || '')).then(function (r) {
       return r.json().then(function (d) { if (!r.ok) throw new Error(d.detail || 'Vérification impossible.'); return d; });

@@ -4,267 +4,162 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WebSIG — Commune urbaine de Labé</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <meta name="description" content="Le WebSIG de la Commune urbaine de Labé : la carte de la commune ouverte à tous, et l'outil de travail des services municipaux.">
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/accueil.css">
+  <script>
+    // Anciens liens vers la carte (index.html#zoom/lat/lon ou avec paramètres) : on les envoie vers carte.html
+    if (location.search || /^#\d+\//.test(location.hash)) location.replace('carte.html' + location.search + location.hash);
+  </script>
 </head>
-<body data-page="public">
+<body class="accueil">
   <header class="topbar">
-    <button id="btn-menu" class="icon-btn" title="Afficher / masquer le panneau">☰</button>
     <div class="brand">
       <strong>WebSIG Commune urbaine de Labé</strong>
       <span>République de Guinée · Région de Labé</span>
     </div>
-    <div class="search">
-      <input id="search" type="search" placeholder="Rechercher une adresse, une rue, un quartier…" autocomplete="off">
-      <ul id="search-results"></ul>
-    </div>
-    <a id="link-espace" class="header-link" href="espace.html" title="Réservé aux agents des services communaux">Espace agents</a>
+    <nav class="acc-nav">
+      <a class="header-link" href="carte.html">Carte publique</a>
+      <a class="header-link acc-lien-espace" href="espace.html">Espace agents</a>
+    </nav>
   </header>
 
-  <aside id="sidebar">
-    <nav class="tabs">
-      <button class="tab active" data-tab="layers">Couches</button>
-      <button class="tab" data-tab="iti">Itinéraire</button>
-      <button class="tab" data-tab="sel">Sélection</button>
-      <button class="tab" data-tab="ana">Analyses</button>
-      <button class="tab" data-tab="stats">Statistiques</button>
-      <button class="tab" data-tab="about">À propos</button>
-    </nav>
-
-    <section id="tab-layers" class="panel active">
-      <h3>Fond de carte</h3>
-      <div id="basemaps"></div>
-      <h3>Couches thématiques</h3>
-      <div id="overlays"></div>
+  <main>
+    <!-- Bandeau d'accueil -->
+    <section class="acc-hero">
+      <div class="acc-hero-texte">
+        <p class="acc-surtitre">Système d'information géographique de la commune</p>
+        <h1>Bienvenue sur le WebSIG de la Commune urbaine de Labé</h1>
+        <p class="acc-accroche">La carte de la commune, ouverte à tous, et l'outil de travail des services municipaux :
+          adresses, foncier, salubrité, environnement, réseaux, marchés et gares routières.</p>
+        <div class="acc-actions">
+          <a class="acc-btn acc-btn-principal" href="carte.html">Ouvrir la carte publique</a>
+          <a class="acc-btn acc-lien-espace" href="espace.html">Espace agents</a>
+        </div>
+      </div>
+      <a class="acc-hero-image" href="carte.html" title="Ouvrir la carte publique">
+        <img src="img/apercu-carte.jpg" alt="Aperçu de la carte de Labé : quartiers, voirie, bâti, cours d'eau et équipements" width="1200" height="651">
+      </a>
     </section>
 
-    <section id="tab-iti" class="panel">
-      <h3>Itinéraire</h3>
-      <div class="iti-modes">
-        <label><input type="radio" name="iti-mode" value="pied" checked> 🚶 À pied</label>
-        <label><input type="radio" name="iti-mode" value="vehicule"> 🚗 En véhicule</label>
-      </div>
-      <div class="iti-search">
-        <input id="iti-search" type="search" placeholder="Ajouter une adresse, une rue, un lieu…" autocomplete="off">
-        <ul id="iti-search-results"></ul>
-      </div>
-      <div class="row">
-        <button id="iti-pick">+ Point sur la carte</button>
-        <button id="iti-gps">◎ Ma position</button>
-      </div>
-      <p class="hint" id="iti-vide">Ajoutez un départ puis une arrivée : par la recherche, avec « Point sur la carte », ou par un <b>clic droit</b> sur la carte (appui long sur téléphone). Les marqueurs se déplacent à la souris.</p>
-      <ul id="iti-etapes"></ul>
-      <div id="iti-actions" class="hidden">
-        <label class="check"><input type="checkbox" id="iti-optim"> Optimiser l'ordre des étapes (tournée)</label>
-        <label class="check"><input type="checkbox" id="iti-boucle"> Revenir au point de départ</label>
-        <div class="row">
-          <button id="iti-reverse">⇅ Inverser</button>
-          <button id="iti-gpx" title="Pour suivre le trajet sur téléphone (OsmAnd, Maps.me…) ou GPS">Exporter GPX</button>
-          <button id="iti-clear" class="danger">Effacer</button>
-        </div>
-      </div>
-      <div id="iti-result"></div>
+    <!-- Chiffres clés -->
+    <section class="acc-chiffres" aria-label="Chiffres clés">
+      <div><b>28</b><span>quartiers</span></div>
+      <div><b id="ch-superficie">192</b><span>km² de territoire communal</span></div>
+      <div><b id="ch-batiments">44 000</b><span>bâtiments cartographiés</span></div>
+      <div><b id="ch-routes">930</b><span>km de voies</span></div>
     </section>
 
-    <section id="tab-sel" class="panel">
-      <h3>Sélection des données</h3>
-      <div class="row"><button id="loc-ouvrir" type="button">⧉ Sélection par localisation…</button><button id="sel-deselect2" type="button" class="hidden" title="Retirer la sélection de la carte">✕ Désélectionner</button></div>
-      <select id="sel-layer" class="full"><option value="">— choisir une couche —</option></select>
-      <p class="hint" id="sel-status">Choisissez une couche, puis ajoutez des conditions et/ou une zone.</p>
-      <div id="sel-builder" class="hidden">
-        <h3>Conditions sur les attributs</h3>
-        <div class="sel-combine">
-          <label><input type="radio" name="sel-combine" value="et" checked> Toutes (ET)</label>
-          <label><input type="radio" name="sel-combine" value="ou"> Au moins une (OU)</label>
-        </div>
-        <div id="sel-conds"></div>
-        <button id="sel-add-cond" type="button">+ Ajouter une condition</button>
+    <!-- Les espaces -->
+    <section class="acc-section">
+      <h2>Accédez à votre espace</h2>
+      <div class="acc-cartes">
+        <article class="acc-carte">
+          <div class="acc-carte-icone" aria-hidden="true">🗺</div>
+          <h3>Grand public</h3>
+          <p>Consulter librement la carte de la commune, sans compte : quartiers, rues, bâtiments, équipements, relief et
+            zones inondables. Rechercher une adresse, calculer un itinéraire, sélectionner et analyser les données.</p>
+          <a class="acc-btn acc-btn-principal" href="carte.html">Accès libre</a>
+        </article>
+        <article class="acc-carte">
+          <div class="acc-carte-icone" aria-hidden="true">👷</div>
+          <h3>Agents communaux</h3>
+          <p>Saisir et suivre les données sur le terrain (même hors connexion), traiter les signalements et travailler
+            dans les services communaux attribués à son compte.</p>
+          <a class="acc-btn acc-lien-espace" href="espace.html">Connexion requise</a>
+          <p class="acc-note acc-hors-serveur hidden">Disponible sur le serveur de la mairie.</p>
+        </article>
+        <article class="acc-carte">
+          <div class="acc-carte-icone" aria-hidden="true">⚙</div>
+          <h3>Administration</h3>
+          <p>Créer les comptes des agents et choisir leurs services, valider les saisies avant publication, suivre le
+            tableau de bord et le journal d'activité.</p>
+          <a class="acc-btn acc-lien-admin" href="admin.html">Connexion requise</a>
+          <p class="acc-note acc-hors-serveur hidden">Disponible sur le serveur de la mairie.</p>
+        </article>
+      </div>
+      <p class="acc-note">Les comptes des agents sont créés par l'administrateur du WebSIG à la mairie : il n'y a pas d'inscription libre.</p>
+    </section>
 
-        <h3>Zone géographique</h3>
-        <div class="row">
-          <button id="sel-zone-poly" type="button">⬠ Dessiner une zone</button>
-          <button id="sel-zone-circle" type="button">◯ Cercle</button>
-          <label class="inline-num">rayon <input id="sel-radius" type="number" value="500" min="10" step="50"> m</label>
-        </div>
-        <p class="hint"><span id="sel-zone-info">Aucune zone.</span> <a href="#" id="sel-zone-clear" class="hidden">Retirer</a></p>
-
-        <h3>Proximité d'une autre couche</h3>
-        <select id="sel-ref-layer" class="full"><option value="">— aucune —</option></select>
-        <div id="sel-ref-opts" class="hidden">
-          <select id="sel-ref-value" class="full"></select>
-          <label class="inline-num">à moins de <input id="sel-ref-dist" type="number" value="50" min="1" step="10"> m</label>
-        </div>
-
-        <div class="row">
-          <button id="sel-run" class="primary" type="button">Appliquer la sélection</button>
-          <button id="sel-reset" type="button">Réinitialiser</button>
-        </div>
+    <!-- Services communaux -->
+    <section class="acc-section acc-fond">
+      <h2>Les services communaux dans le WebSIG</h2>
+      <div class="acc-services">
+        <div><h3>Adressage</h3><p>Noms des voies, numérotation métrique des bâtiments, plaques et certificats d'adresse.</p></div>
+        <div><h3>Foncier</h3><p>Parcelles, titulaires, dossiers d'urbanisme, litiges et fiscalité foncière.</p></div>
+        <div><h3>Déchets</h3><p>Dépôts sauvages, points de collecte, tournées et couverture du ramassage.</p></div>
+        <div><h3>Environnement</h3><p>Zones protégées et inondables, atteintes, plantations, points d'eau et feux.</p></div>
+        <div><h3>Réseaux</h3><p>Éclairage public, bornes-fontaines et interventions de maintenance.</p></div>
+        <div><h3>Marchés et gares routières</h3><p>Sites, emplacements, loyers, tickets, quittances et impayés.</p></div>
       </div>
     </section>
 
-    <section id="tab-ana" class="panel">
-      <div class="ana-switch">
-        <button class="active" data-ana="iso" type="button">⏱ Isochrones</button>
-        <button data-ana="buf" type="button">◎ Tampons</button>
-        <button data-ana="rel" type="button">⛰ Relief</button>
-      </div>
-
-      <div id="ana-iso">
-        <p class="hint">Zones atteignables en un temps donné par le réseau de rues.</p>
-        <div class="iti-modes">
-          <label><input type="radio" name="iso-mode" value="pied" checked> 🚶 À pied</label>
-          <label><input type="radio" name="iso-mode" value="vehicule"> 🚗 En véhicule</label>
-        </div>
-        <label class="field">Durées (minutes)<input id="iso-minutes" value="5, 10, 15"></label>
-        <label class="field">Départ
-          <select id="iso-source">
-            <option value="points">Point(s) choisi(s) sur la carte</option>
-            <option value="sel">Objets de la sélection en cours</option>
-          </select>
-        </label>
-        <div id="iso-points-box">
-          <div class="row">
-            <button id="iso-pick" type="button">+ Point sur la carte</button>
-            <button id="iso-gps" type="button">◎ Ma position</button>
-          </div>
-          <ul id="iso-points" class="ana-points"></ul>
-        </div>
-        <div class="row"><button id="iso-run" class="primary" type="button">Calculer les isochrones</button></div>
-        <div id="iso-result"></div>
-      </div>
-
-      <div id="ana-buf" class="hidden">
-        <p class="hint">Zones situées à moins d'une distance donnée d'objets.</p>
-        <label class="field">Autour de
-          <select id="buf-source">
-            <option value="sel">Objets de la sélection en cours</option>
-            <option value="draw:point">Un point dessiné</option>
-            <option value="draw:line">Une ligne dessinée</option>
-            <option value="draw:area">Une surface dessinée</option>
-          </select>
-        </label>
-        <select id="buf-value" class="full hidden"></select>
-        <div id="buf-draw-box" class="hidden">
-          <div class="row"><button id="buf-draw" type="button">✎ Dessiner l'objet</button> <span class="hint" id="buf-draw-info"></span></div>
-        </div>
-        <label class="field">Distances (mètres)<input id="buf-dist" value="30"></label>
-        <p class="hint">Plusieurs anneaux possibles, ex. « 50, 100, 200 ».</p>
-        <div class="row"><button id="buf-run" class="primary" type="button">Calculer le tampon</button></div>
-        <div id="buf-result"></div>
-      </div>
-
-      <div id="ana-rel" class="hidden">
-        <p class="hint">Relief, pentes et zones inondables, d'après le modèle numérique de terrain Copernicus (30 m). Les couches se trouvent aussi dans l'onglet « Couches ».</p>
-        <div id="rel-resume"><p class="hint">Chargement…</p></div>
-
-        <h4 class="rel-titre">Bâtiments exposés</h4>
-        <label class="field">Inondation : seuils de hauteur au-dessus du drainage (m)<input id="rel-hand" value="2, 5"></label>
-        <label class="field">Pentes : seuils (%)<input id="rel-pente" value="15, 30"></label>
-        <div class="row"><button id="rel-run" class="primary" type="button">Analyser les bâtiments</button></div>
-        <div id="rel-result"></div>
-
-        <h4 class="rel-titre">Profil en long</h4>
-        <p class="hint">Tracez une ligne (rue, canal, projet de voie) : altitude, dénivelés et pentes le long du tracé.</p>
-        <div class="row"><button id="rel-profil" type="button">✎ Tracer le profil</button></div>
-        <div id="rel-profil-result"></div>
-      </div>
-
-      <div class="row"><button id="ana-clear" type="button">Effacer les analyses</button></div>
-    </section>
-
-    <section id="tab-stats" class="panel">
-      <div id="stats"><p class="hint">Chargement…</p></div>
-    </section>
-
-    <section id="tab-about" class="panel">
-      <h3>Commune urbaine de Labé</h3>
-      <p>Carte publique du territoire communal : limites, quartiers, voirie, hydrographie, bâti, équipements, et données collectées et validées par les services de la mairie.</p>
-      <p class="hint">Consultation libre, sans compte. Les agents des services communaux saisissent les données depuis l'<a href="espace.html" id="link-espace-2">espace agents</a>.</p>
-      <h3>Sources</h3>
-      <ul>
-        <li>Limites communale et des quartiers : OpenStreetMap.</li>
-        <li>Thématiques : OSM2IGEO Guinée, mars 2023 — © contributeurs OpenStreetMap, licence ODbL.</li>
-        <li>Imagerie : Esri World Imagery.</li>
-      </ul>
-      <h3>Outils</h3>
-      <ul>
-        <li>📏 Mesure de distance, ⬠ mesure de surface</li>
-        <li>◎ Géolocalisation · 🖨 Impression</li>
+    <!-- Outils -->
+    <section class="acc-section">
+      <h2>Des outils pour tous</h2>
+      <ul class="acc-outils">
+        <li><b>Recherche</b> d'une adresse, d'une rue ou d'un quartier</li>
+        <li><b>Itinéraire</b> et zones accessibles à pied ou en voiture</li>
+        <li><b>Sélection</b> par attributs ou par localisation, comme dans QGIS</li>
+        <li><b>Analyses</b> : bâtiments exposés, densité, proximité des équipements</li>
+        <li><b>Relief</b> : altitude, pentes et zones inondables</li>
+        <li><b>Statistiques</b> par quartier, exports CSV</li>
       </ul>
     </section>
-  </aside>
 
-  <main id="map"></main>
-
-  <div id="load-status" class="load-status">Chargement des couches…</div>
-  <!-- Résultats de la sélection -->
-  <!-- Sélection par localisation (comme l'outil de QGIS) : fenêtre flottante, la carte reste visible -->
-  <div id="loc-modal" class="modal loc-flottant hidden">
-    <form id="loc-form" class="modal-card loc-card">
-      <h3>Sélection par localisation</h3>
-      <label>Sélectionnez les entités depuis
-        <select id="loc-a"></select>
-      </label>
-      <label>Seulement les objets
-        <select id="loc-a-filtre"><option value="">— tous les objets —</option></select>
-      </label>
-      <fieldset class="loc-predicats">
-        <legend>Où les entités (prédicat géométrique)</legend>
-        <div id="loc-predicats"></div>
-      </fieldset>
-      <label>En comparant les entités de
-        <select id="loc-b"></select>
-      </label>
-      <label>Seulement les objets
-        <select id="loc-b-filtre"><option value="">— tous les objets —</option></select>
-      </label>
-      <div class="loc-progression"><div id="loc-barre"></div><span id="loc-pct">0 %</span></div>
-      <div id="loc-journal" class="loc-journal"></div>
-      <p class="form-msg" id="loc-msg"></p>
-      <div class="row">
-        <button type="button" id="loc-fermer">Fermer</button>
-        <button type="submit" id="loc-executer" class="primary">Exécuter</button>
+    <!-- À propos -->
+    <section class="acc-section acc-fond acc-apropos">
+      <div>
+        <h2>À propos</h2>
+        <p>Le WebSIG est le système d'information géographique de la Commune urbaine de Labé. Il rassemble sur une même
+          carte les données de référence de la commune et les informations mises à jour par les services municipaux.
+          Les saisies des agents ne sont publiées sur la carte publique qu'après validation par la mairie.</p>
+        <p>Les données sont aussi diffusées aux formats standards (WMS / WFS), utilisables dans QGIS.</p>
       </div>
-    </form>
-  </div>
-
-  <div id="sel-drawer" class="sel-drawer hidden">
-    <div class="sel-drawer-head">
-      <div id="sel-summary"></div>
-      <div class="sel-drawer-actions">
-        <select id="sel-groupby"></select>
-        <button id="sel-zoom" type="button">Zoomer</button>
-        <button id="sel-csv" type="button">CSV (Excel)</button>
-        <button id="sel-geojson" type="button">GeoJSON</button>
-        <button id="sel-deselect" type="button" title="Retirer la sélection de la carte">Désélectionner</button>
-        <button id="sel-close" type="button" title="Fermer le tableau (la sélection reste sur la carte)">✕</button>
+      <div>
+        <h2>Contact</h2>
+        <p>Pour une question, un signalement ou une demande de compte agent, adressez-vous à la
+          <b>mairie de Labé</b>, auprès de l'administrateur du WebSIG.</p>
       </div>
-    </div>
-    <div class="sel-drawer-body">
-      <div id="sel-groups"></div>
-      <div id="sel-table"></div>
-    </div>
-  </div>
+    </section>
+  </main>
 
-  <div id="coords" class="coords"></div>
-  <div id="measure-box" class="measure-box hidden"></div>
+  <footer class="acc-pied">
+    <span>© Commune urbaine de Labé</span>
+    <span>Données : © contributeurs OpenStreetMap · Relief : Copernicus GLO-30 (© DLR, © Airbus)</span>
+  </footer>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="js/config.js"></script>
-  <script src="js/app.js"></script>
-  <script src="js/table-attributaire.js"></script>
-  <script src="js/adressage-public.js"></script>
-  <script src="js/itineraire.js"></script>
-  <script src="js/topologie.js"></script>
-  <script src="js/selection.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/d3-array@3.2.4/dist/d3-array.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/d3-contour@4.0.2/dist/d3-contour.min.js"></script>
-  <script src="js/analyses.js"></script>
-  <script src="js/relief.js"></script>
-  <script src="js/dechets-carte.js"></script>
-  <script src="js/environnement-carte.js"></script>
-  <script src="js/reseaux-carte.js"></script>
-  <script src="js/marches-carte.js"></script>
-  <script src="js/identify.js"></script>
+  <script>
+  (function () {
+    'use strict';
+    var CONFIG = window.LABE_CONFIG || { mode: 'server' };
+    var STATIC = CONFIG.mode === 'static';
+    // Copie statique (GitHub Pages) : pas d'espace agents ni d'administration, sauf adresse configurée
+    if (STATIC) {
+      document.querySelectorAll('.acc-lien-espace').forEach(function (a) {
+        if (CONFIG.espaceUrl) a.href = CONFIG.espaceUrl; else a.classList.add('acc-inactif');
+      });
+      document.querySelectorAll('.acc-lien-admin').forEach(function (a) {
+        if (CONFIG.espaceUrl) a.href = CONFIG.espaceUrl.replace(/espace\.html.*$/, 'admin.html'); else a.classList.add('acc-inactif');
+      });
+      if (!CONFIG.espaceUrl) {
+        document.querySelectorAll('.acc-hors-serveur').forEach(function (p) { p.classList.remove('hidden'); });
+        document.querySelectorAll('.acc-inactif').forEach(function (a) {
+          a.removeAttribute('href'); a.setAttribute('aria-disabled', 'true');
+        });
+      }
+    }
+    // Chiffres clés à jour
+    function fmt(n) { return Math.round(n).toLocaleString('fr-FR'); }
+    function somme(o) { return Object.keys(o || {}).reduce(function (s, k) { return s + o[k]; }, 0); }
+    fetch(STATIC ? 'data/stats.json' : '/api/stats').then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
+      .then(function (st) {
+        if (st.superficie_km2) document.getElementById('ch-superficie').textContent = fmt(st.superficie_km2);
+        if (st.batiments) document.getElementById('ch-batiments').textContent = fmt(somme(st.batiments));
+        if (st.routes_km) document.getElementById('ch-routes').textContent = fmt(somme(st.routes_km));
+      }).catch(function () { /* chiffres par défaut */ });
+  })();
+  </script>
 </body>
 </html>

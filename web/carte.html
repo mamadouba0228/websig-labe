@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebSIG — Commune urbaine de Labé</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="public">
+  <header class="topbar">
+    <button id="btn-menu" class="icon-btn" title="Afficher / masquer le panneau">☰</button>
+    <a class="brand" href="index.html" title="Page d'accueil du WebSIG">
+      <strong>WebSIG Commune urbaine de Labé</strong>
+      <span>République de Guinée · Région de Labé</span>
+    </a>
+    <div class="search">
+      <input id="search" type="search" placeholder="Rechercher une adresse, une rue, un quartier…" autocomplete="off">
+      <ul id="search-results"></ul>
+    </div>
+    <a id="link-espace" class="header-link" href="espace.html" title="Réservé aux agents des services communaux">Espace agents</a>
+  </header>
+
+  <aside id="sidebar">
+    <nav class="tabs">
+      <button class="tab active" data-tab="layers">Couches</button>
+      <button class="tab" data-tab="iti">Itinéraire</button>
+      <button class="tab" data-tab="sel">Sélection</button>
+      <button class="tab" data-tab="ana">Analyses</button>
+      <button class="tab" data-tab="stats">Statistiques</button>
+      <button class="tab" data-tab="about">À propos</button>
+    </nav>
+
+    <section id="tab-layers" class="panel active">
+      <h3>Fond de carte</h3>
+      <div id="basemaps"></div>
+      <h3>Couches thématiques</h3>
+      <div id="overlays"></div>
+    </section>
+
+    <section id="tab-iti" class="panel">
+      <h3>Itinéraire</h3>
+      <div class="iti-modes">
+        <label><input type="radio" name="iti-mode" value="pied" checked> 🚶 À pied</label>
+        <label><input type="radio" name="iti-mode" value="vehicule"> 🚗 En véhicule</label>
+      </div>
+      <div class="iti-search">
+        <input id="iti-search" type="search" placeholder="Ajouter une adresse, une rue, un lieu…" autocomplete="off">
+        <ul id="iti-search-results"></ul>
+      </div>
+      <div class="row">
+        <button id="iti-pick">+ Point sur la carte</button>
+        <button id="iti-gps">◎ Ma position</button>
+      </div>
+      <p class="hint" id="iti-vide">Ajoutez un départ puis une arrivée : par la recherche, avec « Point sur la carte », ou par un <b>clic droit</b> sur la carte (appui long sur téléphone). Les marqueurs se déplacent à la souris.</p>
+      <ul id="iti-etapes"></ul>
+      <div id="iti-actions" class="hidden">
+        <label class="check"><input type="checkbox" id="iti-optim"> Optimiser l'ordre des étapes (tournée)</label>
+        <label class="check"><input type="checkbox" id="iti-boucle"> Revenir au point de départ</label>
+        <div class="row">
+          <button id="iti-reverse">⇅ Inverser</button>
+          <button id="iti-gpx" title="Pour suivre le trajet sur téléphone (OsmAnd, Maps.me…) ou GPS">Exporter GPX</button>
+          <button id="iti-clear" class="danger">Effacer</button>
+        </div>
+      </div>
+      <div id="iti-result"></div>
+    </section>
+
+    <section id="tab-sel" class="panel">
+      <h3>Sélection des données</h3>
+      <div class="row"><button id="loc-ouvrir" type="button">⧉ Sélection par localisation…</button><button id="sel-deselect2" type="button" class="hidden" title="Retirer la sélection de la carte">✕ Désélectionner</button></div>
+      <select id="sel-layer" class="full"><option value="">— choisir une couche —</option></select>
+      <p class="hint" id="sel-status">Choisissez une couche, puis ajoutez des conditions et/ou une zone.</p>
+      <div id="sel-builder" class="hidden">
+        <h3>Conditions sur les attributs</h3>
+        <div class="sel-combine">
+          <label><input type="radio" name="sel-combine" value="et" checked> Toutes (ET)</label>
+          <label><input type="radio" name="sel-combine" value="ou"> Au moins une (OU)</label>
+        </div>
+        <div id="sel-conds"></div>
+        <button id="sel-add-cond" type="button">+ Ajouter une condition</button>
+
+        <h3>Zone géographique</h3>
+        <div class="row">
+          <button id="sel-zone-poly" type="button">⬠ Dessiner une zone</button>
+          <button id="sel-zone-circle" type="button">◯ Cercle</button>
+          <label class="inline-num">rayon <input id="sel-radius" type="number" value="500" min="10" step="50"> m</label>
+        </div>
+        <p class="hint"><span id="sel-zone-info">Aucune zone.</span> <a href="#" id="sel-zone-clear" class="hidden">Retirer</a></p>
+
+        <h3>Proximité d'une autre couche</h3>
+        <select id="sel-ref-layer" class="full"><option value="">— aucune —</option></select>
+        <div id="sel-ref-opts" class="hidden">
+          <select id="sel-ref-value" class="full"></select>
+          <label class="inline-num">à moins de <input id="sel-ref-dist" type="number" value="50" min="1" step="10"> m</label>
+        </div>
+
+        <div class="row">
+          <button id="sel-run" class="primary" type="button">Appliquer la sélection</button>
+          <button id="sel-reset" type="button">Réinitialiser</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-ana" class="panel">
+      <div class="ana-switch">
+        <button class="active" data-ana="iso" type="button">⏱ Isochrones</button>
+        <button data-ana="buf" type="button">◎ Tampons</button>
+        <button data-ana="rel" type="button">⛰ Relief</button>
+      </div>
+
+      <div id="ana-iso">
+        <p class="hint">Zones atteignables en un temps donné par le réseau de rues.</p>
+        <div class="iti-modes">
+          <label><input type="radio" name="iso-mode" value="pied" checked> 🚶 À pied</label>
+          <label><input type="radio" name="iso-mode" value="vehicule"> 🚗 En véhicule</label>
+        </div>
+        <label class="field">Durées (minutes)<input id="iso-minutes" value="5, 10, 15"></label>
+        <label class="field">Départ
+          <select id="iso-source">
+            <option value="points">Point(s) choisi(s) sur la carte</option>
+            <option value="sel">Objets de la sélection en cours</option>
+          </select>
+        </label>
+        <div id="iso-points-box">
+          <div class="row">
+            <button id="iso-pick" type="button">+ Point sur la carte</button>
+            <button id="iso-gps" type="button">◎ Ma position</button>
+          </div>
+          <ul id="iso-points" class="ana-points"></ul>
+        </div>
+        <div class="row"><button id="iso-run" class="primary" type="button">Calculer les isochrones</button></div>
+        <div id="iso-result"></div>
+      </div>
+
+      <div id="ana-buf" class="hidden">
+        <p class="hint">Zones situées à moins d'une distance donnée d'objets.</p>
+        <label class="field">Autour de
+          <select id="buf-source">
+            <option value="sel">Objets de la sélection en cours</option>
+            <option value="draw:point">Un point dessiné</option>
+            <option value="draw:line">Une ligne dessinée</option>
+            <option value="draw:area">Une surface dessinée</option>
+          </select>
+        </label>
+        <select id="buf-value" class="full hidden"></select>
+        <div id="buf-draw-box" class="hidden">
+          <div class="row"><button id="buf-draw" type="button">✎ Dessiner l'objet</button> <span class="hint" id="buf-draw-info"></span></div>
+        </div>
+        <label class="field">Distances (mètres)<input id="buf-dist" value="30"></label>
+        <p class="hint">Plusieurs anneaux possibles, ex. « 50, 100, 200 ».</p>
+        <div class="row"><button id="buf-run" class="primary" type="button">Calculer le tampon</button></div>
+        <div id="buf-result"></div>
+      </div>
+
+      <div id="ana-rel" class="hidden">
+        <p class="hint">Relief, pentes et zones inondables, d'après le modèle numérique de terrain Copernicus (30 m). Les couches se trouvent aussi dans l'onglet « Couches ».</p>
+        <div id="rel-resume"><p class="hint">Chargement…</p></div>
+
+        <h4 class="rel-titre">Bâtiments exposés</h4>
+        <label class="field">Inondation : seuils de hauteur au-dessus du drainage (m)<input id="rel-hand" value="2, 5"></label>
+        <label class="field">Pentes : seuils (%)<input id="rel-pente" value="15, 30"></label>
+        <div class="row"><button id="rel-run" class="primary" type="button">Analyser les bâtiments</button></div>
+        <div id="rel-result"></div>
+
+        <h4 class="rel-titre">Profil en long</h4>
+        <p class="hint">Tracez une ligne (rue, canal, projet de voie) : altitude, dénivelés et pentes le long du tracé.</p>
+        <div class="row"><button id="rel-profil" type="button">✎ Tracer le profil</button></div>
+        <div id="rel-profil-result"></div>
+      </div>
+
+      <div class="row"><button id="ana-clear" type="button">Effacer les analyses</button></div>
+    </section>
+
+    <section id="tab-stats" class="panel">
+      <div id="stats"><p class="hint">Chargement…</p></div>
+    </section>
+
+    <section id="tab-about" class="panel">
+      <h3>Commune urbaine de Labé</h3>
+      <p>Carte publique du territoire communal : limites, quartiers, voirie, hydrographie, bâti, équipements, et données collectées et validées par les services de la mairie.</p>
+      <p class="hint">Consultation libre, sans compte. Les agents des services communaux saisissent les données depuis l'<a href="espace.html" id="link-espace-2">espace agents</a>.</p>
+      <h3>Sources</h3>
+      <ul>
+        <li>Limites communale et des quartiers : OpenStreetMap.</li>
+        <li>Thématiques : OSM2IGEO Guinée, mars 2023 — © contributeurs OpenStreetMap, licence ODbL.</li>
+        <li>Imagerie : Esri World Imagery.</li>
+      </ul>
+      <h3>Outils</h3>
+      <ul>
+        <li>📏 Mesure de distance, ⬠ mesure de surface</li>
+        <li>◎ Géolocalisation · 🖨 Impression</li>
+      </ul>
+    </section>
+  </aside>
+
+  <main id="map"></main>
+
+  <div id="load-status" class="load-status">Chargement des couches…</div>
+  <!-- Résultats de la sélection -->
+  <!-- Sélection par localisation (comme l'outil de QGIS) : fenêtre flottante, la carte reste visible -->
+  <div id="loc-modal" class="modal loc-flottant hidden">
+    <form id="loc-form" class="modal-card loc-card">
+      <h3>Sélection par localisation</h3>
+      <label>Sélectionnez les entités depuis
+        <select id="loc-a"></select>
+      </label>
+      <label>Seulement les objets
+        <select id="loc-a-filtre"><option value="">— tous les objets —</option></select>
+      </label>
+      <fieldset class="loc-predicats">
+        <legend>Où les entités (prédicat géométrique)</legend>
+        <div id="loc-predicats"></div>
+      </fieldset>
+      <label>En comparant les entités de
+        <select id="loc-b"></select>
+      </label>
+      <label>Seulement les objets
+        <select id="loc-b-filtre"><option value="">— tous les objets —</option></select>
+      </label>
+      <div class="loc-progression"><div id="loc-barre"></div><span id="loc-pct">0 %</span></div>
+      <div id="loc-journal" class="loc-journal"></div>
+      <p class="form-msg" id="loc-msg"></p>
+      <div class="row">
+        <button type="button" id="loc-fermer">Fermer</button>
+        <button type="submit" id="loc-executer" class="primary">Exécuter</button>
+      </div>
+    </form>
+  </div>
+
+  <div id="sel-drawer" class="sel-drawer hidden">
+    <div class="sel-drawer-head">
+      <div id="sel-summary"></div>
+      <div class="sel-drawer-actions">
+        <select id="sel-groupby"></select>
+        <button id="sel-zoom" type="button">Zoomer</button>
+        <button id="sel-csv" type="button">CSV (Excel)</button>
+        <button id="sel-geojson" type="button">GeoJSON</button>
+        <button id="sel-deselect" type="button" title="Retirer la sélection de la carte">Désélectionner</button>
+        <button id="sel-close" type="button" title="Fermer le tableau (la sélection reste sur la carte)">✕</button>
+      </div>
+    </div>
+    <div class="sel-drawer-body">
+      <div id="sel-groups"></div>
+      <div id="sel-table"></div>
+    </div>
+  </div>
+
+  <div id="coords" class="coords"></div>
+  <div id="measure-box" class="measure-box hidden"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/table-attributaire.js"></script>
+  <script src="js/adressage-public.js"></script>
+  <script src="js/itineraire.js"></script>
+  <script src="js/topologie.js"></script>
+  <script src="js/selection.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3-array@3.2.4/dist/d3-array.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3-contour@4.0.2/dist/d3-contour.min.js"></script>
+  <script src="js/analyses.js"></script>
+  <script src="js/relief.js"></script>
+  <script src="js/dechets-carte.js"></script>
+  <script src="js/environnement-carte.js"></script>
+  <script src="js/reseaux-carte.js"></script>
+  <script src="js/marches-carte.js"></script>
+  <script src="js/identify.js"></script>
+</body>
+</html>

@@ -1,0 +1,77 @@
+/* Page d'accueil du WebSIG */
+body.accueil { height: auto; background: #fff; overflow: auto; }
+.accueil main { padding-top: calc(var(--topbar-h) + 4px); }
+.accueil .topbar .brand { flex: 1; }
+.acc-nav { display: flex; gap: 8px; }
+
+.acc-hero { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 36px; align-items: center;
+  max-width: 1200px; margin: 0 auto; padding: 48px 24px 40px; }
+.acc-surtitre { margin: 0 0 8px; font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--green); }
+.acc-hero h1 { margin: 0 0 14px; font-size: 34px; line-height: 1.2; color: var(--green-dark); }
+.acc-accroche { margin: 0 0 24px; font-size: 17px; line-height: 1.55; color: #3c4741; }
+.acc-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.acc-hero-image { display: block; border-radius: 12px; overflow: hidden; border: 1px solid var(--border);
+  box-shadow: 0 10px 30px rgba(21, 77, 47, .18); }
+.acc-hero-image img { display: block; width: 100%; height: auto; transition: transform .3s; }
+.acc-hero-image:hover img { transform: scale(1.02); }
+
+.acc-btn { display: inline-block; padding: 11px 20px; border-radius: 8px; border: 1px solid var(--green); background: #fff;
+  color: var(--green); font-weight: 600; font-size: 15px; text-decoration: none; box-shadow: 0 2px 4px rgba(0,0,0,.08);
+  transition: box-shadow .12s, transform .12s; }
+.acc-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0,0,0,.14); background: #eef6f0; }
+.acc-btn-principal { background: var(--green); color: #fff; }
+.acc-btn-principal:hover { background: var(--green-dark); }
+.acc-btn.acc-inactif { border-color: var(--border); color: var(--muted); background: #f1f3f1; box-shadow: none; cursor: not-allowed; transform: none; }
+
+.acc-chiffres { display: grid; grid-template-columns: repeat(4, 1fr); background: var(--green); color: #fff;
+  border-top: 4px solid var(--yellow); }
+.acc-chiffres div { padding: 22px 12px; text-align: center; }
+.acc-chiffres div + div { border-left: 1px solid rgba(255,255,255,.18); }
+.acc-chiffres b { display: block; font-size: 30px; font-variant-numeric: tabular-nums; }
+.acc-chiffres span { font-size: 14px; opacity: .9; }
+
+.acc-section { max-width: 1200px; margin: 0 auto; padding: 44px 24px; }
+.acc-section h2 { margin: 0 0 22px; font-size: 24px; color: var(--green-dark); }
+.acc-fond { max-width: none; background: var(--bg); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+  padding-left: max(24px, calc((100% - 1152px) / 2)); padding-right: max(24px, calc((100% - 1152px) / 2)); }
+
+.acc-cartes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.acc-carte { display: flex; flex-direction: column; background: #fff; border: 1px solid var(--border); border-radius: 12px;
+  padding: 22px; box-shadow: 0 2px 8px rgba(0,0,0,.05); }
+.acc-carte-icone { font-size: 30px; line-height: 1; margin-bottom: 10px; }
+.acc-carte h3 { margin: 0 0 8px; font-size: 18px; color: var(--green-dark); }
+.acc-carte p { flex: 1; margin: 0 0 18px; line-height: 1.5; color: #3c4741; font-size: 14px; }
+.acc-carte .acc-btn { align-self: flex-start; }
+.acc-carte .acc-note { flex: none; margin: 8px 0 0; }
+.acc-note { color: var(--muted); font-size: 13px; margin: 16px 0 0; }
+
+.acc-services { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.acc-services div { background: #fff; border: 1px solid var(--border); border-left: 4px solid var(--green); border-radius: 8px; padding: 14px 16px; }
+.acc-services h3 { margin: 0 0 6px; font-size: 16px; color: var(--green-dark); }
+.acc-services p { margin: 0; font-size: 14px; line-height: 1.45; color: #3c4741; }
+
+.acc-outils { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px 24px; margin: 0; padding: 0; list-style: none; }
+.acc-outils li { position: relative; padding-left: 22px; line-height: 1.5; font-size: 15px; }
+.acc-outils li::before { content: ""; position: absolute; left: 0; top: 7px; width: 10px; height: 10px; border-radius: 50%; background: var(--yellow); }
+.acc-outils b { color: var(--green-dark); }
+
+.acc-apropos { display: grid; grid-template-columns: 2fr 1fr; gap: 36px; }
+.acc-apropos p { line-height: 1.6; color: #3c4741; }
+
+.acc-pied { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; padding: 18px 24px;
+  background: var(--green-dark); color: rgba(255,255,255,.85); font-size: 13px; }
+
+@media (max-width: 900px) {
+  .acc-hero { grid-template-columns: 1fr; padding-top: 28px; }
+  .acc-hero h1 { font-size: 27px; }
+  .acc-cartes, .acc-services, .acc-outils { grid-template-columns: 1fr 1fr; }
+  .acc-apropos { grid-template-columns: 1fr; gap: 0; }
+}
+@media (max-width: 600px) {
+  .acc-cartes, .acc-services, .acc-outils { grid-template-columns: 1fr; }
+  .acc-chiffres { grid-template-columns: 1fr 1fr; }
+  .acc-chiffres div:nth-child(3) { border-left: 0; }
+  .acc-chiffres b { font-size: 24px; }
+  .acc-nav .header-link:first-child { display: none; }
+  .acc-section, .acc-fond { padding: 32px 18px; }
+}
