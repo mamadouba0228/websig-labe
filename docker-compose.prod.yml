@@ -1,0 +1,35 @@
+# Serveur en ligne (VPS OVH) : ajouts à docker-compose.yml
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# - Caddy reçoit le public sur les ports 80/443 et obtient tout seul le certificat HTTPS (Let's Encrypt)
+#   pour le nom de domaine indiqué dans .env (DOMAINE).
+# - La base de données et le serveur web interne ne sont accessibles que depuis le serveur lui-même
+#   (QGIS / pgAdmin : par tunnel SSH, voir deploiement/HEBERGEMENT_OVH.md).
+
+services:
+  db:
+    ports: !override
+      - "127.0.0.1:${DB_PORT:-5433}:5432"
+
+  web:
+    ports: !override
+      - "127.0.0.1:${WEB_PORT:-8080}:80"
+
+  caddy:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAINE: ${DOMAINE:?Indiquez DOMAINE dans .env}
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+
+volumes:
+  caddy_data:
+  caddy_config:

@@ -369,6 +369,7 @@ Limite : Copernicus est un modèle de *surface* (une partie des arbres et des to
 |---|---|---|
 | Carte publique (copie statique) | GitHub Pages | `https://<compte>.github.io/<dépôt>/` |
 | Carte publique, espace agents, administration | Docker (poste ou serveur de la mairie) | http://localhost:8080 |
+| Application complète en ligne, en https | VPS (OVH ou autre) avec Docker | `https://<domaine>/` |
 
 GitHub Pages ne sert que des fichiers statiques : la carte publique y lit des fichiers GeoJSON exportés
 de la base (`data/public/`). L'espace agents et l'administration ont besoin de la base de données et
@@ -386,6 +387,14 @@ les enregistre dans le dépôt et GitHub reconstruit le site (workflow `.github/
 Quand l'espace agents sera accessible en ligne, définir sa page dans la variable de dépôt `ESPACE_URL`
 (GitHub → Settings → Secrets and variables → Actions → Variables), par exemple
 `https://sig.mairie-labe.gn/espace.html` : le lien « Espace agents » apparaîtra sur la carte publique.
+
+### Mettre l'application complète en ligne (VPS)
+
+Guide pas à pas : [deploiement/HEBERGEMENT_OVH.md](deploiement/HEBERGEMENT_OVH.md). En résumé :
+`scripts\exporter_base.ps1` copie la base du poste, puis `scripts/serveur/installer.sh` installe tout sur un
+Ubuntu neuf (Docker, pare-feu, `.env` avec mots de passe neufs, restauration de la base, https automatique par
+Caddy, sauvegarde chaque nuit). `docker-compose.prod.yml` ajoute Caddy (ports 80/443) et ne laisse la base et
+l'administration de GeoServer accessibles que par tunnel SSH. Mises à jour : `scripts/serveur/mettre_a_jour.sh`.
 
 ## Architecture Docker
 

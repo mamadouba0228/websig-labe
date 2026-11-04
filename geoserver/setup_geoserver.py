@@ -71,7 +71,7 @@ def main():
     check(r, "lecture des paramètres")
     settings = r.json()
     settings["global"]["settings"]["proxyBaseUrl"] = "${X-Forwarded-Proto}://${X-Forwarded-Host}/geoserver"
-    settings["global"]["useHeadersProxyURL"] = True
+    settings["global"]["settings"]["useHeadersProxyURL"] = True  # dans « settings » (sinon ignoré)
     settings["global"]["settings"]["numDecimals"] = 6  # ~10 cm (défaut 4 ≈ 11 m)
     check(s.put(REST + "/settings", json=settings), "paramètres du proxy")
 

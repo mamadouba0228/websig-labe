@@ -1,0 +1,17 @@
+# Entrée publique du serveur : HTTPS automatique (Let's Encrypt) pour le domaine de .env (DOMAINE)
+{$DOMAINE} {
+	encode gzip
+
+	# Administration de GeoServer : pas depuis internet, seulement par tunnel SSH
+	@geoserver_admin path /geoserver/web /geoserver/web/* /geoserver/rest /geoserver/rest/*
+	respond @geoserver_admin "Accès réservé : administration de GeoServer par tunnel SSH." 403
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	reverse_proxy web:80
+}
