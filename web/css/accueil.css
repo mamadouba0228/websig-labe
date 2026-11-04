@@ -75,3 +75,4 @@ body.accueil { height: auto; background: #fff; overflow: auto; }
   .acc-nav .header-link:first-child { display: none; }
   .acc-section, .acc-fond { padding: 32px 18px; }
 }
+.header-link.acc-inactif { opacity: .55; cursor: not-allowed; }
