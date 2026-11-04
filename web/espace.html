@@ -52,6 +52,7 @@
       </div>
       <div class="tab-groupe tab-groupe-services" role="group" aria-labelledby="tg-services">
         <span class="tab-groupe-titre" id="tg-services">Services communaux</span>
+        <p class="hint hidden" id="tg-services-vide">Aucun service communal sur votre compte : demandez l'accès à l'administrateur.</p>
         <div class="tab-ligne">
           <button class="tab" data-tab="adr">Adressage</button>
           <button class="tab" data-tab="fon">Foncier <span id="fon-badge" class="tab-badge hidden"></span></button>
@@ -806,6 +807,10 @@
           <label>Fonction<input name="fonction" maxlength="100" placeholder="ex. Technicien voirie"></label>
         </div>
         <label>Téléphone<input name="telephone" maxlength="30" placeholder="+224 …"></label>
+        <fieldset class="modules-choix" id="register-modules">
+          <legend>Services communaux demandés</legend>
+        </fieldset>
+        <p class="hint">Les outils (saisie, suivi, itinéraire, sélection, analyses, statistiques) sont ouverts à tous les agents. Cochez les services dont vous avez besoin : l'administrateur les confirme en activant votre compte.</p>
         <div class="grid2">
           <label>Mot de passe *<input name="mot_de_passe" type="password" required minlength="8" autocomplete="new-password"></label>
           <label>Confirmation *<input name="confirmation" type="password" required minlength="8" autocomplete="new-password"></label>

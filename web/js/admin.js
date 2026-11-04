@@ -144,7 +144,13 @@
   };
 
   // ---------- Comptes ----------
-  var users = [];
+  var users = [], MODULES = [], SUGG = {};
+  Auth.modules().then(function (r) { MODULES = r.modules; SUGG = r.suggestions; if (users.length) renderUsers(); }).catch(function () {});
+  function servicesDe(u) {
+    if (u.role !== 'agent') return '<small>Tous (' + ROLE[u.role].toLowerCase() + ')</small>';
+    var l = MODULES.filter(function (m) { return (u.modules || []).indexOf(m.id) >= 0; }).map(function (m) { return esc(m.label); });
+    return (l.length ? l.join('<br>') : '<small class="muted">Aucun</small>');
+  }
   var userStatut = document.getElementById('user-statut'), userSearch = document.getElementById('user-search');
   function renderUsers() {
     var me = Auth.user().id, q = norm(userSearch.value);
@@ -164,17 +170,19 @@
         if (u.statut === 'actif') actions += '<button data-statut="desactive" data-id="' + u.id + '">Désactiver</button>';
         if (u.statut === 'en_attente') actions += '<button class="danger" data-statut="desactive" data-id="' + u.id + '">Refuser</button>';
       }
+      if (u.role === 'agent') actions += '<button data-modules="' + u.id + '" title="Choisir les services communaux de cet agent">Services</button>';
       actions += '<button data-reset="' + u.id + '" title="Générer un mot de passe temporaire">Mot de passe</button>';
       return '<tr class="' + (u.statut === 'en_attente' ? 'row-pending' : u.statut === 'desactive' ? 'row-off' : '') + '">' +
         '<td><b>' + esc(u.nom) + '</b><br><small>inscrit le ' + fmtDate(u.cree_le) + '</small></td>' +
         '<td>' + esc(u.service) + '<br><small>' + esc(u.fonction || '') + '</small></td>' +
         '<td>' + esc(u.email) + '<br><small>' + esc(u.telephone || '') + '</small></td>' +
         '<td>' + roleSel + '</td>' +
+        '<td>' + servicesDe(u) + '</td>' +
         '<td><span class="badge u-' + u.statut + '">' + STATUT_COMPTE[u.statut] + '</span></td>' +
         '<td>' + u.nb_contributions + '</td>' +
         '<td>' + fmtDate(u.derniere_connexion, true) + '</td>' +
         '<td class="actions">' + actions + '</td></tr>';
-    }).join('') || '<tr><td colspan="8" class="empty">Aucun compte.</td></tr>';
+    }).join('') || '<tr><td colspan="9" class="empty">Aucun compte.</td></tr>';
   }
   var usersBody = document.getElementById('users-body');
   usersBody.addEventListener('change', function (e) {
@@ -191,6 +199,10 @@
       if (b.dataset.statut === 'desactive' && !confirm('Désactiver ce compte ? L\'agent ne pourra plus se connecter.')) return;
       Auth.api('PUT', '/admin/utilisateurs/' + b.dataset.id, { statut: b.dataset.statut }).then(loaders.users).catch(fail);
     }
+    if (b.dataset.modules) {
+      var cible = users.filter(function (x) { return String(x.id) === b.dataset.modules; })[0];
+      if (cible) ouvrirCompte(cible);
+    }
     if (b.dataset.reset) {
       if (!confirm('Générer un nouveau mot de passe temporaire pour ce compte ?')) return;
       Auth.api('POST', '/admin/utilisateurs/' + b.dataset.reset + '/reinitialiser').then(function (r) {
@@ -198,6 +210,43 @@
       }).catch(fail);
     }
   });
+  // Fenêtre : nouveau compte (identité + services) ou services d'un compte existant
+  var cModal = document.getElementById('compte-modal'), cForm = document.getElementById('compte-form'),
+    cModules = document.getElementById('compte-modules'), cCible = null;
+  function cMsg(t) { document.getElementById('compte-msg').textContent = t || ''; }
+  function ouvrirCompte(u) {
+    cCible = u || null; cForm.reset(); cMsg('');
+    cForm.querySelector('.creation-seule').classList.toggle('hidden', !!u);
+    cForm.querySelectorAll('.creation-seule [required]').forEach(function (el) { el.disabled = !!u; });
+    document.getElementById('compte-titre').textContent = u ? 'Services de ' + u.nom : 'Nouveau compte';
+    document.getElementById('compte-ok').textContent = u ? 'Enregistrer' : 'Créer le compte';
+    var sel = cForm.elements.service;
+    if (!sel.options.length) {
+      sel.add(new Option('— choisir —', ''));
+      Auth.api('GET', '/services').then(function (l) { l.forEach(function (s) { sel.add(new Option(s, s)); }); });
+    }
+    Auth.casesModules(cModules, MODULES, u ? u.modules : []);
+    cModal.classList.remove('hidden');
+  }
+  cForm.elements.service.addEventListener('change', function () {
+    if (!cCible) Auth.casesModules(cModules, MODULES, SUGG[cForm.elements.service.value] || []);
+  });
+  document.getElementById('user-nouveau').addEventListener('click', function () { ouvrirCompte(null); });
+  document.getElementById('compte-annuler').addEventListener('click', function () { cModal.classList.add('hidden'); });
+  cForm.addEventListener('submit', function (e) {
+    e.preventDefault(); cMsg('');
+    var f = cForm.elements, mods = Auth.modulesCoches(cModules), btn = document.getElementById('compte-ok');
+    btn.disabled = true;
+    var p = cCible ? Auth.api('PUT', '/admin/utilisateurs/' + cCible.id, { modules: mods })
+      : Auth.api('POST', '/admin/utilisateurs', { nom: f.nom.value.trim(), email: f.email.value.trim(), service: f.service.value,
+        fonction: f.fonction.value.trim() || null, telephone: f.telephone.value.trim() || null, role: f.role.value, modules: mods });
+    p.then(function (r) {
+      cModal.classList.add('hidden');
+      loaders.users();
+      if (r.mot_de_passe_temporaire) prompt('Compte créé et actif. Mot de passe temporaire à transmettre à l\'agent avec son e-mail (il pourra le changer dans « Mon compte ») :', r.mot_de_passe_temporaire);
+    }).catch(function (err) { cMsg(err.message); }).then(function () { btn.disabled = false; });
+  });
+
   userStatut.addEventListener('change', renderUsers);
   userSearch.addEventListener('input', renderUsers);
   loaders.users = function () {

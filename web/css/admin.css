@@ -43,6 +43,8 @@
 .data-table td small { color: var(--muted); }
 .data-table td.actions { white-space: nowrap; text-align: right; }
 .data-table td.actions > * { margin-left: 4px; }
+/* Comptes : boutons empilés pour que la colonne reste étroite */
+#users-body td.actions > * { display: block; width: 100%; margin: 0 0 4px; }
 .data-table td.empty { text-align: center; color: var(--muted); padding: 20px; }
 .data-table select { font: inherit; font-size: 13px; padding: 3px; }
 .row-pending { background: #fffbea; }

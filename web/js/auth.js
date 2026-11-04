@@ -36,10 +36,33 @@
   }
   function clear() { session = null; localStorage.removeItem(KEY); }
 
+  // Services communaux (onglets) : { modules: [{id, label}], suggestions: {service: [id…]} }
+  var listeModules = null;
+  function modules() {
+    if (!listeModules) listeModules = api('GET', '/modules').catch(function (e) { listeModules = null; throw e; });
+    return listeModules;
+  }
+  // Cases à cocher des services dans un conteneur ; renvoie une fonction qui lit les cases cochées
+  function casesModules(el, liste, coches) {
+    el.querySelectorAll('label.check').forEach(function (x) { x.remove(); });
+    liste.forEach(function (m) {
+      var l = document.createElement('label'), c = document.createElement('input');
+      l.className = 'check'; c.type = 'checkbox'; c.value = m.id; c.checked = (coches || []).indexOf(m.id) >= 0;
+      l.appendChild(c); l.appendChild(document.createTextNode(' ' + m.label)); el.appendChild(l);
+    });
+  }
+  function modulesCoches(el) {
+    return Array.prototype.filter.call(el.querySelectorAll('input[type=checkbox]'), function (c) { return c.checked; })
+      .map(function (c) { return c.value; });
+  }
+
   var Auth = {
     ROLE_LABEL: ROLE_LABEL,
     api: api,
     blobUrl: blobUrl,
+    modules: modules, casesModules: casesModules, modulesCoches: modulesCoches,
+    // Superviseurs et administrateurs voient tous les services ; un agent, ceux de son compte
+    aAcces: function (m) { var u = Auth.user(); return !!u && (Auth.isValidator() || (u.modules || []).indexOf(m) >= 0); },
     user: function () { return session && session.utilisateur; },
     isValidator: function () { var u = Auth.user(); return !!u && (u.role === 'superviseur' || u.role === 'admin'); },
     isAdmin: function () { var u = Auth.user(); return !!u && u.role === 'admin'; },

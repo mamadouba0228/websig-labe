@@ -15,10 +15,21 @@ Système d'information géographique web de la commune urbaine de Labé (Guinée
 | Public (sans compte) | Consulter la carte publique |
 | Agent | Saisir des données ; modifier ou supprimer ses saisies tant qu'elles ne sont pas validées |
 | Superviseur | + valider, rejeter (avec motif), modifier toutes les saisies ; tableau de bord |
-| Administrateur | + activer / désactiver les comptes, attribuer les rôles, réinitialiser les mots de passe, journal |
+| Administrateur | + créer, activer / désactiver les comptes, attribuer les rôles et les services, réinitialiser les mots de passe, journal |
 
 Un agent s'inscrit depuis l'espace agents ; son compte reste **en attente** jusqu'à son activation par
-un administrateur. Les saisies d'un agent sont publiées sur la carte publique **après validation**.
+un administrateur. L'administrateur peut aussi créer le compte lui-même (Administration → Comptes des agents →
+**+ Nouveau compte**) : le compte est actif tout de suite, avec un mot de passe temporaire à transmettre à l'agent.
+Les saisies d'un agent sont publiées sur la carte publique **après validation**.
+
+**Accès par service.** Tous les agents ont accès aux **outils** (saisie, suivi, itinéraire, sélection, analyses,
+statistiques, mon compte). Les **services communaux** (Adressage, Foncier, Déchets, Environnement, Réseaux,
+Marchés et gares routières) se donnent **compte par compte** : cases à cocher à la création du compte (proposées
+d'office selon le service de l'agent), à l'inscription (services demandés, confirmés par l'administrateur) et
+bouton **Services** dans la liste des comptes. Un agent ne voit que les onglets de ses services ; l'API refuse les
+autres (403). Les couches publiques des autres services restent visibles sur la carte. Superviseurs et
+administrateurs voient tous les services. Dans un service, certaines actions restent réservées au service
+compétent (ex. encaissements : Finances et recettes ; instruction foncière : Urbanisme et domaines).
 
 ## Adressage
 

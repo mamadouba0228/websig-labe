@@ -47,27 +47,30 @@
     LEGENDE_PLACES: LEGENDE_PLACES };
 
   // ---------- Carte publique ----------
-  if (document.getElementById('tab-mar')) return; // espace agents : couches gérées par js/marches.js
-
   function lire(url) { return fetch(url).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }); }
-  A.ready.then(function () {
-    return A.STATIC ? lire('data/mar_sites.geojson') : lire('/api/marches/public').then(function (d) { return d.sites; });
-  }).then(function (fc) {
-    var g = A.markClicks(L.featureGroup());
-    fc.features.forEach(function (f) {
-      var p = f.properties;
-      var html = A.popupHtml(p.nom + ' (' + p.numero + ')', {
-        type: p.type, etat: p.etat, jours: p.jours, horaires: p.horaires, destinations: p.destinations,
-        capacite: p.capacite ? p.capacite + ' véhicules' : null,
-        places: p.places ? p.places + ' dont ' + p.libres + ' libre(s)' : null, gestion: p.gestion, quartier: p.quartier
-      }, { type: 'Type', etat: 'État', jours: 'Jours', horaires: 'Horaires', destinations: 'Destinations', capacite: 'Capacité',
-        places: 'Emplacements', gestion: 'Gestion', quartier: 'Quartier' }) +
-        (p.libres ? '<small class="muted">Pour louer un emplacement libre, adressez-vous à la mairie.</small>' : '');
-      var m = dessinerSite(f, g, html);
-      A.searchIndex.push({ name: p.nom, type: p.type, layer: m, parent: g });
-    });
-    A.enregistrerIdentifiable(g, 'Marchés et gares routières');
-    A.addOverlay({ name: 'Marchés et gares routières (' + fc.features.length + ')', layer: g, on: false, group: 'Économie',
-      swatch: '<span class="swatch dot" style="background:' + MARCHE + '"></span>', legend: LEGENDE_SITES });
-  }).catch(function () { /* données des marchés pas encore publiées */ });
+  function publique() {
+    A.ready.then(function () {
+      return A.STATIC ? lire('data/mar_sites.geojson') : lire('/api/marches/public').then(function (d) { return d.sites; });
+    }).then(function (fc) {
+      var g = A.markClicks(L.featureGroup());
+      fc.features.forEach(function (f) {
+        var p = f.properties;
+        var html = A.popupHtml(p.nom + ' (' + p.numero + ')', {
+          type: p.type, etat: p.etat, jours: p.jours, horaires: p.horaires, destinations: p.destinations,
+          capacite: p.capacite ? p.capacite + ' véhicules' : null,
+          places: p.places ? p.places + ' dont ' + p.libres + ' libre(s)' : null, gestion: p.gestion, quartier: p.quartier
+        }, { type: 'Type', etat: 'État', jours: 'Jours', horaires: 'Horaires', destinations: 'Destinations', capacite: 'Capacité',
+          places: 'Emplacements', gestion: 'Gestion', quartier: 'Quartier' }) +
+          (p.libres ? '<small class="muted">Pour louer un emplacement libre, adressez-vous à la mairie.</small>' : '');
+        var m = dessinerSite(f, g, html);
+        A.searchIndex.push({ name: p.nom, type: p.type, layer: m, parent: g });
+      });
+      A.enregistrerIdentifiable(g, 'Marchés et gares routières');
+      A.addOverlay({ name: 'Marchés et gares routières (' + fc.features.length + ')', layer: g, on: false, group: 'Économie',
+        swatch: '<span class="swatch dot" style="background:' + MARCHE + '"></span>', legend: LEGENDE_SITES });
+    }).catch(function () { /* données des marchés pas encore publiées */ });
+  }
+  // espace agents : couches gérées par js/marches.js ; la couche publique sert aux agents sans ce service
+  if (document.getElementById('tab-mar')) (window.LabeCartesPubliques = window.LabeCartesPubliques || {}).mar = publique;
+  else publique();
 })();

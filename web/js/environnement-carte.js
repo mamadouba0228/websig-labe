@@ -56,59 +56,62 @@
     iconeAtteinte: iconeAtteinte, iconeFeu: iconeFeu, STYLE_PLANTATION: STYLE_PLANTATION, STYLE_FEU: STYLE_FEU };
 
   // ---------- Carte publique ----------
-  if (document.getElementById('tab-env')) return; // espace agents : couches gérées par js/environnement.js
-
   function lire(url) { return fetch(url).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }); }
-  A.ready.then(function () {
-    if (!A.STATIC) return lire('/api/environnement/public');
-    return Promise.all(['zones', 'plantations', 'points_eau', 'feux'].map(function (k) { return lire('data/env_' + k + '.geojson'); }))
-      .then(function (r) { return { zones: r[0], plantations: r[1], points_eau: r[2], feux: r[3] }; });
-  }).then(function (d) {
-    var G = 'Protection de l\'environnement';
-    function couche(fc, opts, fiche, nom, libelle) {
-      var g = A.markClicks(L.featureGroup());
-      L.geoJSON(fc, {
-        style: opts.style, pointToLayer: opts.point,
-        onEachFeature: function (f, l) {
-          var x = fiche(f.properties);
-          l.bindPopup(A.popupHtml(x[0], x[1], x[2]) + (x[3] || ''));
-          g.addLayer(l);
-          if (libelle) A.searchIndex.push({ name: libelle(f.properties), type: nom, layer: l.getLatLng ? l : L.featureGroup([l]), parent: g });
-        }
-      });
-      A.enregistrerIdentifiable(g, nom);
-      return g;
-    }
-    var zones = couche(d.zones, { style: function (f) { return styleZone(f.properties); } }, function (p) {
-      return ['Zone protégée ' + p.code, { nom: p.nom, type: p.type, regle: p.regle, ref: p.reference, sup: p.superficie_ha != null ? A.fmt(p.superficie_ha, 1) + ' ha' : null },
-        { nom: 'Nom', type: 'Type', regle: 'Règle', ref: 'Référence', sup: 'Superficie' },
-        '<small class="muted">Avant de construire ou d\'aménager, renseignez-vous auprès de la mairie.</small>'];
-    }, 'Zones protégées', function (p) { return p.nom + ' · ' + p.code; });
-    var eau = couche(d.points_eau, { point: function (f, ll) { return L.marker(ll, { icon: iconeEau(f.properties), keyboard: false }); } }, function (p) {
-      return [(p.nom || p.type) + ' (' + p.numero + ')', { type: p.type, etat: p.etat, amenage: p.amenage, quartier: p.quartier },
-        { type: 'Type', etat: 'État', amenage: 'Aménagé', quartier: 'Quartier' }];
-    }, 'Sources et points d\'eau', function (p) { return (p.nom ? p.nom + ' · ' : '') + p.numero; });
-    var plantations = couche(d.plantations, { style: function () { return STYLE_PLANTATION; },
-      point: function (f, ll) { return L.marker(ll, { icon: iconePlantation(), keyboard: false }); } }, function (p) {
-      return ['Plantation ' + p.numero, { type: p.type, espece: p.espece, plants: A.fmt(p.nombre_plants), date: dateFr(p.date), org: p.organisme,
-        survie: p.survie_pct != null ? p.survie_pct + ' %' : null },
-        { type: 'Type', espece: 'Espèces', plants: 'Plants', date: 'Plantée le', org: 'Organisme', survie: 'Taux de survie' }];
-    }, 'Plantations', null);
-    var feux = couche(d.feux, { style: function () { return STYLE_FEU; },
-      point: function (f, ll) { return L.marker(ll, { icon: iconeFeu(), keyboard: false }); } }, function (p) {
-      return ['Feu de brousse', { date: dateFr(p.date), saison: p.saison, origine: p.origine, cause: p.cause,
-        surface: p.surface_ha ? A.fmt(p.surface_ha, 1) + ' ha' : null, quartier: p.quartier },
-        { date: 'Date', saison: 'Saison', origine: 'Origine', cause: 'Cause', surface: 'Surface brûlée', quartier: 'Quartier' }];
-    }, 'Feux de brousse', null);
-    var n = function (fc) { return fc.features.length; };
-    A.addOverlay({ name: 'Zones protégées (' + n(d.zones) + ')', layer: zones, on: false, group: G,
-      swatch: '<span class="swatch" style="background:' + EAU + '"></span>', legend: legendeZones() });
-    A.addOverlay({ name: 'Sources et points d\'eau (' + n(d.points_eau) + ')', layer: eau, on: true, group: G,
-      swatch: '<span class="swatch dot" style="background:' + EAU + '"></span>',
-      legend: [['S source · P puits · F forage · M mare', EAU, 'dot'], ['Pollué (anneau rouge et « ! »)', ALERTE, 'dot'], ['Tari', GRIS, 'dot']] });
-    A.addOverlay({ name: 'Plantations (' + n(d.plantations) + ')', layer: plantations, on: true, group: G,
-      swatch: '<span class="swatch dot" style="background:' + VERT + '"></span>' });
-    A.addOverlay({ name: 'Feux de brousse (' + n(d.feux) + ')', layer: feux, on: false, group: G,
-      swatch: '<span class="swatch" style="background:' + FEU + '"></span>' });
-  }).catch(function () { /* données de l'environnement pas encore publiées */ });
+  function publique() {
+    A.ready.then(function () {
+      if (!A.STATIC) return lire('/api/environnement/public');
+      return Promise.all(['zones', 'plantations', 'points_eau', 'feux'].map(function (k) { return lire('data/env_' + k + '.geojson'); }))
+        .then(function (r) { return { zones: r[0], plantations: r[1], points_eau: r[2], feux: r[3] }; });
+    }).then(function (d) {
+      var G = 'Protection de l\'environnement';
+      function couche(fc, opts, fiche, nom, libelle) {
+        var g = A.markClicks(L.featureGroup());
+        L.geoJSON(fc, {
+          style: opts.style, pointToLayer: opts.point,
+          onEachFeature: function (f, l) {
+            var x = fiche(f.properties);
+            l.bindPopup(A.popupHtml(x[0], x[1], x[2]) + (x[3] || ''));
+            g.addLayer(l);
+            if (libelle) A.searchIndex.push({ name: libelle(f.properties), type: nom, layer: l.getLatLng ? l : L.featureGroup([l]), parent: g });
+          }
+        });
+        A.enregistrerIdentifiable(g, nom);
+        return g;
+      }
+      var zones = couche(d.zones, { style: function (f) { return styleZone(f.properties); } }, function (p) {
+        return ['Zone protégée ' + p.code, { nom: p.nom, type: p.type, regle: p.regle, ref: p.reference, sup: p.superficie_ha != null ? A.fmt(p.superficie_ha, 1) + ' ha' : null },
+          { nom: 'Nom', type: 'Type', regle: 'Règle', ref: 'Référence', sup: 'Superficie' },
+          '<small class="muted">Avant de construire ou d\'aménager, renseignez-vous auprès de la mairie.</small>'];
+      }, 'Zones protégées', function (p) { return p.nom + ' · ' + p.code; });
+      var eau = couche(d.points_eau, { point: function (f, ll) { return L.marker(ll, { icon: iconeEau(f.properties), keyboard: false }); } }, function (p) {
+        return [(p.nom || p.type) + ' (' + p.numero + ')', { type: p.type, etat: p.etat, amenage: p.amenage, quartier: p.quartier },
+          { type: 'Type', etat: 'État', amenage: 'Aménagé', quartier: 'Quartier' }];
+      }, 'Sources et points d\'eau', function (p) { return (p.nom ? p.nom + ' · ' : '') + p.numero; });
+      var plantations = couche(d.plantations, { style: function () { return STYLE_PLANTATION; },
+        point: function (f, ll) { return L.marker(ll, { icon: iconePlantation(), keyboard: false }); } }, function (p) {
+        return ['Plantation ' + p.numero, { type: p.type, espece: p.espece, plants: A.fmt(p.nombre_plants), date: dateFr(p.date), org: p.organisme,
+          survie: p.survie_pct != null ? p.survie_pct + ' %' : null },
+          { type: 'Type', espece: 'Espèces', plants: 'Plants', date: 'Plantée le', org: 'Organisme', survie: 'Taux de survie' }];
+      }, 'Plantations', null);
+      var feux = couche(d.feux, { style: function () { return STYLE_FEU; },
+        point: function (f, ll) { return L.marker(ll, { icon: iconeFeu(), keyboard: false }); } }, function (p) {
+        return ['Feu de brousse', { date: dateFr(p.date), saison: p.saison, origine: p.origine, cause: p.cause,
+          surface: p.surface_ha ? A.fmt(p.surface_ha, 1) + ' ha' : null, quartier: p.quartier },
+          { date: 'Date', saison: 'Saison', origine: 'Origine', cause: 'Cause', surface: 'Surface brûlée', quartier: 'Quartier' }];
+      }, 'Feux de brousse', null);
+      var n = function (fc) { return fc.features.length; };
+      A.addOverlay({ name: 'Zones protégées (' + n(d.zones) + ')', layer: zones, on: false, group: G,
+        swatch: '<span class="swatch" style="background:' + EAU + '"></span>', legend: legendeZones() });
+      A.addOverlay({ name: 'Sources et points d\'eau (' + n(d.points_eau) + ')', layer: eau, on: true, group: G,
+        swatch: '<span class="swatch dot" style="background:' + EAU + '"></span>',
+        legend: [['S source · P puits · F forage · M mare', EAU, 'dot'], ['Pollué (anneau rouge et « ! »)', ALERTE, 'dot'], ['Tari', GRIS, 'dot']] });
+      A.addOverlay({ name: 'Plantations (' + n(d.plantations) + ')', layer: plantations, on: true, group: G,
+        swatch: '<span class="swatch dot" style="background:' + VERT + '"></span>' });
+      A.addOverlay({ name: 'Feux de brousse (' + n(d.feux) + ')', layer: feux, on: false, group: G,
+        swatch: '<span class="swatch" style="background:' + FEU + '"></span>' });
+    }).catch(function () { /* données de l'environnement pas encore publiées */ });
+  }
+  // espace agents : couches gérées par js/environnement.js ; la couche publique sert aux agents sans ce service
+  if (document.getElementById('tab-env')) (window.LabeCartesPubliques = window.LabeCartesPubliques || {}).env = publique;
+  else publique();
 })();

@@ -46,43 +46,46 @@
     classe: classe, ferme: ferme, icone: icone, legende: legende, legendeTypes: legendeTypes, styleTournee: styleTournee };
 
   // ---------- Carte publique ----------
-  if (document.getElementById('tab-dech')) return; // espace agents : couches gérées par js/dechets.js
-
   function lire(url) { return fetch(url).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }); }
-  A.ready.then(function () {
-    return A.STATIC ? Promise.all([lire('data/dechets_points.geojson'), lire('data/dechets_tournees.geojson')])
-      .then(function (r) { return { points: r[0], tournees: r[1] }; }) : lire('/api/dechets/public');
-  }).then(function (d) {
-    var points = A.markClicks(L.featureGroup()), tournees = A.markClicks(L.featureGroup());
-    L.geoJSON(d.tournees, {
-      style: function () { return styleTournee(); },
-      onEachFeature: function (f, l) {
-        var p = f.properties;
-        l.bindPopup(A.popupHtml('Tournée de collecte ' + p.code, {
-          nom: p.nom, jours: p.jours, heure: p.heure_depart ? 'à partir de ' + p.heure_depart.replace(':', ' h ') : null,
-          moyen: p.moyen, quartiers: p.quartiers, points: p.points ? p.points + ' point(s) de collecte' : null
-        }, { nom: 'Secteur', jours: 'Passage', heure: 'Horaire', moyen: 'Moyen', quartiers: 'Quartiers', points: 'Arrêts' }));
-        tournees.addLayer(l);
-        A.searchIndex.push({ name: 'Tournée ' + p.code + ' · ' + p.nom, type: 'Collecte des déchets · ' + p.jours, layer: L.featureGroup([l]), parent: tournees });
-      }
-    });
-    L.geoJSON(d.points, {
-      pointToLayer: function (f, ll) { return L.marker(ll, { icon: icone(f.properties), keyboard: false }); },
-      onEachFeature: function (f, l) {
-        var p = f.properties;
-        l.bindPopup(A.popupHtml((p.nom || p.type) + ' (' + p.numero + ')', {
-          type: p.type, etat: p.etat, acces: p.acces, quartier: p.quartier, constat: dateFr(p.constat)
-        }, { type: 'Type', etat: 'État', acces: 'Accès', quartier: 'Quartier', constat: 'Dernier constat' }) +
-          '<small class="muted">Un dépôt d\'ordures à signaler ? Contactez le service Hygiène et salubrité de la mairie.</small>');
-        points.addLayer(l);
-        A.searchIndex.push({ name: (p.nom ? p.nom + ' · ' : '') + p.numero, type: p.type + ' · ' + (p.quartier || ''), layer: l, parent: points });
-      }
-    });
-    A.enregistrerIdentifiable(points, 'Points de collecte et dépotoirs');
-    A.enregistrerIdentifiable(tournees, 'Tournées de collecte');
-    A.addOverlay({ name: 'Points de collecte et dépotoirs (' + d.points.features.length + ')', layer: points, on: true, group: 'Gestion des déchets',
-      swatch: '<span class="swatch dot" style="background:' + CLASSES[1].couleur + '"></span>', legend: legende() });
-    A.addOverlay({ name: 'Tournées de collecte (' + d.tournees.features.length + ')', layer: tournees, on: false, group: 'Gestion des déchets',
-      swatch: '<span class="swatch line" style="background:' + TOURNEE + '"></span>' });
-  }).catch(function () { /* données des déchets pas encore publiées */ });
+  function publique() {
+    A.ready.then(function () {
+      return A.STATIC ? Promise.all([lire('data/dechets_points.geojson'), lire('data/dechets_tournees.geojson')])
+        .then(function (r) { return { points: r[0], tournees: r[1] }; }) : lire('/api/dechets/public');
+    }).then(function (d) {
+      var points = A.markClicks(L.featureGroup()), tournees = A.markClicks(L.featureGroup());
+      L.geoJSON(d.tournees, {
+        style: function () { return styleTournee(); },
+        onEachFeature: function (f, l) {
+          var p = f.properties;
+          l.bindPopup(A.popupHtml('Tournée de collecte ' + p.code, {
+            nom: p.nom, jours: p.jours, heure: p.heure_depart ? 'à partir de ' + p.heure_depart.replace(':', ' h ') : null,
+            moyen: p.moyen, quartiers: p.quartiers, points: p.points ? p.points + ' point(s) de collecte' : null
+          }, { nom: 'Secteur', jours: 'Passage', heure: 'Horaire', moyen: 'Moyen', quartiers: 'Quartiers', points: 'Arrêts' }));
+          tournees.addLayer(l);
+          A.searchIndex.push({ name: 'Tournée ' + p.code + ' · ' + p.nom, type: 'Collecte des déchets · ' + p.jours, layer: L.featureGroup([l]), parent: tournees });
+        }
+      });
+      L.geoJSON(d.points, {
+        pointToLayer: function (f, ll) { return L.marker(ll, { icon: icone(f.properties), keyboard: false }); },
+        onEachFeature: function (f, l) {
+          var p = f.properties;
+          l.bindPopup(A.popupHtml((p.nom || p.type) + ' (' + p.numero + ')', {
+            type: p.type, etat: p.etat, acces: p.acces, quartier: p.quartier, constat: dateFr(p.constat)
+          }, { type: 'Type', etat: 'État', acces: 'Accès', quartier: 'Quartier', constat: 'Dernier constat' }) +
+            '<small class="muted">Un dépôt d\'ordures à signaler ? Contactez le service Hygiène et salubrité de la mairie.</small>');
+          points.addLayer(l);
+          A.searchIndex.push({ name: (p.nom ? p.nom + ' · ' : '') + p.numero, type: p.type + ' · ' + (p.quartier || ''), layer: l, parent: points });
+        }
+      });
+      A.enregistrerIdentifiable(points, 'Points de collecte et dépotoirs');
+      A.enregistrerIdentifiable(tournees, 'Tournées de collecte');
+      A.addOverlay({ name: 'Points de collecte et dépotoirs (' + d.points.features.length + ')', layer: points, on: true, group: 'Gestion des déchets',
+        swatch: '<span class="swatch dot" style="background:' + CLASSES[1].couleur + '"></span>', legend: legende() });
+      A.addOverlay({ name: 'Tournées de collecte (' + d.tournees.features.length + ')', layer: tournees, on: false, group: 'Gestion des déchets',
+        swatch: '<span class="swatch line" style="background:' + TOURNEE + '"></span>' });
+    }).catch(function () { /* données des déchets pas encore publiées */ });
+  }
+  // espace agents : couches gérées par js/dechets.js ; la couche publique sert aux agents sans ce service
+  if (document.getElementById('tab-dech')) (window.LabeCartesPubliques = window.LabeCartesPubliques || {}).dech = publique;
+  else publique();
 })();

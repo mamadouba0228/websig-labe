@@ -610,6 +610,11 @@ tr.cliquable:hover td { background: #f8f9fa; }
 .tab-groupe-services { background: #f3f8f4; }
 .tab-groupe-titre { display: block; padding: 2px 6px 0; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
 .tab-groupe-services .tab-groupe-titre { color: var(--green); }
+#tg-services-vide { margin: 2px 6px 6px; }
+.modules-choix { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px 8px; margin: 0 0 6px; }
+.modules-choix legend { font-size: 13px; padding: 0 4px; }
+.modules-choix .check { grid-column: auto; font-size: 13px; margin: 0; }
+.modules-choix .check input { display: inline; width: auto; margin: 0; }
 .tab-ligne { display: flex; flex-wrap: wrap; }
 .tab-ligne .tab { flex: 1 0 auto; padding: 8px 8px; }
 .tab-groupe-carte { padding: 4px; }

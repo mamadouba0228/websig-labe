@@ -18,6 +18,8 @@ CREATE TABLE IF NOT EXISTS app.utilisateurs (
     derniere_connexion timestamptz
 );
 CREATE UNIQUE INDEX IF NOT EXISTS utilisateurs_email_idx ON app.utilisateurs (lower(email));
+-- Services communaux (onglets) accessibles à l'agent : adr, fon, dech, env, res, mar. Superviseurs et admins : tous.
+ALTER TABLE app.utilisateurs ADD COLUMN IF NOT EXISTS modules text[] NOT NULL DEFAULT '{}';
 
 CREATE TABLE IF NOT EXISTS app.sessions (
     jeton_hash   text PRIMARY KEY,                -- SHA-256 du jeton : le jeton lui-même n'est pas stocké

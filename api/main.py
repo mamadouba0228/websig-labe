@@ -7,7 +7,9 @@ Rôles :
   - superviseur  : valide / rejette / modifie toutes les contributions
   - admin        : superviseur + gestion des comptes et journal d'activité
 
-Les agents créent leur compte eux-mêmes ; un administrateur l'active.
+Les agents créent leur compte eux-mêmes (un administrateur l'active), ou l'administrateur le crée directement.
+Chaque compte d'agent a la liste des services communaux (modules) auxquels il a accès ; les outils
+(saisie, suivi, itinéraire, sélection, analyses, statistiques) sont ouverts à tous les agents.
 """
 import base64
 import hashlib
@@ -19,7 +21,7 @@ from contextlib import contextmanager
 from pathlib import Path
 
 import psycopg
-from fastapi import Depends, FastAPI, Header, HTTPException, Response
+from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response
 from psycopg.rows import dict_row
 from psycopg_pool import ConnectionPool
 from pydantic import BaseModel, Field
@@ -33,6 +35,16 @@ SERVICES = [
     "Affaires sociales", "Police municipale", "Environnement et cadre de vie", "Autre",
 ]
 ROLES = ("agent", "superviseur", "admin")
+# Services communaux de l'espace agents (onglets) : l'accès se donne compte par compte.
+MODULES = {"adr": "Adressage", "fon": "Foncier", "dech": "Déchets", "env": "Environnement",
+           "res": "Réseaux (éclairage, eau)", "mar": "Marchés et gares routières"}
+# Accès proposés d'office selon le service de l'agent (l'administrateur peut les changer)
+MODULES_SUGGERES = {
+    "Urbanisme et domaines": ["adr", "fon", "env"], "Services techniques": ["adr", "res"],
+    "Voirie et assainissement": ["dech", "res"], "Hygiène et salubrité": ["dech", "env"],
+    "Finances et recettes": ["fon", "mar"], "Développement local": ["mar"],
+    "Environnement et cadre de vie": ["env", "dech"],
+}
 STATUTS = {"À valider", "Validé", "Affecté", "En cours", "Traité", "Rejeté"}
 GEOM_TYPES = {"Point", "LineString", "Polygon"}
 MAX_PHOTO = 1_000_000
@@ -100,7 +112,8 @@ def journal(cur, user_id, action, objet=None, detail=None):
 
 
 # ---------------------------------------------------------------- authentification
-USER_COLS = "u.id, u.nom, u.email, u.service, u.fonction, u.telephone, u.role, u.statut, u.cree_le, u.derniere_connexion"
+USER_COLS = ("u.id, u.nom, u.email, u.service, u.fonction, u.telephone, u.role, u.statut, u.modules, u.cree_le, "
+             "u.derniere_connexion")
 
 
 def current_user(authorization: str | None = Header(None)) -> dict:
@@ -128,6 +141,37 @@ def admin(u: dict = Depends(current_user)) -> dict:
     return u
 
 
+def a_acces(u: dict, module: str) -> bool:
+    """Superviseurs et administrateurs voient tous les services ; un agent, ceux de son compte."""
+    return u["role"] in ("superviseur", "admin") or module in (u.get("modules") or [])
+
+
+# Routes sans compte (carte publique, vérification des certificats et des fiches)
+ROUTES_PUBLIQUES = ("/public", "/localiser", "/certificat", "/fiches/verifier")
+
+
+def acces_module(module: str):
+    """Dépendance commune aux routes d'un service : refuse un agent connecté qui n'y a pas accès."""
+    def verifier(request: Request, authorization: str | None = Header(None)):
+        if not authorization or request.url.path.endswith(ROUTES_PUBLIQUES):
+            return  # la route elle-même exige (ou non) une connexion
+        try:
+            u = current_user(authorization)
+        except HTTPException:
+            return
+        if not a_acces(u, module):
+            raise HTTPException(403, f"Vous n'avez pas accès au service « {MODULES[module]} ». "
+                                     "Demandez-le à l'administrateur.")
+    return Depends(verifier)
+
+
+def verifier_modules(modules: list[str]) -> list[str]:
+    inconnus = [m for m in modules if m not in MODULES]
+    if inconnus:
+        raise HTTPException(400, "Service inconnu : " + ", ".join(inconnus))
+    return [m for m in MODULES if m in modules]  # ordre des onglets, sans doublon
+
+
 def public_user(u: dict) -> dict:
     out = dict(u)
     for k in ("cree_le", "derniere_connexion"):
@@ -143,6 +187,7 @@ class Inscription(BaseModel):
     fonction: str | None = Field(None, max_length=100)
     telephone: str | None = Field(None, max_length=30)
     mot_de_passe: str = Field(max_length=200)
+    modules: list[str] = []
 
 
 class Connexion(BaseModel):
@@ -170,18 +215,24 @@ def services():
     return SERVICES
 
 
+@app.get("/modules")
+def modules():
+    return {"modules": [{"id": k, "label": v} for k, v in MODULES.items()], "suggestions": MODULES_SUGGERES}
+
+
 @app.post("/auth/inscription", status_code=201)
 def inscription(body: Inscription):
     if body.service not in SERVICES:
         raise HTTPException(400, "Service inconnu.")
     check_strength(body.mot_de_passe)
+    mods = verifier_modules(body.modules)
     email = body.email.strip().lower()
     with cursor() as cur:
         try:
-            cur.execute("""INSERT INTO app.utilisateurs (nom, email, service, fonction, telephone, mot_de_passe)
-                           VALUES (%s, %s, %s, %s, %s, %s) RETURNING id""",
+            cur.execute("""INSERT INTO app.utilisateurs (nom, email, service, fonction, telephone, mot_de_passe, modules)
+                           VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id""",
                         (body.nom.strip(), email, body.service, body.fonction, body.telephone,
-                         hash_password(body.mot_de_passe)))
+                         hash_password(body.mot_de_passe), mods))
         except psycopg.errors.UniqueViolation:
             raise HTTPException(409, "Un compte existe déjà avec cette adresse e-mail.")
         uid = cur.fetchone()["id"]
@@ -248,6 +299,41 @@ class MajUtilisateur(BaseModel):
     statut: str | None = None
     service: str | None = None
     fonction: str | None = Field(None, max_length=100)
+    modules: list[str] | None = None
+
+
+class NouveauCompte(BaseModel):
+    nom: str = Field(min_length=3, max_length=100)
+    email: str = Field(min_length=5, max_length=120, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+    service: str
+    fonction: str | None = Field(None, max_length=100)
+    telephone: str | None = Field(None, max_length=30)
+    role: str = "agent"
+    modules: list[str] = []
+
+
+@app.post("/admin/utilisateurs", status_code=201)
+def creer_utilisateur(body: NouveauCompte, u: dict = Depends(admin)):
+    """Compte créé par l'administrateur : actif tout de suite, avec un mot de passe temporaire à transmettre."""
+    if body.service not in SERVICES:
+        raise HTTPException(400, "Service inconnu.")
+    if body.role not in ROLES:
+        raise HTTPException(400, "Rôle invalide.")
+    mods = verifier_modules(body.modules)
+    temp = secrets.token_urlsafe(6) + "7a"
+    with cursor() as cur:
+        try:
+            cur.execute("""INSERT INTO app.utilisateurs (nom, email, service, fonction, telephone, mot_de_passe, role, statut,
+                                                         modules, active_le, active_par)
+                           VALUES (%s, %s, %s, %s, %s, %s, %s, 'actif', %s, now(), %s) RETURNING id""",
+                        (body.nom.strip(), body.email.strip().lower(), body.service, body.fonction or None,
+                         body.telephone or None, hash_password(temp), body.role, mods, u["id"]))
+        except psycopg.errors.UniqueViolation:
+            raise HTTPException(409, "Un compte existe déjà avec cette adresse e-mail.")
+        uid = cur.fetchone()["id"]
+        journal(cur, u["id"], "création du compte", f"utilisateur {uid}",
+                f"{body.nom} — {body.service} · services : " + (", ".join(MODULES[m] for m in mods) or "aucun"))
+    return {"id": uid, "mot_de_passe_temporaire": temp}
 
 
 @app.get("/admin/utilisateurs")
@@ -271,6 +357,10 @@ def maj_utilisateur(uid: int, body: MajUtilisateur, u: dict = Depends(admin)):
         raise HTTPException(400, "Statut invalide.")
     if "service" in d and d["service"] not in SERVICES:
         raise HTTPException(400, "Service inconnu.")
+    if d.get("modules") is not None:
+        d["modules"] = verifier_modules(d["modules"])
+    elif "modules" in d:
+        del d["modules"]
     if not d:
         raise HTTPException(400, "Rien à modifier.")
     sets = [f"{k} = %s" for k in d]
@@ -286,7 +376,9 @@ def maj_utilisateur(uid: int, body: MajUtilisateur, u: dict = Depends(admin)):
         if d.get("statut") == "desactive":
             cur.execute("DELETE FROM app.sessions WHERE utilisateur = %s", (uid,))
         journal(cur, u["id"], "modification du compte", f"utilisateur {uid}",
-                f"{r['nom']} : " + ", ".join(f"{k} = {v}" for k, v in d.items()))
+                f"{r['nom']} : " + ", ".join(
+                    f"services = {', '.join(MODULES[m] for m in v) or 'aucun'}" if k == "modules" else f"{k} = {v}"
+                    for k, v in d.items()))
     return {"ok": True}
 
 
@@ -612,12 +704,13 @@ import environnement  # noqa: E402
 import reseaux  # noqa: E402
 import marches  # noqa: E402
 
-app.include_router(adressage.router)
 app.include_router(suivi.router)
-app.include_router(foncier.router)
-app.include_router(foncier_gestion.router)
-app.include_router(foncier_fiscalite.router)
-app.include_router(dechets.router)
-app.include_router(environnement.router)
-app.include_router(reseaux.router)
-app.include_router(marches.router)
+# Services communaux : réservés aux agents qui y ont accès (voir MODULES)
+app.include_router(adressage.router, dependencies=[acces_module("adr")])
+app.include_router(foncier.router, dependencies=[acces_module("fon")])
+app.include_router(foncier_gestion.router, dependencies=[acces_module("fon")])
+app.include_router(foncier_fiscalite.router, dependencies=[acces_module("fon")])
+app.include_router(dechets.router, dependencies=[acces_module("dech")])
+app.include_router(environnement.router, dependencies=[acces_module("env")])
+app.include_router(reseaux.router, dependencies=[acces_module("res")])
+app.include_router(marches.router, dependencies=[acces_module("mar")])

@@ -48,43 +48,46 @@
     LEGENDE_LAMPADAIRES: LEGENDE_LAMPADAIRES, LEGENDE_BORNES: LEGENDE_BORNES };
 
   // ---------- Carte publique ----------
-  if (document.getElementById('tab-res')) return; // espace agents : couches gérées par js/reseaux.js
-
   function lire(url) { return fetch(url).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }); }
-  A.ready.then(function () {
-    if (!A.STATIC) return lire('/api/reseaux/public');
-    return Promise.all(['lampadaires', 'bornes'].map(function (k) { return lire('data/res_' + k + '.geojson'); }))
-      .then(function (r) { return { lampadaires: r[0], bornes: r[1] }; });
-  }).then(function (d) {
-    var G = 'Réseaux';
-    function couche(fc, icone, fiche, nom, libelle) {
-      var g = A.markClicks(L.featureGroup());
-      L.geoJSON(fc, {
-        pointToLayer: function (f, ll) { return L.marker(ll, { icon: icone(f.properties), keyboard: false }); },
-        onEachFeature: function (f, l) {
-          var x = fiche(f.properties);
-          l.bindPopup(A.popupHtml(x[0], x[1], x[2]) + (x[3] || ''));
-          g.addLayer(l);
-          if (libelle) A.searchIndex.push({ name: libelle(f.properties), type: nom, layer: l, parent: g });
-        }
-      });
-      A.enregistrerIdentifiable(g, nom);
-      return g;
-    }
-    var lamp = couche(d.lampadaires, iconeLampadaire, function (p) {
-      return ['Lampadaire ' + p.numero, { alim: p.alimentation, etat: p.etat, voie: p.voie, quartier: p.quartier },
-        { alim: 'Alimentation', etat: 'État', voie: 'Rue', quartier: 'Quartier' },
-        p.etat === 'En panne' ? '<small class="muted">Panne connue de la mairie.</small>' : ''];
-    }, 'Éclairage public', null);
-    var bornes = couche(d.bornes, iconeBorne, function (p) {
-      return [(p.nom || p.type) + ' (' + p.numero + ')', { type: p.type, etat: p.etat, gest: p.gestionnaire, payante: p.payante,
-        prix: p.prix_gnf ? A.fmt(p.prix_gnf) + ' GNF le bidon de 20 l' : null, horaires: p.horaires, quartier: p.quartier },
-        { type: 'Type', etat: 'État', gest: 'Gestionnaire', payante: 'Payante', prix: 'Prix', horaires: 'Horaires', quartier: 'Quartier' }];
-    }, 'Bornes-fontaines', function (p) { return (p.nom ? p.nom + ' · ' : '') + p.numero; });
-    var n = function (fc) { return fc.features.length; };
-    A.addOverlay({ name: 'Éclairage public (' + n(d.lampadaires) + ')', layer: lamp, on: false, group: G,
-      swatch: '<span class="swatch dot" style="background:' + LUMIERE + '"></span>', legend: LEGENDE_LAMPADAIRES });
-    A.addOverlay({ name: 'Bornes-fontaines (' + n(d.bornes) + ')', layer: bornes, on: true, group: G,
-      swatch: '<span class="swatch dot" style="background:' + BORNE + '"></span>', legend: LEGENDE_BORNES });
-  }).catch(function () { /* données des réseaux pas encore publiées */ });
+  function publique() {
+    A.ready.then(function () {
+      if (!A.STATIC) return lire('/api/reseaux/public');
+      return Promise.all(['lampadaires', 'bornes'].map(function (k) { return lire('data/res_' + k + '.geojson'); }))
+        .then(function (r) { return { lampadaires: r[0], bornes: r[1] }; });
+    }).then(function (d) {
+      var G = 'Réseaux';
+      function couche(fc, icone, fiche, nom, libelle) {
+        var g = A.markClicks(L.featureGroup());
+        L.geoJSON(fc, {
+          pointToLayer: function (f, ll) { return L.marker(ll, { icon: icone(f.properties), keyboard: false }); },
+          onEachFeature: function (f, l) {
+            var x = fiche(f.properties);
+            l.bindPopup(A.popupHtml(x[0], x[1], x[2]) + (x[3] || ''));
+            g.addLayer(l);
+            if (libelle) A.searchIndex.push({ name: libelle(f.properties), type: nom, layer: l, parent: g });
+          }
+        });
+        A.enregistrerIdentifiable(g, nom);
+        return g;
+      }
+      var lamp = couche(d.lampadaires, iconeLampadaire, function (p) {
+        return ['Lampadaire ' + p.numero, { alim: p.alimentation, etat: p.etat, voie: p.voie, quartier: p.quartier },
+          { alim: 'Alimentation', etat: 'État', voie: 'Rue', quartier: 'Quartier' },
+          p.etat === 'En panne' ? '<small class="muted">Panne connue de la mairie.</small>' : ''];
+      }, 'Éclairage public', null);
+      var bornes = couche(d.bornes, iconeBorne, function (p) {
+        return [(p.nom || p.type) + ' (' + p.numero + ')', { type: p.type, etat: p.etat, gest: p.gestionnaire, payante: p.payante,
+          prix: p.prix_gnf ? A.fmt(p.prix_gnf) + ' GNF le bidon de 20 l' : null, horaires: p.horaires, quartier: p.quartier },
+          { type: 'Type', etat: 'État', gest: 'Gestionnaire', payante: 'Payante', prix: 'Prix', horaires: 'Horaires', quartier: 'Quartier' }];
+      }, 'Bornes-fontaines', function (p) { return (p.nom ? p.nom + ' · ' : '') + p.numero; });
+      var n = function (fc) { return fc.features.length; };
+      A.addOverlay({ name: 'Éclairage public (' + n(d.lampadaires) + ')', layer: lamp, on: false, group: G,
+        swatch: '<span class="swatch dot" style="background:' + LUMIERE + '"></span>', legend: LEGENDE_LAMPADAIRES });
+      A.addOverlay({ name: 'Bornes-fontaines (' + n(d.bornes) + ')', layer: bornes, on: true, group: G,
+        swatch: '<span class="swatch dot" style="background:' + BORNE + '"></span>', legend: LEGENDE_BORNES });
+    }).catch(function () { /* données des réseaux pas encore publiées */ });
+  }
+  // espace agents : couches gérées par js/reseaux.js ; la couche publique sert aux agents sans ce service
+  if (document.getElementById('tab-res')) (window.LabeCartesPubliques = window.LabeCartesPubliques || {}).res = publique;
+  else publique();
 })();

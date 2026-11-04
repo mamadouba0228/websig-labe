@@ -83,14 +83,16 @@
             <option value="actif">Actifs</option><option value="desactive">Désactivés</option>
           </select>
           <input id="user-search" type="search" placeholder="Filtrer (nom, e-mail, service…)">
+          <button id="user-nouveau" class="primary">+ Nouveau compte</button>
         </div>
         <div class="table-wrap">
           <table class="data-table">
-            <thead><tr><th>Nom</th><th>Service / fonction</th><th>Contact</th><th>Rôle</th><th>Statut</th><th>Saisies</th><th>Dernière connexion</th><th></th></tr></thead>
+            <thead><tr><th>Nom</th><th>Service / fonction</th><th>Contact</th><th>Rôle</th><th>Services accessibles</th><th>Statut</th><th>Saisies</th><th>Dernière connexion</th><th></th></tr></thead>
             <tbody id="users-body"></tbody>
           </table>
         </div>
         <p class="hint">Rôles : <b>agent</b> saisit des données · <b>superviseur</b> valide les saisies · <b>administrateur</b> gère aussi les comptes.</p>
+        <p class="hint">Tous les agents ont accès aux outils (saisie, suivi, itinéraire, sélection, analyses, statistiques). Les services communaux (adressage, foncier, déchets, environnement, réseaux, marchés) se donnent compte par compte ; superviseurs et administrateurs les voient tous.</p>
       </section>
 
       <section id="view-journal" class="view hidden">
@@ -113,6 +115,34 @@
         </div>
       </section>
     </main>
+  </div>
+
+  <!-- Création d'un compte / services accessibles -->
+  <div id="compte-modal" class="modal hidden">
+    <form id="compte-form" class="modal-card">
+      <h3 id="compte-titre">Nouveau compte</h3>
+      <div class="creation-seule">
+        <label>Nom complet *<input name="nom" required minlength="3" maxlength="100"></label>
+        <label>Adresse e-mail *<input name="email" type="email" required maxlength="120"></label>
+        <div class="grid2">
+          <label>Service *<select name="service" required></select></label>
+          <label>Fonction<input name="fonction" maxlength="100"></label>
+        </div>
+        <div class="grid2">
+          <label>Téléphone<input name="telephone" maxlength="30" placeholder="+224 …"></label>
+          <label>Rôle<select name="role"><option value="agent">Agent</option><option value="superviseur">Superviseur</option><option value="admin">Administrateur</option></select></label>
+        </div>
+      </div>
+      <fieldset class="modules-choix" id="compte-modules">
+        <legend>Services communaux accessibles</legend>
+      </fieldset>
+      <p class="hint" id="compte-note">Les outils (saisie, suivi, itinéraire, sélection, analyses, statistiques) sont ouverts à tous les agents. Dans un service, certaines actions restent réservées au service compétent (ex. encaissements : Finances et recettes) et aux superviseurs.</p>
+      <p class="form-msg" id="compte-msg"></p>
+      <div class="row">
+        <button type="button" id="compte-annuler">Annuler</button>
+        <button type="submit" class="primary" id="compte-ok">Créer le compte</button>
+      </div>
+    </form>
   </div>
 
   <script src="js/config.js"></script>
