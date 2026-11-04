@@ -76,3 +76,6 @@ body.accueil { height: auto; background: #fff; overflow: auto; }
   .acc-section, .acc-fond { padding: 32px 18px; }
 }
 .header-link.acc-inactif { opacity: .55; cursor: not-allowed; }
+.acc-contact { font-size: 15px; }
+.acc-contact a { color: var(--green); font-weight: 600; text-decoration: none; }
+.acc-contact a:hover { text-decoration: underline; }
