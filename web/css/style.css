@@ -620,6 +620,19 @@ tr.cliquable:hover td { background: #f8f9fa; }
 .tab-groupe-carte { padding: 4px; }
 .tab-ligne .tab.tab-couches { padding: 8px; font-weight: 600; color: var(--green); border: 1px solid var(--border); border-radius: 6px; }
 .tab-ligne .tab.tab-couches.active { background: var(--green); color: #fff; border-color: var(--green); }
+/* Outils et services : boutons en relief, bien visibles */
+.tab-groupe-outils, .tab-groupe-services { padding: 6px 6px 8px; }
+.tab-groupe-outils .tab-groupe-titre, .tab-groupe-services .tab-groupe-titre { padding: 0 2px 5px; }
+.tab-groupe-outils .tab-ligne, .tab-groupe-services .tab-ligne { gap: 6px; }
+.tab-groupe-outils .tab-ligne .tab, .tab-groupe-services .tab-ligne .tab {
+  padding: 8px 10px; border: 1px solid #cfd8d2; border-radius: 8px; background: #fff; color: #2b3a31;
+  font-weight: 600; box-shadow: 0 1px 0 #cfd8d2, 0 2px 4px rgba(0,0,0,.08); transition: box-shadow .12s, transform .12s; }
+.tab-groupe-services .tab-ligne .tab { border-color: #b7d3c0; color: #1f5132; }
+.tab-groupe-outils .tab-ligne .tab:hover, .tab-groupe-services .tab-ligne .tab:hover {
+  background: #eef6f0; border-color: var(--green); box-shadow: 0 2px 6px rgba(0,0,0,.12); transform: translateY(-1px); }
+.tab-groupe-outils .tab-ligne .tab.active, .tab-groupe-services .tab-ligne .tab.active {
+  background: var(--green); color: #fff; border-color: var(--green); box-shadow: inset 0 2px 3px rgba(0,0,0,.18); transform: none; }
+.tab-groupe-outils .tab-ligne .tab:focus-visible, .tab-groupe-services .tab-ligne .tab:focus-visible { outline: 2px solid var(--yellow); outline-offset: 1px; }
 
 /* Petit téléphone : le titre et l'Administration (tâche de bureau) laissent la place à la recherche et à la déconnexion */
 @media (max-width: 520px) {
