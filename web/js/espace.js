@@ -1,10 +1,10 @@
-/* Espace agents : connexion, inscription, compte. Démarre le module de saisie une fois connecté. */
+/* Espace agents : connexion (comptes créés par l'administrateur), compte. Démarre le module de saisie une fois connecté. */
 (function () {
   'use strict';
 
   var esc = LabeApp.esc;
   var screen = document.getElementById('auth-screen');
-  var loginForm = document.getElementById('login-form'), registerForm = document.getElementById('register-form');
+  var loginForm = document.getElementById('login-form');
 
   function msg(id, text, ok) {
     var el = document.getElementById(id);
@@ -12,33 +12,12 @@
     el.className = 'form-msg' + (ok ? ' ok' : '');
   }
 
-  // Onglets Connexion / Créer un compte
-  document.querySelectorAll('.auth-tab').forEach(function (t) {
-    t.addEventListener('click', function () {
-      document.querySelectorAll('.auth-tab').forEach(function (x) { x.classList.toggle('active', x === t); });
-      var reg = t.getAttribute('data-auth') === 'register';
-      loginForm.classList.toggle('hidden', reg);
-      registerForm.classList.toggle('hidden', !reg);
-    });
-  });
-
-  // Services communaux (liste fournie par l'API)
-  Auth.api('GET', '/services').then(function (list) {
-    var sel = registerForm.elements.service;
-    sel.add(new Option('— choisir —', ''));
-    list.forEach(function (s) { sel.add(new Option(s, s)); });
-  }).catch(function () { msg('register-msg', 'Serveur injoignable.'); });
-
-  // Services communaux demandés : proposés d'office selon le service choisi
-  var regModules = document.getElementById('register-modules'), MODULES = [], SUGG = {};
+  // Services communaux (libellés pour « Mon compte »)
+  var MODULES = [];
   Auth.modules().then(function (r) {
-    MODULES = r.modules; SUGG = r.suggestions;
-    Auth.casesModules(regModules, MODULES, []);
+    MODULES = r.modules;
     if (Auth.user()) renderAccount(Auth.user());
   }).catch(function () {});
-  registerForm.elements.service.addEventListener('change', function () {
-    Auth.casesModules(regModules, MODULES, SUGG[registerForm.elements.service.value] || []);
-  });
 
   loginForm.addEventListener('submit', function (e) {
     e.preventDefault();
@@ -47,23 +26,6 @@
     Auth.login(loginForm.elements.email.value.trim(), loginForm.elements.mot_de_passe.value)
       .then(function () { loginForm.reset(); enter(); })
       .catch(function (err) { msg('login-msg', err.message); })
-      .then(function () { btn.disabled = false; });
-  });
-
-  registerForm.addEventListener('submit', function (e) {
-    e.preventDefault();
-    var f = registerForm.elements;
-    if (f.mot_de_passe.value !== f.confirmation.value) return msg('register-msg', 'Les mots de passe ne correspondent pas.');
-    var btn = registerForm.querySelector('button'); btn.disabled = true;
-    Auth.api('POST', '/auth/inscription', {
-      nom: f.nom.value.trim(), email: f.email.value.trim(), service: f.service.value,
-      fonction: f.fonction.value.trim() || null, telephone: f.telephone.value.trim() || null,
-      mot_de_passe: f.mot_de_passe.value, modules: Auth.modulesCoches(regModules)
-    }).then(function (r) {
-      registerForm.reset();
-      Auth.casesModules(regModules, MODULES, []);
-      msg('register-msg', r.message, true);
-    }).catch(function (err) { msg('register-msg', err.message); })
       .then(function () { btn.disabled = false; });
   });
 

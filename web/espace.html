@@ -780,45 +780,22 @@
   <div id="coords" class="coords"></div>
   <div id="measure-box" class="measure-box hidden"></div>
 
-  <!-- Connexion / inscription -->
+  <!-- Connexion (les comptes sont créés par l'administrateur) -->
   <div id="auth-screen" class="auth-screen">
     <div class="auth-card">
       <div class="auth-brand">
         <strong>WebSIG Commune urbaine de Labé</strong>
         <span>Espace réservé aux agents des services communaux</span>
       </div>
-      <nav class="tabs auth-tabs">
-        <button class="auth-tab active" data-auth="login">Connexion</button>
-        <button class="auth-tab" data-auth="register">Créer un compte</button>
-      </nav>
-
-      <form id="login-form" class="stack">
+      <form id="login-form" class="stack auth-login">
         <label>Adresse e-mail<input name="email" type="email" required autocomplete="username"></label>
         <label>Mot de passe<input name="mot_de_passe" type="password" required autocomplete="current-password"></label>
         <p class="form-msg" id="login-msg"></p>
         <button type="submit" class="primary">Se connecter</button>
       </form>
 
-      <form id="register-form" class="stack hidden">
-        <label>Nom complet *<input name="nom" required minlength="3" maxlength="100"></label>
-        <label>Adresse e-mail *<input name="email" type="email" required maxlength="120" autocomplete="username"></label>
-        <div class="grid2">
-          <label>Service *<select name="service" required></select></label>
-          <label>Fonction<input name="fonction" maxlength="100" placeholder="ex. Technicien voirie"></label>
-        </div>
-        <label>Téléphone<input name="telephone" maxlength="30" placeholder="+224 …"></label>
-        <fieldset class="modules-choix" id="register-modules">
-          <legend>Services communaux demandés</legend>
-        </fieldset>
-        <p class="hint">Les outils (saisie, suivi, itinéraire, sélection, analyses, statistiques) sont ouverts à tous les agents. Cochez les services dont vous avez besoin : l'administrateur les confirme en activant votre compte.</p>
-        <div class="grid2">
-          <label>Mot de passe *<input name="mot_de_passe" type="password" required minlength="8" autocomplete="new-password"></label>
-          <label>Confirmation *<input name="confirmation" type="password" required minlength="8" autocomplete="new-password"></label>
-        </div>
-        <p class="hint">8 caractères minimum, avec des lettres et des chiffres. Votre compte sera activé par un administrateur de la mairie.</p>
-        <p class="form-msg" id="register-msg"></p>
-        <button type="submit" class="primary">Créer mon compte</button>
-      </form>
+      <p class="hint auth-note">Les comptes des agents sont créés par l'administrateur de la mairie. Pour obtenir un accès, adressez-vous à lui.
+        Sans compte, la <a href="index.html">carte publique</a> permet de consulter les données et d'utiliser les outils.</p>
 
       <p class="auth-footer"><a href="index.html">← Retour à la carte publique</a></p>
     </div>

@@ -4,29 +4,29 @@ Système d'information géographique web de la commune urbaine de Labé (Guinée
 
 - **Carte publique** : consultation libre, sans compte, en lecture seule (limites, 28 quartiers,
   voirie, bâti, hydrographie, équipements, données validées par la mairie).
-- **Espace agents** : les agents des services communaux créent leur compte, puis saisissent des données
-  (points, lignes, surfaces, photos, import GeoJSON).
-- **Administration** : activation des comptes, rôles, validation des saisies, tableau de bord, journal d'activité.
+- **Espace agents** : les agents des services communaux, avec un compte créé par l'administrateur,
+  saisissent des données (points, lignes, surfaces, photos, import GeoJSON).
+- **Administration** : création et activation des comptes, rôles, validation des saisies, tableau de bord, journal d'activité.
 
 ## Rôles
 
 | Rôle | Droits |
 |---|---|
-| Public (sans compte) | Consulter la carte publique |
+| Public (sans compte) | Consulter la carte publique et utiliser ses outils ; pas de création de compte |
 | Agent | Saisir des données ; modifier ou supprimer ses saisies tant qu'elles ne sont pas validées |
 | Superviseur | + valider, rejeter (avec motif), modifier toutes les saisies ; tableau de bord |
 | Administrateur | + créer, activer / désactiver les comptes, attribuer les rôles et les services, réinitialiser les mots de passe, journal |
 
-Un agent s'inscrit depuis l'espace agents ; son compte reste **en attente** jusqu'à son activation par
-un administrateur. L'administrateur peut aussi créer le compte lui-même (Administration → Comptes des agents →
-**+ Nouveau compte**) : le compte est actif tout de suite, avec un mot de passe temporaire à transmettre à l'agent.
+**Pas d'inscription libre** : seul un **administrateur** crée les comptes des agents (Administration → Comptes des
+agents → **+ Nouveau compte**). Le compte est actif tout de suite, avec un mot de passe temporaire à transmettre à
+l'agent, qui le change dans « Mon compte ». L'écran de connexion n'a plus de formulaire « Créer un compte » et l'API
+n'a plus de route d'inscription.
 Les saisies d'un agent sont publiées sur la carte publique **après validation**.
 
 **Accès par service.** Tous les agents ont accès aux **outils** (saisie, suivi, itinéraire, sélection, analyses,
 statistiques, mon compte). Les **services communaux** (Adressage, Foncier, Déchets, Environnement, Réseaux,
 Marchés et gares routières) se donnent **compte par compte** : cases à cocher à la création du compte (proposées
-d'office selon le service de l'agent), à l'inscription (services demandés, confirmés par l'administrateur) et
-bouton **Services** dans la liste des comptes. Un agent ne voit que les onglets de ses services ; l'API refuse les
+d'office selon le service de l'agent) et bouton **Services** dans la liste des comptes. Un agent ne voit que les onglets de ses services ; l'API refuse les
 autres (403). Les couches publiques des autres services restent visibles sur la carte. Superviseurs et
 administrateurs voient tous les services. Dans un service, certaines actions restent réservées au service
 compétent (ex. encaissements : Finances et recettes ; instruction foncière : Urbanisme et domaines).

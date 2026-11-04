@@ -148,15 +148,15 @@ body.collapsed .coords { left: 110px; }
 .role-badge.role-superviseur { background: #d0ebff; color: #1864ab; }
 .muted { color: var(--muted); }
 
-/* Écran de connexion / inscription */
+/* Écran de connexion */
 .auth-screen { position: fixed; inset: 0; z-index: 3000; display: flex; align-items: center; justify-content: center; padding: 16px;
   background: linear-gradient(rgba(21,77,47,.88), rgba(21,77,47,.88)), url('https://tile.openstreetmap.org/12/1908/1918.png') center / cover; }
 .auth-card { background: #fff; border-radius: 12px; padding: 22px 24px; width: min(460px, 100%); max-height: 94vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,.35); border-top: 5px solid var(--yellow); }
 .auth-brand strong { display: block; color: var(--green-dark); font-size: 18px; }
 .auth-brand span { color: var(--muted); font-size: 13px; }
-.auth-tabs { margin: 16px 0 14px; position: static; }
-.auth-tab { flex: 1; padding: 10px 4px; background: none; border: 0; border-bottom: 3px solid transparent; border-radius: 0; cursor: pointer; font-size: 14px; color: var(--muted); }
-.auth-tab.active { color: var(--green); border-bottom-color: var(--green); font-weight: 600; }
+.auth-login { margin-top: 16px; }
+.auth-note { margin: 12px 0 0; line-height: 1.45; }
+.auth-note a { color: var(--green); }
 .auth-footer { margin: 14px 0 0; font-size: 13px; text-align: center; }
 .auth-footer a { color: var(--green); }
 .stack label { display: block; font-size: 13px; margin-bottom: 10px; }

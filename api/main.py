@@ -7,7 +7,8 @@ Rôles :
   - superviseur  : valide / rejette / modifie toutes les contributions
   - admin        : superviseur + gestion des comptes et journal d'activité
 
-Les agents créent leur compte eux-mêmes (un administrateur l'active), ou l'administrateur le crée directement.
+Pas d'inscription libre : seul un administrateur crée les comptes des agents. Le public n'a pas de compte
+(carte publique : visualisation et outils).
 Chaque compte d'agent a la liste des services communaux (modules) auxquels il a accès ; les outils
 (saisie, suivi, itinéraire, sélection, analyses, statistiques) sont ouverts à tous les agents.
 """
@@ -180,16 +181,6 @@ def public_user(u: dict) -> dict:
     return out
 
 
-class Inscription(BaseModel):
-    nom: str = Field(min_length=3, max_length=100)
-    email: str = Field(min_length=5, max_length=120, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-    service: str
-    fonction: str | None = Field(None, max_length=100)
-    telephone: str | None = Field(None, max_length=30)
-    mot_de_passe: str = Field(max_length=200)
-    modules: list[str] = []
-
-
 class Connexion(BaseModel):
     email: str = Field(max_length=120)
     mot_de_passe: str = Field(max_length=200)
@@ -218,26 +209,6 @@ def services():
 @app.get("/modules")
 def modules():
     return {"modules": [{"id": k, "label": v} for k, v in MODULES.items()], "suggestions": MODULES_SUGGERES}
-
-
-@app.post("/auth/inscription", status_code=201)
-def inscription(body: Inscription):
-    if body.service not in SERVICES:
-        raise HTTPException(400, "Service inconnu.")
-    check_strength(body.mot_de_passe)
-    mods = verifier_modules(body.modules)
-    email = body.email.strip().lower()
-    with cursor() as cur:
-        try:
-            cur.execute("""INSERT INTO app.utilisateurs (nom, email, service, fonction, telephone, mot_de_passe, modules)
-                           VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id""",
-                        (body.nom.strip(), email, body.service, body.fonction, body.telephone,
-                         hash_password(body.mot_de_passe), mods))
-        except psycopg.errors.UniqueViolation:
-            raise HTTPException(409, "Un compte existe déjà avec cette adresse e-mail.")
-        uid = cur.fetchone()["id"]
-        journal(cur, uid, "inscription", f"utilisateur {uid}", f"{body.nom} — {body.service}")
-    return {"ok": True, "message": "Compte créé. Il sera utilisable après activation par un administrateur."}
 
 
 @app.post("/auth/connexion")
