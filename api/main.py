@@ -129,7 +129,14 @@ def envoyer_mail(dest: str, sujet: str, texte: str, html_: str) -> bool:
                 elif SMTP_USER:  # jamais de mot de passe en clair
                     raise smtplib.SMTPException("le serveur d'envoi ne propose pas de connexion chiffrée")
             if SMTP_USER:
-                srv.login(SMTP_USER, SMTP_PASSWORD)
+                # PLAIN seul quand il est proposé : sinon, après un refus (535), smtplib essaie une autre méthode
+                # sur une connexion déjà fermée par le serveur et l'erreur utile est perdue.
+                srv.ehlo_or_helo_if_needed()
+                if "plain" in srv.esmtp_features.get("auth", "").lower().split():
+                    srv.user, srv.password = SMTP_USER, SMTP_PASSWORD
+                    srv.auth("PLAIN", srv.auth_plain)
+                else:
+                    srv.login(SMTP_USER, SMTP_PASSWORD)
             srv.send_message(msg)
         return True
     except (OSError, smtplib.SMTPException) as e:
