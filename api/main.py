@@ -11,18 +11,26 @@ Pas d'inscription libre : seul un administrateur crée les comptes des agents. L
 (carte publique : visualisation et outils).
 Chaque compte d'agent a la liste des services communaux (modules) auxquels il a accès ; les outils
 (saisie, suivi, itinéraire, sélection, analyses, statistiques) sont ouverts à tous les agents.
+À la création du compte, l'agent reçoit par e-mail ses identifiants et un lien pour valider son adresse :
+il ne peut pas se connecter avant (si l'envoi est impossible, l'administrateur transmet lui-même le lien).
 """
 import base64
 import hashlib
+import html
 import json
 import os
 import secrets
+import smtplib
+import ssl
 import time
 from contextlib import contextmanager
+from email.message import EmailMessage
+from email.utils import formataddr
 from pathlib import Path
 
 import psycopg
 from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response
+from fastapi.responses import RedirectResponse
 from psycopg.rows import dict_row
 from psycopg_pool import ConnectionPool
 from pydantic import BaseModel, Field
@@ -83,6 +91,98 @@ def check_strength(pw: str):
         raise HTTPException(400, "Mot de passe trop faible : 8 caractères minimum, avec lettres et chiffres.")
 
 
+# ---------------------------------------------------------------- e-mails (identifiants, validation de l'adresse)
+SMTP_HOST = os.environ.get("SMTP_HOST", "").strip()
+SMTP_PORT = int(os.environ.get("SMTP_PORT") or 587)
+SMTP_USER = os.environ.get("SMTP_USER", "").strip()
+SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
+SMTP_FROM = os.environ.get("SMTP_FROM", "").strip() or SMTP_USER
+SITE_URL = os.environ.get("SITE_URL", "").strip().rstrip("/")
+VALIDATION_JOURS = 7
+
+
+def adresse_site(request: Request) -> str:
+    """Adresse publique du site (pour les liens des e-mails) : SITE_URL, sinon celle de la requête."""
+    if SITE_URL:
+        return SITE_URL
+    proto = request.headers.get("x-forwarded-proto") or request.url.scheme
+    return f"{proto}://{request.headers.get('host', request.url.netloc)}"
+
+
+def envoyer_mail(dest: str, sujet: str, texte: str, html_: str) -> bool:
+    """Envoie un e-mail ; False si l'envoi n'est pas configuré ou a échoué (l'appelant prévoit un repli)."""
+    if not SMTP_HOST or not SMTP_FROM:
+        return False
+    msg = EmailMessage()
+    msg["Subject"], msg["From"], msg["To"] = sujet, formataddr(("WebSIG de Labé", SMTP_FROM)), dest
+    msg.set_content(texte)
+    msg.add_alternative(html_, subtype="html")
+    try:
+        srv = (smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=20, context=ssl.create_default_context())
+               if SMTP_PORT == 465 else smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=20))
+        with srv:
+            if SMTP_PORT != 465:
+                srv.ehlo()
+                if srv.has_extn("starttls"):
+                    srv.starttls(context=ssl.create_default_context())
+                    srv.ehlo()
+                elif SMTP_USER:  # jamais de mot de passe en clair
+                    raise smtplib.SMTPException("le serveur d'envoi ne propose pas de connexion chiffrée")
+            if SMTP_USER:
+                srv.login(SMTP_USER, SMTP_PASSWORD)
+            srv.send_message(msg)
+        return True
+    except (OSError, smtplib.SMTPException) as e:
+        print(f"Envoi d'e-mail impossible à {dest} : {e}", flush=True)
+        return False
+
+
+def nouveau_lien_validation(cur, uid: int, base: str) -> str:
+    jeton = secrets.token_urlsafe(32)
+    cur.execute("""UPDATE app.utilisateurs SET jeton_validation = %s,
+                          jeton_expire_le = now() + make_interval(days => %s) WHERE id = %s""",
+                (hashlib.sha256(jeton.encode()).hexdigest(), VALIDATION_JOURS, uid))
+    return f"{base}/api/auth/valider?jeton={jeton}"
+
+
+def mail_identifiants(base: str, nom: str, email: str, mdp: str, lien: str | None) -> tuple[str, str, str]:
+    """Sujet, texte et HTML de l'e-mail envoyé à l'agent (création du compte ou nouveau mot de passe)."""
+    espace = f"{base}/espace.html"
+    sujet = "Votre compte agent — WebSIG de Labé" if lien else "Votre nouveau mot de passe — WebSIG de Labé"
+    lignes = [f"Bonjour {nom},", "",
+              ("Un compte vous a été créé dans l'espace agents du WebSIG de la Commune urbaine de Labé."
+               if lien else "Un nouveau mot de passe temporaire a été généré pour votre compte agent."), "",
+              f"  Adresse de connexion : {espace}", f"  Identifiant (e-mail) : {email}",
+              f"  Mot de passe temporaire : {mdp}", ""]
+    if lien:
+        lignes += ["Avant votre première connexion, validez votre adresse e-mail en ouvrant ce lien "
+                   f"(valable {VALIDATION_JOURS} jours) :", lien, ""]
+    lignes += ["Après connexion, changez ce mot de passe dans « Mon compte ».", "",
+               "Si vous n'êtes pas concerné(e), ignorez ce message.", "", "— WebSIG de la Commune urbaine de Labé"]
+    e = html.escape
+    bouton = (f'<p><a href="{e(lien)}" style="display:inline-block;background:#1f6f43;color:#fff;padding:10px 18px;'
+              f'border-radius:6px;text-decoration:none;font-weight:bold">Valider mon adresse e-mail</a></p>'
+              f'<p style="font-size:13px;color:#555">Lien valable {VALIDATION_JOURS} jours, à ouvrir avant votre '
+              f'première connexion. S\'il ne s\'ouvre pas, copiez cette adresse dans votre navigateur :<br>{e(lien)}</p>'
+              if lien else "")
+    corps = f"""<div style="font-family:Arial,sans-serif;max-width:560px;color:#222">
+<p style="background:#1f6f43;color:#fff;padding:12px 16px;margin:0;font-weight:bold">WebSIG de la Commune urbaine de Labé</p>
+<div style="padding:16px;border:1px solid #ddd;border-top:0">
+<p>Bonjour {e(nom)},</p>
+<p>{"Un compte vous a été créé dans l'espace agents du WebSIG de la Commune urbaine de Labé."
+    if lien else "Un nouveau mot de passe temporaire a été généré pour votre compte agent."}</p>
+<table style="border-collapse:collapse;margin:8px 0 14px">
+<tr><td style="padding:3px 12px 3px 0;color:#555">Adresse de connexion</td><td><a href="{e(espace)}">{e(espace)}</a></td></tr>
+<tr><td style="padding:3px 12px 3px 0;color:#555">Identifiant (e-mail)</td><td><b>{e(email)}</b></td></tr>
+<tr><td style="padding:3px 12px 3px 0;color:#555">Mot de passe temporaire</td><td><b style="font-family:monospace;font-size:15px">{e(mdp)}</b></td></tr>
+</table>
+{bouton}
+<p>Après connexion, changez ce mot de passe dans « Mon compte ».</p>
+<p style="font-size:12px;color:#777">Si vous n'êtes pas concerné(e), ignorez ce message.</p>
+</div></div>"""
+    return sujet, "\n".join(lignes), corps
+
+
 # ---------------------------------------------------------------- démarrage
 @app.on_event("startup")
 def startup():
@@ -101,8 +201,10 @@ def startup():
         cur.execute("SELECT 1 FROM app.utilisateurs WHERE role = 'admin' LIMIT 1")
         if not cur.fetchone():
             cur.execute("""
-                INSERT INTO app.utilisateurs (nom, email, service, fonction, mot_de_passe, role, statut, active_le)
-                VALUES ('Administrateur', %s, 'Secrétariat général', 'Administrateur SIG', %s, 'admin', 'actif', now())
+                INSERT INTO app.utilisateurs (nom, email, service, fonction, mot_de_passe, role, statut, active_le,
+                                              email_valide_le)
+                VALUES ('Administrateur', %s, 'Secrétariat général', 'Administrateur SIG', %s, 'admin', 'actif', now(),
+                        now())
                 ON CONFLICT DO NOTHING""",
                 (os.environ["APP_ADMIN_EMAIL"].strip().lower(), hash_password(os.environ["APP_ADMIN_PASSWORD"])))
 
@@ -114,7 +216,7 @@ def journal(cur, user_id, action, objet=None, detail=None):
 
 # ---------------------------------------------------------------- authentification
 USER_COLS = ("u.id, u.nom, u.email, u.service, u.fonction, u.telephone, u.role, u.statut, u.modules, u.cree_le, "
-             "u.derniere_connexion")
+             "u.derniere_connexion, u.email_valide_le")
 
 
 def current_user(authorization: str | None = Header(None)) -> dict:
@@ -175,7 +277,7 @@ def verifier_modules(modules: list[str]) -> list[str]:
 
 def public_user(u: dict) -> dict:
     out = dict(u)
-    for k in ("cree_le", "derniere_connexion"):
+    for k in ("cree_le", "derniere_connexion", "email_valide_le"):
         if out.get(k):
             out[k] = out[k].isoformat(timespec="seconds")
     return out
@@ -226,6 +328,10 @@ def connexion(body: Connexion):
             raise HTTPException(403, "Votre compte est en attente d'activation par un administrateur.")
         if u["statut"] != "actif":
             raise HTTPException(403, "Votre compte est désactivé. Contactez l'administrateur.")
+        if not u["email_valide_le"]:
+            raise HTTPException(403, "Adresse e-mail non validée : ouvrez le lien « Valider mon adresse e-mail » reçu "
+                                     "par e-mail. Lien expiré ou non reçu ? Demandez à l'administrateur de vous renvoyer "
+                                     "vos identifiants.")
         _echecs.pop(email, None)
         token = secrets.token_urlsafe(32)
         cur.execute("DELETE FROM app.sessions WHERE expire_le < now()")
@@ -245,6 +351,22 @@ def deconnexion(authorization: str | None = Header(None)):
             cur.execute("DELETE FROM app.sessions WHERE jeton_hash = %s",
                         (hashlib.sha256(authorization[7:].encode()).hexdigest(),))
     return {"ok": True}
+
+
+@app.get("/auth/valider")
+def valider_adresse(jeton: str = ""):
+    """Lien de l'e-mail : valide l'adresse puis renvoie vers l'écran de connexion avec un message.
+    Le lien reste utilisable jusqu'à son expiration (un second clic, ou l'analyse anti-virus de la messagerie
+    qui l'ouvre avant l'agent, ne doit pas le « brûler »)."""
+    with cursor() as cur:
+        cur.execute("""UPDATE app.utilisateurs SET email_valide_le = COALESCE(email_valide_le, now())
+                       WHERE jeton_validation = %s AND jeton_expire_le > now()
+                       RETURNING id, email_valide_le = now() AS premiere_fois""",
+                    (hashlib.sha256(jeton.encode()).hexdigest(),))
+        r = cur.fetchone()
+        if r and r["premiere_fois"]:
+            journal(cur, r["id"], "validation de l'adresse e-mail")
+    return RedirectResponse("/espace.html?adresse=" + ("validee" if r else "lien-invalide"), status_code=303)
 
 
 @app.get("/auth/moi")
@@ -283,9 +405,21 @@ class NouveauCompte(BaseModel):
     modules: list[str] = []
 
 
+def transmettre_identifiants(cur, request: Request, uid: int, nom: str, email: str, mdp: str,
+                             valider: bool) -> dict:
+    """Envoie à l'agent ses identifiants (et le lien de validation si l'adresse n'est pas encore validée).
+    Si l'envoi est impossible, renvoie à l'administrateur de quoi les transmettre lui-même."""
+    base = adresse_site(request)
+    lien = nouveau_lien_validation(cur, uid, base) if valider else None
+    if envoyer_mail(email, *mail_identifiants(base, nom, email, mdp, lien)):
+        return {"email_envoye": True}
+    return {"email_envoye": False, "mot_de_passe_temporaire": mdp, "lien_validation": lien}
+
+
 @app.post("/admin/utilisateurs", status_code=201)
-def creer_utilisateur(body: NouveauCompte, u: dict = Depends(admin)):
-    """Compte créé par l'administrateur : actif tout de suite, avec un mot de passe temporaire à transmettre."""
+def creer_utilisateur(body: NouveauCompte, request: Request, u: dict = Depends(admin)):
+    """Compte créé par l'administrateur : l'agent reçoit par e-mail ses identifiants et un lien de validation
+    de son adresse, à ouvrir avant de pouvoir se connecter."""
     if body.service not in SERVICES:
         raise HTTPException(400, "Service inconnu.")
     if body.role not in ROLES:
@@ -302,9 +436,11 @@ def creer_utilisateur(body: NouveauCompte, u: dict = Depends(admin)):
         except psycopg.errors.UniqueViolation:
             raise HTTPException(409, "Un compte existe déjà avec cette adresse e-mail.")
         uid = cur.fetchone()["id"]
+        envoi = transmettre_identifiants(cur, request, uid, body.nom.strip(), body.email.strip().lower(), temp, True)
         journal(cur, u["id"], "création du compte", f"utilisateur {uid}",
-                f"{body.nom} — {body.service} · services : " + (", ".join(MODULES[m] for m in mods) or "aucun"))
-    return {"id": uid, "mot_de_passe_temporaire": temp}
+                f"{body.nom} — {body.service} · services : " + (", ".join(MODULES[m] for m in mods) or "aucun")
+                + (" · identifiants envoyés par e-mail" if envoi["email_envoye"] else " · e-mail non envoyé"))
+    return {"id": uid, **envoi}
 
 
 @app.get("/admin/utilisateurs")
@@ -354,16 +490,20 @@ def maj_utilisateur(uid: int, body: MajUtilisateur, u: dict = Depends(admin)):
 
 
 @app.post("/admin/utilisateurs/{uid}/reinitialiser")
-def reinitialiser_mdp(uid: int, u: dict = Depends(admin)):
+def reinitialiser_mdp(uid: int, request: Request, u: dict = Depends(admin)):
+    """Nouveau mot de passe temporaire, envoyé par e-mail (avec un nouveau lien si l'adresse n'est pas validée)."""
     temp = secrets.token_urlsafe(6) + "7a"
     with cursor() as cur:
-        cur.execute("UPDATE app.utilisateurs SET mot_de_passe = %s WHERE id = %s RETURNING nom", (hash_password(temp), uid))
+        cur.execute("""UPDATE app.utilisateurs SET mot_de_passe = %s WHERE id = %s
+                       RETURNING nom, email, email_valide_le""", (hash_password(temp), uid))
         r = cur.fetchone()
         if not r:
             raise HTTPException(404, "Utilisateur introuvable.")
         cur.execute("DELETE FROM app.sessions WHERE utilisateur = %s", (uid,))
-        journal(cur, u["id"], "réinitialisation du mot de passe", f"utilisateur {uid}", r["nom"])
-    return {"mot_de_passe_temporaire": temp}
+        envoi = transmettre_identifiants(cur, request, uid, r["nom"], r["email"], temp, not r["email_valide_le"])
+        journal(cur, u["id"], "réinitialisation du mot de passe", f"utilisateur {uid}",
+                r["nom"] + (" · envoyé par e-mail" if envoi["email_envoye"] else " · e-mail non envoyé"))
+    return envoi
 
 
 @app.get("/admin/journal")

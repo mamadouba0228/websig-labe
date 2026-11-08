@@ -82,6 +82,13 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       APP_ADMIN_EMAIL: ${APP_ADMIN_EMAIL}
       APP_ADMIN_PASSWORD: ${APP_ADMIN_PASSWORD}
+      # Envoi des e-mails aux agents (identifiants, validation de l'adresse) — facultatif, voir .env.example
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      SITE_URL: ${SITE_URL:-}
     volumes:
       - ./data/public/relief:/relief:ro   # grille du relief (zones de pentes fortes)
     depends_on:

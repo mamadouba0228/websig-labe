@@ -20,9 +20,11 @@ Système d'information géographique web de la commune urbaine de Labé (Guinée
 | Administrateur | + créer, activer / désactiver les comptes, attribuer les rôles et les services, réinitialiser les mots de passe, journal |
 
 **Pas d'inscription libre** : seul un **administrateur** crée les comptes des agents (Administration → Comptes des
-agents → **+ Nouveau compte**). Le compte est actif tout de suite, avec un mot de passe temporaire à transmettre à
-l'agent, qui le change dans « Mon compte ». L'écran de connexion n'a plus de formulaire « Créer un compte » et l'API
-n'a plus de route d'inscription.
+agents → **+ Nouveau compte**). L'agent reçoit **par e-mail** ses identifiants (mot de passe temporaire, à changer
+dans « Mon compte ») et un **lien pour valider son adresse** : il ne peut pas se connecter avant (lien valable 7 jours ;
+le bouton « Renvoyer » en envoie un nouveau). L'envoi se règle dans `.env` (`SMTP_*`, `SITE_URL`, voir `.env.example`) ;
+sans cela, l'administrateur voit le mot de passe et le lien, et les transmet lui-même. L'écran de connexion n'a pas de
+formulaire « Créer un compte » et l'API n'a pas de route d'inscription.
 Les saisies d'un agent sont publiées sur la carte publique **après validation**.
 
 **Accès par service.** Tous les agents ont accès aux **outils** (saisie, suivi, itinéraire, sélection, analyses,

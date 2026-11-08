@@ -82,11 +82,14 @@ APP_ADMIN_PASSWORD=$ADMIN_MDP
 DB_PORT=5433
 WEB_PORT=8080
 DOMAINE=$DOMAINE
+# Adresse du site dans les e-mails envoyés aux agents
+SITE_URL=https://$DOMAINE
 EOF
   chmod 600 .env
   NOUVEL_ENV=1
 else
   grep -q '^DOMAINE=' .env || echo "DOMAINE=$DOMAINE" >> .env
+  grep -q '^SITE_URL=' .env || echo "SITE_URL=https://$DOMAINE" >> .env
 fi
 set -a; . ./.env; set +a
 

@@ -19,6 +19,15 @@
     if (Auth.user()) renderAccount(Auth.user());
   }).catch(function () {});
 
+  // Retour du lien « Valider mon adresse e-mail » reçu par l'agent
+  var adresse = /[?&]adresse=([a-z-]+)/.exec(location.search);
+  if (adresse) {
+    if (adresse[1] === 'validee') msg('login-msg', 'Votre adresse e-mail est validée. Connectez-vous avec les identifiants reçus par e-mail.', true);
+    else msg('login-msg', 'Ce lien de validation est expiré ou incomplet. Si vous ne pouvez pas vous connecter, ' +
+      'demandez à l\'administrateur de vous renvoyer vos identifiants.');
+    history.replaceState(null, '', location.pathname);
+  }
+
   loginForm.addEventListener('submit', function (e) {
     e.preventDefault();
     msg('login-msg', '');

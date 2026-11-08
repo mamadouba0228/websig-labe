@@ -171,11 +171,14 @@
         if (u.statut === 'en_attente') actions += '<button class="danger" data-statut="desactive" data-id="' + u.id + '">Refuser</button>';
       }
       if (u.role === 'agent') actions += '<button data-modules="' + u.id + '" title="Choisir les services communaux de cet agent">Services</button>';
-      actions += '<button data-reset="' + u.id + '" title="Générer un mot de passe temporaire">Mot de passe</button>';
+      actions += '<button data-reset="' + u.id + '" title="Générer un mot de passe temporaire et l\'envoyer par e-mail' +
+        (u.email_valide_le ? '' : ' (avec un nouveau lien de validation)') + '">' +
+        (u.email_valide_le ? 'Mot de passe' : 'Renvoyer') + '</button>';
       return '<tr class="' + (u.statut === 'en_attente' ? 'row-pending' : u.statut === 'desactive' ? 'row-off' : '') + '">' +
         '<td><b>' + esc(u.nom) + '</b><br><small>inscrit le ' + fmtDate(u.cree_le) + '</small></td>' +
         '<td>' + esc(u.service) + '<br><small>' + esc(u.fonction || '') + '</small></td>' +
-        '<td>' + esc(u.email) + '<br><small>' + esc(u.telephone || '') + '</small></td>' +
+        '<td>' + esc(u.email) + (u.email_valide_le ? '' : '<br><span class="badge u-en_attente" title="L\'agent doit ouvrir le lien reçu par e-mail avant sa première connexion">Adresse non validée</span>') +
+        '<br><small>' + esc(u.telephone || '') + '</small></td>' +
         '<td>' + roleSel + '</td>' +
         '<td>' + servicesDe(u) + '</td>' +
         '<td><span class="badge u-' + u.statut + '">' + STATUT_COMPTE[u.statut] + '</span></td>' +
@@ -204,12 +207,26 @@
       if (cible) ouvrirCompte(cible);
     }
     if (b.dataset.reset) {
-      if (!confirm('Générer un nouveau mot de passe temporaire pour ce compte ?')) return;
+      var agent = users.filter(function (x) { return String(x.id) === b.dataset.reset; })[0];
+      if (!confirm('Générer un nouveau mot de passe temporaire et l\'envoyer par e-mail à ' + (agent ? agent.email : 'l\'agent') +
+        (agent && !agent.email_valide_le ? ' (avec un nouveau lien de validation de l\'adresse)' : '') + ' ?')) return;
       Auth.api('POST', '/admin/utilisateurs/' + b.dataset.reset + '/reinitialiser').then(function (r) {
-        prompt('Mot de passe temporaire à transmettre à l\'agent (il pourra le changer dans « Mon compte ») :', r.mot_de_passe_temporaire);
+        resultatEnvoi(r, agent ? agent.email : '', agent && !agent.email_valide_le);
       }).catch(fail);
     }
   });
+  // Après création ou nouveau mot de passe : e-mail envoyé, ou identifiants à transmettre soi-même
+  function resultatEnvoi(r, email, avecLien) {
+    if (r.email_envoye) {
+      alert('Un e-mail a été envoyé à ' + email + ' avec ses identifiants' +
+        (avecLien ? ' et un lien pour valider son adresse (à ouvrir avant sa première connexion)' : '') + '.');
+      return;
+    }
+    var t = 'L\'e-mail n\'a pas pu être envoyé (envoi non configuré sur le serveur ou erreur).\n\n' +
+      'Transmettez vous-même à l\'agent :\n- identifiant : ' + email + '\n- mot de passe temporaire : ' + r.mot_de_passe_temporaire;
+    if (r.lien_validation) t += '\n- le lien de validation de son adresse, à ouvrir avant sa première connexion (copié ci-dessous)';
+    prompt(t, r.lien_validation || r.mot_de_passe_temporaire);
+  }
   // Fenêtre : nouveau compte (identité + services) ou services d'un compte existant
   var cModal = document.getElementById('compte-modal'), cForm = document.getElementById('compte-form'),
     cModules = document.getElementById('compte-modules'), cCible = null;
@@ -240,10 +257,11 @@
     var p = cCible ? Auth.api('PUT', '/admin/utilisateurs/' + cCible.id, { modules: mods })
       : Auth.api('POST', '/admin/utilisateurs', { nom: f.nom.value.trim(), email: f.email.value.trim(), service: f.service.value,
         fonction: f.fonction.value.trim() || null, telephone: f.telephone.value.trim() || null, role: f.role.value, modules: mods });
+    var email = f.email.value.trim();
     p.then(function (r) {
       cModal.classList.add('hidden');
       loaders.users();
-      if (r.mot_de_passe_temporaire) prompt('Compte créé et actif. Mot de passe temporaire à transmettre à l\'agent avec son e-mail (il pourra le changer dans « Mon compte ») :', r.mot_de_passe_temporaire);
+      if (!cCible) resultatEnvoi(r, email, true);
     }).catch(function (err) { cMsg(err.message); }).then(function () { btn.disabled = false; });
   });
 

@@ -20,6 +20,12 @@ CREATE TABLE IF NOT EXISTS app.utilisateurs (
 CREATE UNIQUE INDEX IF NOT EXISTS utilisateurs_email_idx ON app.utilisateurs (lower(email));
 -- Services communaux (onglets) accessibles à l'agent : adr, fon, dech, env, res, mar. Superviseurs et admins : tous.
 ALTER TABLE app.utilisateurs ADD COLUMN IF NOT EXISTS modules text[] NOT NULL DEFAULT '{}';
+-- Validation de l'adresse e-mail par le lien envoyé à la création du compte.
+-- Les comptes qui existaient avant cette colonne sont considérés comme validés (valeur par défaut posée une fois).
+ALTER TABLE app.utilisateurs ADD COLUMN IF NOT EXISTS email_valide_le timestamptz DEFAULT now();
+ALTER TABLE app.utilisateurs ALTER COLUMN email_valide_le DROP DEFAULT;
+ALTER TABLE app.utilisateurs ADD COLUMN IF NOT EXISTS jeton_validation text;   -- empreinte SHA-256 du jeton du lien
+ALTER TABLE app.utilisateurs ADD COLUMN IF NOT EXISTS jeton_expire_le timestamptz;
 
 CREATE TABLE IF NOT EXISTS app.sessions (
     jeton_hash   text PRIMARY KEY,                -- SHA-256 du jeton : le jeton lui-même n'est pas stocké
